@@ -191,49 +191,260 @@ dsl://{workspace_id}                          - DSL representatie
 
 ## Technologie Stack
 
-### Aanbevolen Implementatie
-- **TypeScript** met `@modelcontextprotocol/sdk`
-- **Node.js** runtime
-- **stdio transport** (start simpel)
+### Implementatie in PHP
+- **PHP 8.1+** met moderne features (attributes, enums, type hints)
+- **MCP SDK**: `mcp/sdk` (via Composer)
+- **Transport**: stdio voor Claude Desktop, HTTP voor web
 - **Structurizr CLI** voor DSL parsing en export
-- **REST API client** voor Structurizr Cloud/On-Premises integratie
+- **Guzzle HTTP client** voor Structurizr Cloud/On-Premises API
+- **PSR standards**: PSR-3 (logging), PSR-11 (container), PSR-16 (cache)
+
+### Composer Dependencies
+```json
+{
+    "require": {
+        "php": "^8.1",
+        "mcp/sdk": "*",
+        "guzzlehttp/guzzle": "^7.0",
+        "monolog/monolog": "^3.0",
+        "symfony/cache": "^6.0",
+        "symfony/process": "^6.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0",
+        "phpstan/phpstan": "^1.10"
+    }
+}
+```
 
 ### Project Structuur
 ```
 structurizr-mcp/
 ├── src/
-│   ├── index.ts              # Server entry point
-│   ├── tools/                # Tool implementations
-│   │   ├── workspace.ts
-│   │   ├── model.ts
-│   │   ├── views.ts
-│   │   └── export.ts
-│   ├── resources/            # Resource handlers
-│   │   └── workspace.ts
-│   ├── prompts/              # Prompt templates
-│   │   └── analysis.ts
-│   ├── structurizr/          # Structurizr client
-│   │   ├── cli.ts
-│   │   └── api.ts
-│   └── types/                # TypeScript types
-├── tests/                    # Unit & integration tests
-├── docs/                     # Documentation
-├── package.json
-└── tsconfig.json
+│   ├── Tools/                    # Tool implementations
+│   │   ├── WorkspaceTools.php    # Workspace CRUD
+│   │   ├── ModelTools.php        # Element & relationship management
+│   │   ├── ViewTools.php         # View creation
+│   │   └── ExportTools.php       # Export functionaliteit
+│   ├── Resources/                # Resource handlers
+│   │   ├── WorkspaceResource.php
+│   │   └── ConfigResource.php
+│   ├── Prompts/                  # Prompt templates
+│   │   ├── AnalysisPrompts.php
+│   │   └── GenerationPrompts.php
+│   ├── Structurizr/              # Structurizr integration
+│   │   ├── CliWrapper.php        # CLI command wrapper
+│   │   ├── ApiClient.php         # REST API client
+│   │   └── WorkspaceManager.php  # Workspace state management
+│   └── Exception/                # Custom exceptions
+│       └── StructurizrException.php
+├── tests/                        # PHPUnit tests
+│   ├── Unit/
+│   └── Integration/
+├── docs/                         # Documentation
+├── cache/                        # Discovery cache
+├── sessions/                     # Session storage
+├── workspaces/                   # Local workspace files
+├── server.php                    # MCP server entry point
+├── composer.json
+└── phpunit.xml
+```
+
+## PHP Implementation Voorbeelden
+
+### Server Setup (server.php)
+
+```php
+<?php
+
+require 'vendor/autoload.php';
+
+use Mcp\Server;
+use Mcp\Server\Transport\StdioTransport;
+use Mcp\Server\Session\FileSessionStore;
+use Mcp\Capability\Registry\Container;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
+use Symfony\Component\Cache\Psr16Cache;
+
+// Setup logging (naar STDERR!)
+$logger = new Logger('structurizr-mcp');
+$logger->pushHandler(new StreamHandler('php://stderr', Logger::DEBUG));
+
+// Setup dependency injection container
+$container = new Container();
+$container->set(LoggerInterface::class, $logger);
+
+// Setup cache voor discovery
+$cache = new Psr16Cache(
+    new PhpFilesAdapter(directory: __DIR__ . '/cache')
+);
+
+// Build MCP server
+$server = Server::builder()
+    ->setServerInfo(
+        name: 'Structurizr MCP Server',
+        version: '1.0.0',
+        description: 'MCP server for Structurizr workspace management'
+    )
+    ->setInstructions(
+        'Use this server to create and manage Structurizr workspaces, ' .
+        'add architectural elements, and generate C4 diagrams.'
+    )
+    ->setContainer($container)
+    ->setLogger($logger)
+    ->setSession(new FileSessionStore(__DIR__ . '/sessions'))
+    ->setDiscovery(
+        basePath: __DIR__,
+        scanDirs: ['src'],
+        excludeDirs: ['vendor', 'tests', 'cache'],
+        cache: $cache
+    )
+    ->build();
+
+// Run met STDIO transport
+$transport = new StdioTransport(logger: $logger);
+$exitCode = $server->run($transport);
+exit($exitCode);
+```
+
+### Tool Definition met Attributes
+
+```php
+<?php
+
+namespace StructurizrMcp\Tools;
+
+use Mcp\Capability\Attribute\McpTool;
+use Mcp\Capability\Attribute\Schema;
+use Mcp\Exception\ToolCallException;
+use Psr\Log\LoggerInterface;
+
+class WorkspaceTools
+{
+    public function __construct(
+        private LoggerInterface $logger,
+        private StructurizrCliWrapper $cli
+    ) {}
+
+    #[McpTool(
+        name: 'create_workspace',
+        description: 'Creates a new Structurizr workspace'
+    )]
+    public function createWorkspace(
+        #[Schema(description: 'Workspace name', minLength: 1, maxLength: 100)]
+        string $name,
+
+        #[Schema(description: 'Workspace description', maxLength: 500)]
+        string $description = ''
+    ): array {
+        $this->logger->info("Creating workspace: {$name}");
+
+        try {
+            $workspaceId = $this->cli->createWorkspace($name, $description);
+
+            return [
+                'workspaceId' => $workspaceId,
+                'name' => $name,
+                'description' => $description
+            ];
+        } catch (\Exception $e) {
+            throw new ToolCallException(
+                "Failed to create workspace: " . $e->getMessage()
+            );
+        }
+    }
+
+    #[McpTool(name: 'add_software_system')]
+    public function addSoftwareSystem(
+        #[Schema(type: 'integer', minimum: 1)]
+        int $workspaceId,
+
+        #[Schema(minLength: 1, maxLength: 100)]
+        string $name,
+
+        string $description = '',
+
+        #[Schema(enum: ['Internal', 'External'])]
+        string $location = 'Internal'
+    ): array {
+        // Implementation
+        return ['systemId' => 'sys-001', 'name' => $name];
+    }
+}
+```
+
+### Resource Definition
+
+```php
+<?php
+
+namespace StructurizrMcp\Resources;
+
+use Mcp\Capability\Attribute\McpResourceTemplate;
+
+class WorkspaceResource
+{
+    #[McpResourceTemplate(
+        uriTemplate: 'structurizr://workspace/{workspaceId}',
+        name: 'workspace_details',
+        description: 'Get workspace by ID',
+        mimeType: 'application/json'
+    )]
+    public function getWorkspace(string $workspaceId): array {
+        return [
+            'id' => $workspaceId,
+            'name' => 'Example Workspace',
+            'model' => [...],
+            'views' => [...]
+        ];
+    }
+}
+```
+
+### Claude Desktop Configuratie
+
+```json
+{
+  "mcpServers": {
+    "structurizr": {
+      "command": "php",
+      "args": ["/path/to/structurizr-mcp/server.php"],
+      "env": {
+        "STRUCTURIZR_API_KEY": "your-key",
+        "STRUCTURIZR_API_URL": "https://api.structurizr.com"
+      }
+    }
+  }
+}
 ```
 
 ## Development Workflow
 
 ### Lokale Development
-1. DSL file creëren/bewerken
-2. MCP server starten
-3. Tools aanroepen via MCP client
-4. Workspace valideren
-5. Export naar gewenst formaat
+1. `composer install` - Installeer dependencies
+2. DSL file creëren/bewerken in `workspaces/`
+3. `php server.php` - Start MCP server
+4. Tools aanroepen via MCP client (Claude Desktop)
+5. Workspace valideren met Structurizr CLI
+6. Export naar gewenst formaat
+
+### Testing
+```bash
+# Run PHPUnit tests
+./vendor/bin/phpunit
+
+# Static analysis
+./vendor/bin/phpstan analyse src
+
+# Test server manually
+php server.php < test_request.json
+```
 
 ### Integratie met Structurizr Cloud
-1. API credentials configureren
-2. Workspace push/pull via API
+1. Configureer API credentials via environment variables
+2. Workspace push/pull via API client
 3. Sync lokale en cloud workspaces
 
 ## Next Steps
@@ -242,8 +453,18 @@ Zie [TASKS.md](./TASKS.md) voor de gedetailleerde implementatie roadmap.
 
 ## Resources
 
+### Structurizr
 - [Structurizr Documentation](https://structurizr.com)
 - [C4 Model](https://c4model.com)
 - [Structurizr DSL](https://github.com/structurizr/dsl)
+- [Structurizr CLI](https://github.com/structurizr/cli)
+
+### Model Context Protocol
 - [Model Context Protocol](https://modelcontextprotocol.io)
-- [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)
+- [MCP Specification](https://spec.modelcontextprotocol.io)
+- [MCP PHP SDK](https://github.com/modelcontextprotocol/php-sdk)
+
+### PHP Development
+- [PHP 8.1 Documentation](https://www.php.net/manual/en/)
+- [Composer](https://getcomposer.org/)
+- [PSR Standards](https://www.php-fig.org/psr/)

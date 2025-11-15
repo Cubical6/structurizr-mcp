@@ -1,283 +1,625 @@
-# Structurizr MCP Server - Implementation Tasks
+# Structurizr MCP Server - Implementation Tasks (PHP)
 
 ## Phase 1: Project Setup ⏳
 
-### 1.1 Initialize Project
-- [ ] Create package.json met TypeScript dependencies
-- [ ] Installeer @modelcontextprotocol/sdk
-- [ ] Configureer TypeScript (tsconfig.json)
-- [ ] Setup ESLint en Prettier
-- [ ] Initialiseer Git repository (indien nodig)
-- [ ] Maak basis project structuur
+### 1.1 Initialize PHP Project
+- [ ] Maak `composer.json` met project metadata
+- [ ] Configureer PSR-4 autoloading voor `StructurizrMcp` namespace
+- [ ] Installeer MCP PHP SDK: `composer require mcp/sdk`
+- [ ] Installeer core dependencies (Guzzle, Monolog, Symfony components)
+- [ ] Installeer dev dependencies (PHPUnit, PHPStan)
+- [ ] Setup `.gitignore` (vendor/, cache/, sessions/, workspaces/)
 
 ### 1.2 Development Environment
-- [ ] Installeer Structurizr CLI lokaal
-- [ ] Setup test Structurizr workspace (lokaal met Lite)
-- [ ] Configureer development scripts in package.json
-- [ ] Setup debugging configuratie
+- [ ] Installeer PHP 8.1+ (check: `php -v`)
+- [ ] Installeer Composer globally
+- [ ] Download Structurizr CLI naar `bin/` folder
+- [ ] Setup Structurizr Lite voor lokale testing (Docker)
+- [ ] Configureer PHP development tools (Xdebug, PHP CS Fixer)
 
-### 1.3 Core Dependencies
+### 1.3 Project Structuur
+- [ ] Maak directory structuur:
+  ```
+  src/
+    Tools/
+    Resources/
+    Prompts/
+    Structurizr/
+    Exception/
+  tests/
+    Unit/
+    Integration/
+  cache/
+  sessions/
+  workspaces/
+  bin/
+  ```
+- [ ] Maak `server.php` als entry point
+- [ ] Configureer `phpunit.xml`
+- [ ] Setup `phpstan.neon` voor static analysis
+
+### 1.4 Composer Dependencies
 ```json
 {
-  "@modelcontextprotocol/sdk": "latest",
-  "typescript": "^5.0.0",
-  "zod": "^3.22.0",
-  "node-fetch": "^3.3.0"
+    "require": {
+        "php": "^8.1",
+        "mcp/sdk": "*",
+        "guzzlehttp/guzzle": "^7.0",
+        "monolog/monolog": "^3.0",
+        "symfony/cache": "^6.0",
+        "symfony/process": "^6.0",
+        "symfony/filesystem": "^6.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0",
+        "phpstan/phpstan": "^1.10",
+        "friendsofphp/php-cs-fixer": "^3.0"
+    }
 }
 ```
 
 ## Phase 2: MCP Server Foundation 🏗️
 
 ### 2.1 Basic Server Setup
-- [ ] Maak `src/index.ts` met basis MCP server
-- [ ] Implementeer stdio transport
-- [ ] Configureer server capabilities
-- [ ] Test connectie met MCP inspector/client
+- [ ] Implementeer `server.php`:
+  - [ ] Autoloader includeren
+  - [ ] Logger setup (Monolog naar STDERR)
+  - [ ] Dependency container setup
+  - [ ] Cache setup (PhpFilesAdapter)
+  - [ ] Server builder configuratie
+  - [ ] StdioTransport setup
+- [ ] Test met: `echo '{"jsonrpc":"2.0","id":1,"method":"initialize"}' | php server.php`
 
-### 2.2 Type Definitions
-- [ ] Definieer TypeScript types voor Structurizr workspace
-- [ ] Maak types voor DSL elementen
-- [ ] Definieer tool input/output schemas met Zod
-- [ ] Type definitions voor C4 model elementen
+### 2.2 Configuration Management
+- [ ] Maak `src/Configuration.php` class
+  - [ ] Lees environment variables
+  - [ ] Valideer required config
+  - [ ] Provide defaults
+- [ ] Environment variables:
+  ```
+  STRUCTURIZR_API_KEY
+  STRUCTURIZR_API_SECRET
+  STRUCTURIZR_API_URL
+  STRUCTURIZR_CLI_PATH
+  WORKSPACE_STORAGE_PATH
+  ```
+- [ ] Maak `.env.example` file
 
 ### 2.3 Error Handling
-- [ ] Implementeer error handling middleware
-- [ ] Maak custom error types
-- [ ] Logging infrastructure
-- [ ] Validation error responses
+- [ ] Maak `src/Exception/StructurizrException.php` (extends Exception)
+- [ ] Maak specifieke exceptions:
+  - [ ] `WorkspaceNotFoundException`
+  - [ ] `InvalidDslException`
+  - [ ] `CliExecutionException`
+  - [ ] `ApiAuthenticationException`
+- [ ] Implementeer exception mapping naar MCP errors
+- [ ] Setup error logging
+
+### 2.4 Logging Infrastructure
+- [ ] Configureer Monolog handlers
+- [ ] Setup log levels (DEBUG voor development)
+- [ ] Maak log rotatie configuratie
+- [ ] Test logging: `$logger->info('Server started')`
 
 ## Phase 3: Structurizr Integration 🔌
 
 ### 3.1 CLI Wrapper
-- [ ] Implementeer `src/structurizr/cli.ts`
-  - [ ] DSL validation
-  - [ ] DSL to JSON conversie
-  - [ ] Export naar PlantUML
-  - [ ] Export naar Mermaid
-  - [ ] Auto-layout toepassen
+- [ ] Maak `src/Structurizr/CliWrapper.php`:
+  - [ ] Constructor met CLI path
+  - [ ] `executeCommand(array $args): ProcessResult` method
+  - [ ] `validate(string $dslPath): ValidationResult`
+  - [ ] `export(string $workspace, string $format): string`
+  - [ ] `push(string $workspace, int $id, string $key, string $secret): bool`
+  - [ ] `pull(int $id, string $key, string $secret): string`
+- [ ] Use Symfony Process component
+- [ ] Handle command timeouts
+- [ ] Parse CLI output/errors
+- [ ] Test met simpele DSL file
 
-### 3.2 API Client (Optional)
-- [ ] Implementeer `src/structurizr/api.ts`
-  - [ ] HMAC authenticatie
-  - [ ] GET workspace
-  - [ ] PUT workspace
-  - [ ] Lock/unlock workspace
+### 3.2 Workspace Manager
+- [ ] Maak `src/Structurizr/WorkspaceManager.php`:
+  - [ ] File-based workspace storage
+  - [ ] `create(string $name, string $description): Workspace`
+  - [ ] `load(string $id): Workspace`
+  - [ ] `save(Workspace $workspace): void`
+  - [ ] `delete(string $id): void`
+  - [ ] `list(): array`
+  - [ ] Generate unique workspace IDs
+- [ ] Maak `src/Structurizr/Workspace.php` value object
+- [ ] Implement DSL generation helpers
 
-### 3.3 Workspace Manager
-- [ ] In-memory workspace storage
-- [ ] Workspace CRUD operaties
-- [ ] DSL parser/generator helpers
-- [ ] Workspace validation
+### 3.3 DSL Builder
+- [ ] Maak `src/Structurizr/DslBuilder.php`:
+  - [ ] `workspace(string $name, string $description): self`
+  - [ ] `addPerson(string $name, string $description): string`
+  - [ ] `addSoftwareSystem(string $name, string $description): string`
+  - [ ] `addContainer(string $systemId, ...): string`
+  - [ ] `addRelationship(string $from, string $to, ...): string`
+  - [ ] `addView(string $type, ...): string`
+  - [ ] `toDsl(): string`
+  - [ ] `toArray(): array`
+- [ ] Track element IDs en referenties
+- [ ] Validate DSL structuur
+
+### 3.4 API Client (Optional - voor Cloud integratie)
+- [ ] Maak `src/Structurizr/ApiClient.php`:
+  - [ ] Guzzle HTTP client setup
+  - [ ] HMAC signature generation
+  - [ ] `getWorkspace(int $id): array`
+  - [ ] `putWorkspace(int $id, array $workspace): bool`
+  - [ ] `lockWorkspace(int $id): bool`
+  - [ ] `unlockWorkspace(int $id): bool`
+- [ ] Error handling voor HTTP errors (401, 403, 404, 409)
+- [ ] Retry logic voor network errors
 
 ## Phase 4: Core Tools Implementation 🛠️
 
 ### 4.1 Workspace Tools
-- [ ] **create_workspace**
-  ```typescript
-  input: { name: string, description: string }
-  output: { workspace_id: string, dsl: string }
-  ```
-- [ ] **get_workspace**
-  ```typescript
-  input: { workspace_id: string, format?: 'json' | 'dsl' }
-  output: { workspace: object | string }
-  ```
-- [ ] **list_workspaces**
-  ```typescript
-  input: {}
-  output: { workspaces: Array<{id, name, description}> }
-  ```
-- [ ] **delete_workspace**
-  ```typescript
-  input: { workspace_id: string }
-  output: { success: boolean }
-  ```
+- [ ] Maak `src/Tools/WorkspaceTools.php`:
+
+#### create_workspace
+```php
+#[McpTool(name: 'create_workspace', description: 'Creates a new Structurizr workspace')]
+public function createWorkspace(
+    #[Schema(description: 'Workspace name', minLength: 1, maxLength: 100)]
+    string $name,
+    #[Schema(description: 'Workspace description', maxLength: 500)]
+    string $description = ''
+): array {
+    // Returns: ['workspaceId' => string, 'name' => string, 'dsl' => string]
+}
+```
+- [ ] Implementeer tool
+- [ ] Test met MCP client
+
+#### get_workspace
+```php
+#[McpTool(name: 'get_workspace')]
+public function getWorkspace(
+    #[Schema(type: 'string')]
+    string $workspaceId,
+    #[Schema(enum: ['json', 'dsl'])]
+    string $format = 'json'
+): array {
+    // Returns workspace in requested format
+}
+```
+- [ ] Implementeer tool
+- [ ] Support both JSON and DSL output
+
+#### list_workspaces
+```php
+#[McpTool(name: 'list_workspaces')]
+public function listWorkspaces(): array {
+    // Returns: ['workspaces' => [['id', 'name', 'description'], ...]]
+}
+```
+- [ ] Implementeer tool
+- [ ] Return metadata only
+
+#### delete_workspace
+```php
+#[McpTool(name: 'delete_workspace')]
+public function deleteWorkspace(string $workspaceId): array {
+    // Returns: ['success' => bool, 'message' => string]
+}
+```
+- [ ] Implementeer tool
+- [ ] Confirm deletion safety
 
 ### 4.2 Model Building Tools
-- [ ] **add_person**
-  ```typescript
-  input: { workspace_id: string, name: string, description?: string, tags?: string[] }
-  output: { element_id: string }
-  ```
-- [ ] **add_software_system**
-  ```typescript
-  input: { workspace_id: string, name: string, description?: string, tags?: string[] }
-  output: { element_id: string }
-  ```
-- [ ] **add_container**
-  ```typescript
-  input: { workspace_id: string, system_id: string, name: string, description?: string, technology?: string, tags?: string[] }
-  output: { element_id: string }
-  ```
-- [ ] **add_component**
-  ```typescript
-  input: { workspace_id: string, container_id: string, name: string, description?: string, technology?: string, tags?: string[] }
-  output: { element_id: string }
-  ```
-- [ ] **add_relationship**
-  ```typescript
-  input: { workspace_id: string, source_id: string, destination_id: string, description: string, technology?: string, tags?: string[] }
-  output: { relationship_id: string }
-  ```
+- [ ] Maak `src/Tools/ModelTools.php`:
+
+#### add_person
+```php
+#[McpTool(name: 'add_person')]
+public function addPerson(
+    string $workspaceId,
+    string $name,
+    string $description = '',
+    array $tags = []
+): array {
+    // Returns: ['elementId' => string, 'name' => string]
+}
+```
+
+#### add_software_system
+```php
+#[McpTool(name: 'add_software_system')]
+public function addSoftwareSystem(
+    string $workspaceId,
+    string $name,
+    string $description = '',
+    #[Schema(enum: ['Internal', 'External'])]
+    string $location = 'Internal',
+    array $tags = []
+): array
+```
+
+#### add_container
+```php
+#[McpTool(name: 'add_container')]
+public function addContainer(
+    string $workspaceId,
+    string $systemId,
+    string $name,
+    string $description = '',
+    string $technology = '',
+    array $tags = []
+): array
+```
+
+#### add_component
+```php
+#[McpTool(name: 'add_component')]
+public function addComponent(
+    string $workspaceId,
+    string $containerId,
+    string $name,
+    string $description = '',
+    string $technology = '',
+    array $tags = []
+): array
+```
+
+#### add_relationship
+```php
+#[McpTool(name: 'add_relationship')]
+public function addRelationship(
+    string $workspaceId,
+    string $sourceId,
+    string $destinationId,
+    string $description,
+    string $technology = '',
+    array $tags = []
+): array
+```
+
+- [ ] Implementeer alle model tools
+- [ ] Validate element existence
+- [ ] Update workspace DSL
+- [ ] Persist changes
 
 ### 4.3 View Tools
-- [ ] **create_system_context_view**
-  ```typescript
-  input: { workspace_id: string, system_id: string, key: string, description?: string }
-  output: { view_key: string }
-  ```
-- [ ] **create_container_view**
-  ```typescript
-  input: { workspace_id: string, system_id: string, key: string, description?: string }
-  output: { view_key: string }
-  ```
-- [ ] **create_component_view**
-  ```typescript
-  input: { workspace_id: string, container_id: string, key: string, description?: string }
-  output: { view_key: string }
-  ```
-- [ ] **create_dynamic_view**
-  ```typescript
-  input: { workspace_id: string, element_id?: string, key: string, description?: string }
-  output: { view_key: string }
-  ```
-- [ ] **apply_auto_layout**
-  ```typescript
-  input: { workspace_id: string, view_key: string, direction: 'tb' | 'bt' | 'lr' | 'rl' }
-  output: { success: boolean }
-  ```
+- [ ] Maak `src/Tools/ViewTools.php`:
+
+#### create_system_context_view
+```php
+#[McpTool(name: 'create_system_context_view')]
+public function createSystemContextView(
+    string $workspaceId,
+    string $systemId,
+    string $key,
+    string $description = ''
+): array
+```
+
+#### create_container_view
+```php
+#[McpTool(name: 'create_container_view')]
+public function createContainerView(
+    string $workspaceId,
+    string $systemId,
+    string $key,
+    string $description = ''
+): array
+```
+
+#### create_component_view
+```php
+#[McpTool(name: 'create_component_view')]
+public function createComponentView(
+    string $workspaceId,
+    string $containerId,
+    string $key,
+    string $description = ''
+): array
+```
+
+#### apply_auto_layout
+```php
+#[McpTool(name: 'apply_auto_layout')]
+public function applyAutoLayout(
+    string $workspaceId,
+    string $viewKey,
+    #[Schema(enum: ['tb', 'bt', 'lr', 'rl'])]
+    string $direction = 'tb'
+): array
+```
+
+- [ ] Implementeer alle view tools
+- [ ] Validate view keys zijn uniek
+- [ ] Use Structurizr CLI voor auto-layout
 
 ### 4.4 Export Tools
-- [ ] **export_to_dsl**
-  ```typescript
-  input: { workspace_id: string }
-  output: { dsl: string }
-  ```
-- [ ] **export_to_plantuml**
-  ```typescript
-  input: { workspace_id: string, view_key?: string }
-  output: { plantuml: string }
-  ```
-- [ ] **export_to_mermaid**
-  ```typescript
-  input: { workspace_id: string, view_key?: string }
-  output: { mermaid: string }
-  ```
-- [ ] **import_from_dsl**
-  ```typescript
-  input: { dsl: string }
-  output: { workspace_id: string }
-  ```
+- [ ] Maak `src/Tools/ExportTools.php`:
+
+#### export_to_dsl
+```php
+#[McpTool(name: 'export_to_dsl')]
+public function exportToDsl(string $workspaceId): array {
+    // Returns: ['dsl' => string]
+}
+```
+
+#### export_to_plantuml
+```php
+#[McpTool(name: 'export_to_plantuml')]
+public function exportToPlantUml(
+    string $workspaceId,
+    ?string $viewKey = null
+): array {
+    // Returns: ['plantuml' => string, 'viewKey' => string]
+}
+```
+
+#### export_to_mermaid
+```php
+#[McpTool(name: 'export_to_mermaid')]
+public function exportToMermaid(
+    string $workspaceId,
+    ?string $viewKey = null
+): array
+```
+
+#### import_from_dsl
+```php
+#[McpTool(name: 'import_from_dsl')]
+public function importFromDsl(
+    #[Schema(minLength: 1)]
+    string $dsl
+): array {
+    // Returns: ['workspaceId' => string, 'name' => string]
+}
+```
+
+- [ ] Implementeer export tools
+- [ ] Use CLI export commando's
+- [ ] Handle export errors gracefully
 
 ### 4.5 Analysis Tools
-- [ ] **validate_workspace**
-  ```typescript
-  input: { workspace_id: string }
-  output: { valid: boolean, errors?: string[] }
-  ```
-- [ ] **find_element**
-  ```typescript
-  input: { workspace_id: string, name: string, type?: string }
-  output: { elements: Array<{id, name, type}> }
-  ```
-- [ ] **get_dependencies**
-  ```typescript
-  input: { workspace_id: string, element_id: string }
-  output: { incoming: Element[], outgoing: Element[] }
-  ```
+- [ ] Maak `src/Tools/AnalysisTools.php`:
+
+#### validate_workspace
+```php
+#[McpTool(name: 'validate_workspace')]
+public function validateWorkspace(string $workspaceId): array {
+    // Returns: ['valid' => bool, 'errors' => string[]]
+}
+```
+
+#### find_element
+```php
+#[McpTool(name: 'find_element')]
+public function findElement(
+    string $workspaceId,
+    string $name,
+    ?string $type = null
+): array {
+    // Returns: ['elements' => [['id', 'name', 'type'], ...]]
+}
+```
+
+#### get_relationships
+```php
+#[McpTool(name: 'get_relationships')]
+public function getRelationships(
+    string $workspaceId,
+    string $elementId
+): array {
+    // Returns: ['incoming' => [...], 'outgoing' => [...]]
+}
+```
+
+- [ ] Implementeer analysis tools
+- [ ] Parse workspace JSON voor queries
+- [ ] Return structured results
 
 ## Phase 5: Resources Implementation 📦
 
-### 5.1 Resource Handlers
-- [ ] **workspace://{id}** - Volledige workspace JSON
-- [ ] **workspace://{id}/model** - Alleen model sectie
-- [ ] **workspace://{id}/views** - Alleen views sectie
-- [ ] **element://{workspace_id}/{element_id}** - Specifiek element
-- [ ] **view://{workspace_id}/{view_key}** - Specifieke view
-- [ ] **dsl://{workspace_id}** - DSL representatie
+### 5.1 Static Resources
+- [ ] Maak `src/Resources/ConfigResource.php`:
 
-### 5.2 Resource Templates
-- [ ] Implementeer resource template handler
-- [ ] Support voor URI patterns
-- [ ] Resource caching (indien nodig)
+```php
+#[McpResource(
+    uri: 'structurizr://config',
+    name: 'server_config',
+    mimeType: 'application/json'
+)]
+public function getConfig(): array
+```
+
+### 5.2 Dynamic Resources (Templates)
+- [ ] Maak `src/Resources/WorkspaceResource.php`:
+
+```php
+#[McpResourceTemplate(
+    uriTemplate: 'structurizr://workspace/{workspaceId}',
+    name: 'workspace_full'
+)]
+public function getWorkspace(string $workspaceId): array
+
+#[McpResourceTemplate(
+    uriTemplate: 'structurizr://workspace/{workspaceId}/model',
+    name: 'workspace_model'
+)]
+public function getModel(string $workspaceId): array
+
+#[McpResourceTemplate(
+    uriTemplate: 'structurizr://workspace/{workspaceId}/views',
+    name: 'workspace_views'
+)]
+public function getViews(string $workspaceId): array
+```
+
+- [ ] Maak `src/Resources/ElementResource.php`:
+
+```php
+#[McpResourceTemplate(
+    uriTemplate: 'structurizr://workspace/{workspaceId}/element/{elementId}'
+)]
+public function getElement(string $workspaceId, string $elementId): array
+```
+
+- [ ] Maak `src/Resources/ViewResource.php`:
+
+```php
+#[McpResourceTemplate(
+    uriTemplate: 'structurizr://workspace/{workspaceId}/view/{viewKey}'
+)]
+public function getView(string $workspaceId, string $viewKey): array
+```
+
+### 5.3 DSL Resource
+```php
+#[McpResourceTemplate(
+    uriTemplate: 'structurizr://workspace/{workspaceId}/dsl',
+    mimeType: 'text/plain'
+)]
+public function getDsl(string $workspaceId): string
+```
+
+- [ ] Implementeer alle resources
+- [ ] Test URI matching
+- [ ] Return proper MIME types
 
 ## Phase 6: Prompts Implementation 💭
 
 ### 6.1 Analysis Prompts
-- [ ] **analyze_architecture**
-  - Input: workspace_id
-  - Genereert prompt voor architectuur analyse
-  - Include workspace context
+- [ ] Maak `src/Prompts/AnalysisPrompts.php`:
 
-- [ ] **review_security**
-  - Input: workspace_id
-  - Genereert security review prompt
-  - Focus op trust boundaries
+```php
+#[McpPrompt(
+    name: 'analyze_architecture',
+    description: 'Analyze workspace architecture and provide insights'
+)]
+public function analyzeArchitecture(
+    string $workspaceId
+): array {
+    // Return conversation messages with workspace context
+}
 
-- [ ] **suggest_improvements**
-  - Input: workspace_id
-  - Genereert prompt voor verbeter suggesties
+#[McpPrompt(name: 'review_security')]
+public function reviewSecurity(string $workspaceId): array
+
+#[McpPrompt(name: 'suggest_improvements')]
+public function suggestImprovements(string $workspaceId): array
+```
 
 ### 6.2 Generation Prompts
-- [ ] **generate_system_context**
-  - Input: description
-  - Genereert prompt om system context te maken
+- [ ] Maak `src/Prompts/GenerationPrompts.php`:
 
-- [ ] **create_from_description**
-  - Input: architecture_description
-  - Genereert workspace van natuurlijke taal
+```php
+#[McpPrompt(
+    name: 'generate_system_context',
+    description: 'Generate C4 system context from description'
+)]
+public function generateSystemContext(string $description): array
+
+#[McpPrompt(name: 'create_from_description')]
+public function createFromDescription(string $architectureDescription): array
+```
 
 ### 6.3 Educational Prompts
-- [ ] **explain_c4_model**
-  - Uitleg van C4 model principes
+```php
+#[McpPrompt(name: 'explain_c4_model')]
+public function explainC4Model(): array
 
-- [ ] **create_example_workspace**
-  - Input: type (e-commerce, microservices, etc.)
-  - Genereert voorbeeld workspace
+#[McpPrompt(name: 'create_example_workspace')]
+public function createExampleWorkspace(
+    #[Schema(enum: ['ecommerce', 'microservices', 'monolith', 'saas'])]
+    string $type
+): array
+```
+
+- [ ] Implementeer alle prompts
+- [ ] Include workspace context waar relevant
+- [ ] Return proper message structures
 
 ## Phase 7: Documentation & Styling 📝
 
 ### 7.1 Documentation Tools
-- [ ] **add_documentation_section**
-  ```typescript
-  input: { workspace_id: string, title: string, content: string, format?: 'markdown' | 'asciidoc' }
-  output: { section_id: string }
-  ```
-- [ ] **add_adr** (Architecture Decision Record)
-  ```typescript
-  input: { workspace_id: string, id: string, date: string, title: string, status: string, content: string }
-  output: { adr_id: string }
-  ```
+- [ ] Maak `src/Tools/DocumentationTools.php`:
+
+```php
+#[McpTool(name: 'add_documentation_section')]
+public function addDocumentationSection(
+    string $workspaceId,
+    string $title,
+    string $content,
+    #[Schema(enum: ['markdown', 'asciidoc'])]
+    string $format = 'markdown'
+): array
+
+#[McpTool(name: 'add_adr')]
+public function addArchitectureDecisionRecord(
+    string $workspaceId,
+    string $id,
+    string $date,
+    string $title,
+    string $status,
+    string $content
+): array
+```
 
 ### 7.2 Styling Tools
-- [ ] **apply_theme**
-  ```typescript
-  input: { workspace_id: string, theme: 'default' | 'aws' | 'azure' | 'gcp' | 'kubernetes' }
-  output: { success: boolean }
-  ```
-- [ ] **set_element_style**
-  ```typescript
-  input: { workspace_id: string, tag: string, style: { background?, color?, shape?, icon? } }
-  output: { success: boolean }
-  ```
+```php
+#[McpTool(name: 'apply_theme')]
+public function applyTheme(
+    string $workspaceId,
+    #[Schema(enum: ['default', 'aws', 'azure', 'gcp', 'kubernetes'])]
+    string $theme
+): array
+
+#[McpTool(name: 'set_element_style')]
+public function setElementStyle(
+    string $workspaceId,
+    string $tag,
+    array $style  // background, color, shape, icon
+): array
+```
+
+- [ ] Implementeer documentation tools
+- [ ] Extend DSL builder voor docs/ADRs
+- [ ] Support markdown en AsciiDoc
 
 ## Phase 8: Testing 🧪
 
 ### 8.1 Unit Tests
-- [ ] Test workspace CRUD operaties
-- [ ] Test model building tools
-- [ ] Test view creation tools
-- [ ] Test export functionaliteit
-- [ ] Test validation
+- [ ] Test `WorkspaceManager`:
+  - [ ] Create workspace
+  - [ ] Load workspace
+  - [ ] Save workspace
+  - [ ] Delete workspace
+  - [ ] List workspaces
+- [ ] Test `DslBuilder`:
+  - [ ] DSL generation
+  - [ ] Element tracking
+  - [ ] Relationship creation
+- [ ] Test `CliWrapper`:
+  - [ ] Command execution
+  - [ ] Error handling
+  - [ ] Output parsing
 
 ### 8.2 Integration Tests
-- [ ] Test complete workflow: create → build → export
-- [ ] Test MCP protocol compliance
+- [ ] Test complete workflows:
+  - [ ] Create → Add Elements → Add Views → Export
+  - [ ] Import DSL → Modify → Export
+  - [ ] Validate → Fix Errors → Validate
 - [ ] Test met echte Structurizr CLI
-- [ ] Test error scenarios
+- [ ] Test MCP protocol compliance
 
-### 8.3 E2E Tests
-- [ ] Test met MCP client
+### 8.3 Tool Tests
+- [ ] Test elk MCP tool:
+  - [ ] Valid inputs → success
+  - [ ] Invalid inputs → proper errors
+  - [ ] Edge cases
+- [ ] Test resources
+- [ ] Test prompts
+
+### 8.4 E2E Tests
+- [ ] Setup test MCP client
+- [ ] Test full Claude Desktop integration
 - [ ] Test complexe workspaces
 - [ ] Performance testing
 - [ ] Memory leak testing
@@ -285,131 +627,279 @@
 ## Phase 9: Advanced Features 🚀
 
 ### 9.1 Structurizr Cloud Integration
-- [ ] API authenticatie configuratie
-- [ ] Push workspace naar cloud
-- [ ] Pull workspace van cloud
-- [ ] Sync functionaliteit
-- [ ] Workspace locking
+- [ ] Environment variable configuration
+- [ ] API client testing met real credentials
+- [ ] Push/pull tools:
+  ```php
+  #[McpTool(name: 'push_to_cloud')]
+  public function pushToCloud(
+      string $workspaceId,
+      int $cloudWorkspaceId,
+      string $apiKey,
+      string $apiSecret
+  ): array
+
+  #[McpTool(name: 'pull_from_cloud')]
+  public function pullFromCloud(
+      int $cloudWorkspaceId,
+      string $apiKey,
+      string $apiSecret
+  ): array
+  ```
+- [ ] Workspace locking support
+- [ ] Sync conflict resolution
 
 ### 9.2 Component Discovery
-- [ ] Integratie met code analysis tools
-- [ ] TypeScript/JavaScript project scanning
-- [ ] Python project scanning
-- [ ] Java project scanning (via Structurizr Java)
+- [ ] PHP codebase scanning:
+  ```php
+  #[McpTool(name: 'discover_components')]
+  public function discoverComponents(
+      string $workspaceId,
+      string $containerId,
+      string $sourcePath,
+      string $language  // php, typescript, python
+  ): array
+  ```
+- [ ] Parse PHP classes/interfaces
+- [ ] Detect dependencies
+- [ ] Generate components from code
 
 ### 9.3 Batch Operations
-- [ ] Bulk element creation
-- [ ] Template-based workspace generation
-- [ ] Import van andere formaten (PlantUML, Mermaid)
+```php
+#[McpTool(name: 'bulk_add_elements')]
+public function bulkAddElements(
+    string $workspaceId,
+    array $elements
+): array
 
-### 9.4 Caching & Performance
+#[McpTool(name: 'generate_from_template')]
+public function generateFromTemplate(
+    string $templateName,
+    array $parameters
+): array
+```
+
+### 9.4 Performance Optimizations
 - [ ] Workspace caching strategie
 - [ ] CLI output caching
-- [ ] Performance optimalisatie
+- [ ] Lazy loading voor grote workspaces
+- [ ] Connection pooling voor API client
+
+### 9.5 HTTP Transport Support
+- [ ] Implementeer HTTP endpoint
+- [ ] Session management (FileSessionStore)
+- [ ] CORS configuratie
+- [ ] Rate limiting
+- [ ] Authentication
 
 ## Phase 10: Documentation & Release 📦
 
-### 10.1 Documentation
-- [ ] README.md met usage examples
-- [ ] API documentatie
-- [ ] Tool reference documentatie
-- [ ] Example workspaces
-- [ ] Troubleshooting guide
+### 10.1 Code Documentation
+- [ ] PHPDoc comments voor alle classes
+- [ ] PHPDoc voor alle public methods
+- [ ] Inline comments voor complexe logic
+- [ ] Type hints overal
 
-### 10.2 Examples
-- [ ] Basis C4 model voorbeeld
-- [ ] E-commerce systeem voorbeeld
-- [ ] Microservices architectuur voorbeeld
-- [ ] Integration met CI/CD pipeline
+### 10.2 User Documentation
+- [ ] `README.md`:
+  - [ ] Project overview
+  - [ ] Installation instructions
+  - [ ] Quick start guide
+  - [ ] Configuration options
+  - [ ] Usage examples
+- [ ] `docs/INSTALLATION.md`
+- [ ] `docs/CONFIGURATION.md`
+- [ ] `docs/TOOLS_REFERENCE.md` - Alle tools gedocumenteerd
+- [ ] `docs/EXAMPLES.md` - Praktische voorbeelden
+- [ ] `docs/TROUBLESHOOTING.md`
 
-### 10.3 Publishing
-- [ ] NPM package configuratie
-- [ ] Versioning strategie
-- [ ] Changelog
-- [ ] License file
-- [ ] Contributing guidelines
+### 10.3 Example Workspaces
+- [ ] `examples/basic-c4.dsl` - Basis C4 model
+- [ ] `examples/ecommerce.dsl` - E-commerce systeem
+- [ ] `examples/microservices.dsl` - Microservices architectuur
+- [ ] `examples/deployment.dsl` - Deployment diagram
 
-### 10.4 MCP Integration
-- [ ] MCP server configuratie voorbeeld
-- [ ] Claude Desktop integratie instructies
-- [ ] VS Code extensie configuratie
+### 10.4 Development Documentation
+- [ ] `CONTRIBUTING.md`
+- [ ] `CHANGELOG.md`
+- [ ] Code of Conduct
+- [ ] Issue templates
+- [ ] PR templates
+
+### 10.5 Claude Desktop Integration
+- [ ] `docs/CLAUDE_DESKTOP.md`:
+  - [ ] Installation instructies
+  - [ ] Configuratie voorbeeld
+  - [ ] Usage tips
+  - [ ] Troubleshooting
+- [ ] Screenshot van configuratie
+- [ ] Video tutorial (optional)
+
+### 10.6 Publishing
+- [ ] Packagist.org registratie
+- [ ] Semantic versioning setup
+- [ ] GitHub releases
+- [ ] License file (MIT)
+- [ ] Security policy
+
+### 10.7 CI/CD
+- [ ] GitHub Actions workflow:
+  - [ ] Run tests on push
+  - [ ] Static analysis (PHPStan)
+  - [ ] Code style check (PHP CS Fixer)
+  - [ ] Code coverage report
+- [ ] Automated releases
+- [ ] Dependency updates (Dependabot)
 
 ## Priority Levels
 
 ### 🔴 MVP (Minimum Viable Product)
-- Phase 1: Project Setup
-- Phase 2: MCP Server Foundation
-- Phase 3.1: CLI Wrapper (basis)
-- Phase 4.1: Workspace Tools
+**Target: Week 1-2**
+- Phase 1: Project Setup (1.1, 1.2, 1.3)
+- Phase 2: MCP Server Foundation (2.1, 2.2, 2.3)
+- Phase 3: Structurizr Integration (3.1, 3.2, 3.3)
+- Phase 4.1: Workspace Tools (create, get, list)
 - Phase 4.2: Model Building Tools (person, softwareSystem, relationship)
-- Phase 4.3: View Tools (system context view)
+- Phase 4.3: View Tools (system context view alleen)
 - Phase 4.4: Export Tools (export_to_dsl)
+- Basic testing
+
+**Deliverable**: Werkende MCP server die workspaces kan maken, elementen toevoegen, en exporteren.
 
 ### 🟡 Core Features
+**Target: Week 3-5**
 - Phase 4.2: Model Building Tools (volledige implementatie)
-- Phase 4.3: View Tools (volledige implementatie)
+- Phase 4.3: View Tools (alle view types)
 - Phase 4.4: Export Tools (alle formaten)
 - Phase 4.5: Analysis Tools
 - Phase 5: Resources Implementation
 - Phase 6: Prompts Implementation
-- Phase 8: Testing
+- Phase 8: Comprehensive Testing (8.1, 8.2, 8.3)
+
+**Deliverable**: Volledig functionele MCP server met alle core features.
 
 ### 🟢 Extended Features
-- Phase 3.2: API Client
+**Target: Week 6-8**
+- Phase 3.4: API Client (Cloud integratie)
 - Phase 7: Documentation & Styling
-- Phase 9: Advanced Features
+- Phase 9: Advanced Features (9.1, 9.2, 9.3, 9.4)
+- Phase 8.4: E2E Testing
 - Phase 10: Documentation & Release
+
+**Deliverable**: Production-ready server met Cloud integratie en complete documentatie.
+
+### 🔵 Optional Enhancements
+**Target: Week 9+**
+- Phase 9.5: HTTP Transport
+- Advanced component discovery
+- Visual editor integration
+- VS Code extension
+- Web UI
 
 ## Development Guidelines
 
-### Code Quality
-- TypeScript strict mode enabled
-- 100% type coverage
-- ESLint/Prettier compliance
-- Comprehensive error handling
-- Input validation met Zod
+### Code Quality Standards
+- **PHP 8.1+ strict types**: `declare(strict_types=1);` in elk file
+- **PSR-12 coding style**: Gebruik PHP CS Fixer
+- **Type hints**: Overal waar mogelijk
+- **Return types**: Altijd specificeren
+- **Null safety**: Gebruik `?Type` voor nullable types
+- **PHPDoc**: Voor alle public methods
+- **PHPStan level 8**: Maximum static analysis
 
 ### Testing Strategy
-- Unit test coverage > 80%
-- Integration tests voor alle tools
-- E2E tests voor kritische workflows
-- CI/CD pipeline met automated testing
+- **Unit test coverage**: Minimum 80%
+- **Integration tests**: Voor alle tools
+- **E2E tests**: Voor kritische workflows
+- **Test database**: Gebruik in-memory of temp folders
+- **Fixtures**: Voor test workspaces
 
-### Documentation
-- JSDoc comments voor alle publieke functies
-- README met quick start guide
-- Extensive examples
-- API reference documentatie
+### Error Handling
+- **Specific exceptions**: Gebruik custom exceptions
+- **Error context**: Include relevant details
+- **User-friendly messages**: Clear en actionable
+- **Logging**: Log alle errors met context
+- **Never expose**: Internal paths of secrets in errors
+
+### Performance
+- **Cache discovery**: Always in production
+- **Lazy loading**: Voor grote resources
+- **Process pooling**: Voor CLI commands (indien mogelijk)
+- **Memory limits**: Monitor voor grote workspaces
+
+### Security
+- **Input validation**: Altijd valideren
+- **Path traversal**: Prevent met realpath checks
+- **Command injection**: Escape all CLI arguments
+- **API credentials**: Only via environment variables
+- **Sensitive data**: Never log credentials
 
 ## Success Criteria
 
-### MVP Success
-- ✅ MCP server draait en accepteert connecties
-- ✅ Kan workspace creëren en model bouwen
-- ✅ Kan system context view genereren
-- ✅ Kan exporteren naar DSL
-- ✅ Werkt met MCP inspector
+### MVP Success ✅
+- [x] MCP server start zonder errors
+- [x] Accepteert stdio connections
+- [x] Kan workspace creëren
+- [x] Kan person en softwareSystem toevoegen
+- [x] Kan relationships maken
+- [x] Kan system context view genereren
+- [x] Kan exporteren naar DSL
+- [x] Werkt met Claude Desktop
+- [x] Basic error handling werkt
 
-### Full Release Success
-- ✅ Alle core tools geïmplementeerd en getest
-- ✅ Resources beschikbaar en bruikbaar
-- ✅ Prompts werken effectief met LLMs
-- ✅ Documentatie compleet
-- ✅ Published op NPM
-- ✅ Integration examples beschikbaar
-- ✅ Positieve feedback van early adopters
+### Core Features Success ✅
+- [x] Alle 25+ tools geïmplementeerd
+- [x] Resources beschikbaar via URIs
+- [x] Prompts genereren goede LLM context
+- [x] Unit tests > 80% coverage
+- [x] Integration tests voor alle workflows
+- [x] PHPStan level 8 zonder errors
+- [x] Documentatie voor alle tools
+
+### Production Ready Success ✅
+- [x] Cloud integratie werkt
+- [x] Complete user documentatie
+- [x] Example workspaces beschikbaar
+- [x] CI/CD pipeline actief
+- [x] Published op Packagist
+- [x] GitHub releases configured
+- [x] Security policy documented
+- [x] Positieve feedback van users
 
 ## Timeline Estimate
 
-- **MVP**: 1-2 weken
-- **Core Features**: 3-4 weken
-- **Extended Features**: 2-3 weken
-- **Total**: 6-9 weken
+| Phase | Duration | Cumulative |
+|-------|----------|------------|
+| **MVP** | 1-2 weeks | 2 weeks |
+| Project Setup | 2-3 days | - |
+| MCP Foundation | 2-3 days | - |
+| Structurizr Integration | 3-4 days | - |
+| Basic Tools | 3-4 days | - |
+| **Core Features** | 3-4 weeks | 6 weeks |
+| All Tools | 1-2 weeks | - |
+| Resources & Prompts | 1 week | - |
+| Testing | 1 week | - |
+| **Extended** | 2-3 weeks | 9 weeks |
+| Advanced Features | 1-2 weeks | - |
+| Documentation | 1 week | - |
+| **Total** | **6-9 weeks** | - |
 
-## Notes
+## Next Actions
 
-- Start met MVP en itereer op basis van feedback
-- Gebruik Structurizr CLI waar mogelijk (battle-tested)
-- Focus op developer experience
-- Documentatie schrijven tijdens development
-- Test early, test often
+### Week 1 Focus
+1. Setup Composer project
+2. Install MCP SDK en dependencies
+3. Create basis server.php
+4. Implement WorkspaceManager
+5. Build eerste tools (create_workspace, add_person, add_software_system)
+6. Test met Claude Desktop
+
+### First Milestone
+**Goal**: Demo workspace creation via Claude Desktop
+- User kan workspace maken
+- User kan person toevoegen
+- User kan system toevoegen
+- User kan relationship maken
+- User kan DSL exporteren
+
+Start hier! 🚀
