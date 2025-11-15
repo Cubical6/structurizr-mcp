@@ -1,0 +1,46 @@
+# Composer
+/vendor/
+composer.lock
+
+# Cache
+/cache/*
+!/cache/.gitkeep
+
+# Sessions
+/sessions/*
+!/sessions/.gitkeep
+
+# Workspaces
+/workspaces/*
+!/workspaces/.gitkeep
+
+# Logs
+*.log
+/logs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# PHPUnit
+.phpunit.result.cache
+/coverage/
+
+# Environment
+.env
+.env.local
+
+# Structurizr CLI
+/bin/structurizr-cli/
+/bin/*.jar
+
+# Build artifacts
+/build/
+/dist/
