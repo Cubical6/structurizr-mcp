@@ -3,22 +3,22 @@
 ## Phase 1: Project Setup ⏳
 
 ### 1.1 Initialize PHP Project
-- [ ] Maak `composer.json` met project metadata
-- [ ] Configureer PSR-4 autoloading voor `StructurizrMcp` namespace
-- [ ] Installeer MCP PHP SDK: `composer require mcp/sdk`
-- [ ] Installeer core dependencies (Guzzle, Monolog, Symfony components)
-- [ ] Installeer dev dependencies (PHPUnit, PHPStan)
+- [ ] Create `composer.json` with project metadata
+- [ ] Configure PSR-4 autoloading for `StructurizrMcp` namespace
+- [ ] Install MCP PHP SDK: `composer require mcp/sdk`
+- [ ] Install core dependencies (Guzzle, Monolog, Symfony components)
+- [ ] Install dev dependencies (PHPUnit, PHPStan)
 - [ ] Setup `.gitignore` (vendor/, cache/, sessions/, workspaces/)
 
 ### 1.2 Development Environment
-- [ ] Installeer PHP 8.1+ (check: `php -v`)
-- [ ] Installeer Composer globally
-- [ ] Download Structurizr CLI naar `bin/` folder
-- [ ] Setup Structurizr Lite voor lokale testing (Docker)
-- [ ] Configureer PHP development tools (Xdebug, PHP CS Fixer)
+- [ ] Install PHP 8.1+ (check: `php -v`)
+- [ ] Install Composer globally
+- [ ] Download Structurizr CLI to `bin/` folder
+- [ ] Setup Structurizr Lite for local testing (Docker)
+- [ ] Configure PHP development tools (Xdebug, PHP CS Fixer)
 
-### 1.3 Project Structuur
-- [ ] Maak directory structuur:
+### 1.3 Project Structure
+- [ ] Create directory structure:
   ```
   src/
     Tools/
@@ -34,9 +34,9 @@
   workspaces/
   bin/
   ```
-- [ ] Maak `server.php` als entry point
-- [ ] Configureer `phpunit.xml`
-- [ ] Setup `phpstan.neon` voor static analysis
+- [ ] Create `server.php` as entry point
+- [ ] Configure `phpunit.xml`
+- [ ] Setup `phpstan.neon` for static analysis
 
 ### 1.4 Composer Dependencies
 ```json
@@ -61,19 +61,19 @@
 ## Phase 2: MCP Server Foundation 🏗️
 
 ### 2.1 Basic Server Setup
-- [ ] Implementeer `server.php`:
-  - [ ] Autoloader includeren
-  - [ ] Logger setup (Monolog naar STDERR)
+- [ ] Implement `server.php`:
+  - [ ] Include autoloader
+  - [ ] Logger setup (Monolog to STDERR)
   - [ ] Dependency container setup
   - [ ] Cache setup (PhpFilesAdapter)
-  - [ ] Server builder configuratie
+  - [ ] Server builder configuration
   - [ ] StdioTransport setup
-- [ ] Test met: `echo '{"jsonrpc":"2.0","id":1,"method":"initialize"}' | php server.php`
+- [ ] Test with: `echo '{"jsonrpc":"2.0","id":1,"method":"initialize"}' | php server.php`
 
 ### 2.2 Configuration Management
-- [ ] Maak `src/Configuration.php` class
-  - [ ] Lees environment variables
-  - [ ] Valideer required config
+- [ ] Create `src/Configuration.php` class
+  - [ ] Read environment variables
+  - [ ] Validate required config
   - [ ] Provide defaults
 - [ ] Environment variables:
   ```
@@ -83,29 +83,29 @@
   STRUCTURIZR_CLI_PATH
   WORKSPACE_STORAGE_PATH
   ```
-- [ ] Maak `.env.example` file
+- [ ] Create `.env.example` file
 
 ### 2.3 Error Handling
-- [ ] Maak `src/Exception/StructurizrException.php` (extends Exception)
-- [ ] Maak specifieke exceptions:
+- [ ] Create `src/Exception/StructurizrException.php` (extends Exception)
+- [ ] Create specific exceptions:
   - [ ] `WorkspaceNotFoundException`
   - [ ] `InvalidDslException`
   - [ ] `CliExecutionException`
   - [ ] `ApiAuthenticationException`
-- [ ] Implementeer exception mapping naar MCP errors
+- [ ] Implement exception mapping to MCP errors
 - [ ] Setup error logging
 
 ### 2.4 Logging Infrastructure
-- [ ] Configureer Monolog handlers
-- [ ] Setup log levels (DEBUG voor development)
-- [ ] Maak log rotatie configuratie
+- [ ] Configure Monolog handlers
+- [ ] Setup log levels (DEBUG for development)
+- [ ] Create log rotation configuration
 - [ ] Test logging: `$logger->info('Server started')`
 
 ## Phase 3: Structurizr Integration 🔌
 
 ### 3.1 CLI Wrapper
-- [ ] Maak `src/Structurizr/CliWrapper.php`:
-  - [ ] Constructor met CLI path
+- [ ] Create `src/Structurizr/CliWrapper.php`:
+  - [ ] Constructor with CLI path
   - [ ] `executeCommand(array $args): ProcessResult` method
   - [ ] `validate(string $dslPath): ValidationResult`
   - [ ] `export(string $workspace, string $format): string`
@@ -114,10 +114,10 @@
 - [ ] Use Symfony Process component
 - [ ] Handle command timeouts
 - [ ] Parse CLI output/errors
-- [ ] Test met simpele DSL file
+- [ ] Test with simple DSL file
 
 ### 3.2 Workspace Manager
-- [ ] Maak `src/Structurizr/WorkspaceManager.php`:
+- [ ] Create `src/Structurizr/WorkspaceManager.php`:
   - [ ] File-based workspace storage
   - [ ] `create(string $name, string $description): Workspace`
   - [ ] `load(string $id): Workspace`
@@ -125,11 +125,11 @@
   - [ ] `delete(string $id): void`
   - [ ] `list(): array`
   - [ ] Generate unique workspace IDs
-- [ ] Maak `src/Structurizr/Workspace.php` value object
+- [ ] Create `src/Structurizr/Workspace.php` value object
 - [ ] Implement DSL generation helpers
 
 ### 3.3 DSL Builder
-- [ ] Maak `src/Structurizr/DslBuilder.php`:
+- [ ] Create `src/Structurizr/DslBuilder.php`:
   - [ ] `workspace(string $name, string $description): self`
   - [ ] `addPerson(string $name, string $description): string`
   - [ ] `addSoftwareSystem(string $name, string $description): string`
@@ -138,24 +138,24 @@
   - [ ] `addView(string $type, ...): string`
   - [ ] `toDsl(): string`
   - [ ] `toArray(): array`
-- [ ] Track element IDs en referenties
-- [ ] Validate DSL structuur
+- [ ] Track element IDs and references
+- [ ] Validate DSL structure
 
-### 3.4 API Client (Optional - voor Cloud integratie)
-- [ ] Maak `src/Structurizr/ApiClient.php`:
+### 3.4 API Client (Optional - for Cloud integration)
+- [ ] Create `src/Structurizr/ApiClient.php`:
   - [ ] Guzzle HTTP client setup
   - [ ] HMAC signature generation
   - [ ] `getWorkspace(int $id): array`
   - [ ] `putWorkspace(int $id, array $workspace): bool`
   - [ ] `lockWorkspace(int $id): bool`
   - [ ] `unlockWorkspace(int $id): bool`
-- [ ] Error handling voor HTTP errors (401, 403, 404, 409)
-- [ ] Retry logic voor network errors
+- [ ] Error handling for HTTP errors (401, 403, 404, 409)
+- [ ] Retry logic for network errors
 
 ## Phase 4: Core Tools Implementation 🛠️
 
 ### 4.1 Workspace Tools
-- [ ] Maak `src/Tools/WorkspaceTools.php`:
+- [ ] Create `src/Tools/WorkspaceTools.php`:
 
 #### create_workspace
 ```php
@@ -169,8 +169,8 @@ public function createWorkspace(
     // Returns: ['workspaceId' => string, 'name' => string, 'dsl' => string]
 }
 ```
-- [ ] Implementeer tool
-- [ ] Test met MCP client
+- [ ] Implement tool
+- [ ] Test with MCP client
 
 #### get_workspace
 ```php
@@ -184,7 +184,7 @@ public function getWorkspace(
     // Returns workspace in requested format
 }
 ```
-- [ ] Implementeer tool
+- [ ] Implement tool
 - [ ] Support both JSON and DSL output
 
 #### list_workspaces
@@ -194,7 +194,7 @@ public function listWorkspaces(): array {
     // Returns: ['workspaces' => [['id', 'name', 'description'], ...]]
 }
 ```
-- [ ] Implementeer tool
+- [ ] Implement tool
 - [ ] Return metadata only
 
 #### delete_workspace
@@ -204,11 +204,11 @@ public function deleteWorkspace(string $workspaceId): array {
     // Returns: ['success' => bool, 'message' => string]
 }
 ```
-- [ ] Implementeer tool
+- [ ] Implement tool
 - [ ] Confirm deletion safety
 
 ### 4.2 Model Building Tools
-- [ ] Maak `src/Tools/ModelTools.php`:
+- [ ] Create `src/Tools/ModelTools.php`:
 
 #### add_person
 ```php
@@ -275,13 +275,13 @@ public function addRelationship(
 ): array
 ```
 
-- [ ] Implementeer alle model tools
+- [ ] Implement all model tools
 - [ ] Validate element existence
 - [ ] Update workspace DSL
 - [ ] Persist changes
 
 ### 4.3 View Tools
-- [ ] Maak `src/Tools/ViewTools.php`:
+- [ ] Create `src/Tools/ViewTools.php`:
 
 #### create_system_context_view
 ```php
@@ -327,12 +327,12 @@ public function applyAutoLayout(
 ): array
 ```
 
-- [ ] Implementeer alle view tools
-- [ ] Validate view keys zijn uniek
-- [ ] Use Structurizr CLI voor auto-layout
+- [ ] Implement all view tools
+- [ ] Validate view keys are unique
+- [ ] Use Structurizr CLI for auto-layout
 
 ### 4.4 Export Tools
-- [ ] Maak `src/Tools/ExportTools.php`:
+- [ ] Create `src/Tools/ExportTools.php`:
 
 #### export_to_dsl
 ```php
@@ -373,12 +373,12 @@ public function importFromDsl(
 }
 ```
 
-- [ ] Implementeer export tools
-- [ ] Use CLI export commando's
+- [ ] Implement export tools
+- [ ] Use CLI export commands
 - [ ] Handle export errors gracefully
 
 ### 4.5 Analysis Tools
-- [ ] Maak `src/Tools/AnalysisTools.php`:
+- [ ] Create `src/Tools/AnalysisTools.php`:
 
 #### validate_workspace
 ```php
@@ -411,14 +411,14 @@ public function getRelationships(
 }
 ```
 
-- [ ] Implementeer analysis tools
-- [ ] Parse workspace JSON voor queries
+- [ ] Implement analysis tools
+- [ ] Parse workspace JSON for queries
 - [ ] Return structured results
 
 ## Phase 5: Resources Implementation 📦
 
 ### 5.1 Static Resources
-- [ ] Maak `src/Resources/ConfigResource.php`:
+- [ ] Create `src/Resources/ConfigResource.php`:
 
 ```php
 #[McpResource(
@@ -430,7 +430,7 @@ public function getConfig(): array
 ```
 
 ### 5.2 Dynamic Resources (Templates)
-- [ ] Maak `src/Resources/WorkspaceResource.php`:
+- [ ] Create `src/Resources/WorkspaceResource.php`:
 
 ```php
 #[McpResourceTemplate(
@@ -452,7 +452,7 @@ public function getModel(string $workspaceId): array
 public function getViews(string $workspaceId): array
 ```
 
-- [ ] Maak `src/Resources/ElementResource.php`:
+- [ ] Create `src/Resources/ElementResource.php`:
 
 ```php
 #[McpResourceTemplate(
@@ -461,7 +461,7 @@ public function getViews(string $workspaceId): array
 public function getElement(string $workspaceId, string $elementId): array
 ```
 
-- [ ] Maak `src/Resources/ViewResource.php`:
+- [ ] Create `src/Resources/ViewResource.php`:
 
 ```php
 #[McpResourceTemplate(
@@ -479,14 +479,14 @@ public function getView(string $workspaceId, string $viewKey): array
 public function getDsl(string $workspaceId): string
 ```
 
-- [ ] Implementeer alle resources
+- [ ] Implement all resources
 - [ ] Test URI matching
 - [ ] Return proper MIME types
 
 ## Phase 6: Prompts Implementation 💭
 
 ### 6.1 Analysis Prompts
-- [ ] Maak `src/Prompts/AnalysisPrompts.php`:
+- [ ] Create `src/Prompts/AnalysisPrompts.php`:
 
 ```php
 #[McpPrompt(
@@ -507,7 +507,7 @@ public function suggestImprovements(string $workspaceId): array
 ```
 
 ### 6.2 Generation Prompts
-- [ ] Maak `src/Prompts/GenerationPrompts.php`:
+- [ ] Create `src/Prompts/GenerationPrompts.php`:
 
 ```php
 #[McpPrompt(
@@ -532,14 +532,14 @@ public function createExampleWorkspace(
 ): array
 ```
 
-- [ ] Implementeer alle prompts
-- [ ] Include workspace context waar relevant
+- [ ] Implement all prompts
+- [ ] Include workspace context where relevant
 - [ ] Return proper message structures
 
 ## Phase 7: Documentation & Styling 📝
 
 ### 7.1 Documentation Tools
-- [ ] Maak `src/Tools/DocumentationTools.php`:
+- [ ] Create `src/Tools/DocumentationTools.php`:
 
 ```php
 #[McpTool(name: 'add_documentation_section')]
@@ -579,9 +579,9 @@ public function setElementStyle(
 ): array
 ```
 
-- [ ] Implementeer documentation tools
-- [ ] Extend DSL builder voor docs/ADRs
-- [ ] Support markdown en AsciiDoc
+- [ ] Implement documentation tools
+- [ ] Extend DSL builder for docs/ADRs
+- [ ] Support markdown and AsciiDoc
 
 ## Phase 8: Testing 🧪
 
@@ -606,11 +606,11 @@ public function setElementStyle(
   - [ ] Create → Add Elements → Add Views → Export
   - [ ] Import DSL → Modify → Export
   - [ ] Validate → Fix Errors → Validate
-- [ ] Test met echte Structurizr CLI
+- [ ] Test with real Structurizr CLI
 - [ ] Test MCP protocol compliance
 
 ### 8.3 Tool Tests
-- [ ] Test elk MCP tool:
+- [ ] Test each MCP tool:
   - [ ] Valid inputs → success
   - [ ] Invalid inputs → proper errors
   - [ ] Edge cases
@@ -620,7 +620,7 @@ public function setElementStyle(
 ### 8.4 E2E Tests
 - [ ] Setup test MCP client
 - [ ] Test full Claude Desktop integration
-- [ ] Test complexe workspaces
+- [ ] Test complex workspaces
 - [ ] Performance testing
 - [ ] Memory leak testing
 
@@ -628,7 +628,7 @@ public function setElementStyle(
 
 ### 9.1 Structurizr Cloud Integration
 - [ ] Environment variable configuration
-- [ ] API client testing met real credentials
+- [ ] API client testing with real credentials
 - [ ] Push/pull tools:
   ```php
   #[McpTool(name: 'push_to_cloud')]
@@ -680,25 +680,25 @@ public function generateFromTemplate(
 ```
 
 ### 9.4 Performance Optimizations
-- [ ] Workspace caching strategie
+- [ ] Workspace caching strategy
 - [ ] CLI output caching
-- [ ] Lazy loading voor grote workspaces
-- [ ] Connection pooling voor API client
+- [ ] Lazy loading for large workspaces
+- [ ] Connection pooling for API client
 
 ### 9.5 HTTP Transport Support
-- [ ] Implementeer HTTP endpoint
+- [ ] Implement HTTP endpoint
 - [ ] Session management (FileSessionStore)
-- [ ] CORS configuratie
+- [ ] CORS configuration
 - [ ] Rate limiting
 - [ ] Authentication
 
 ## Phase 10: Documentation & Release 📦
 
 ### 10.1 Code Documentation
-- [ ] PHPDoc comments voor alle classes
-- [ ] PHPDoc voor alle public methods
-- [ ] Inline comments voor complexe logic
-- [ ] Type hints overal
+- [ ] PHPDoc comments for all classes
+- [ ] PHPDoc for all public methods
+- [ ] Inline comments for complex logic
+- [ ] Type hints everywhere
 
 ### 10.2 User Documentation
 - [ ] `README.md`:
@@ -709,14 +709,14 @@ public function generateFromTemplate(
   - [ ] Usage examples
 - [ ] `docs/INSTALLATION.md`
 - [ ] `docs/CONFIGURATION.md`
-- [ ] `docs/TOOLS_REFERENCE.md` - Alle tools gedocumenteerd
-- [ ] `docs/EXAMPLES.md` - Praktische voorbeelden
+- [ ] `docs/TOOLS_REFERENCE.md` - All tools documented
+- [ ] `docs/EXAMPLES.md` - Practical examples
 - [ ] `docs/TROUBLESHOOTING.md`
 
 ### 10.3 Example Workspaces
-- [ ] `examples/basic-c4.dsl` - Basis C4 model
-- [ ] `examples/ecommerce.dsl` - E-commerce systeem
-- [ ] `examples/microservices.dsl` - Microservices architectuur
+- [ ] `examples/basic-c4.dsl` - Basic C4 model
+- [ ] `examples/ecommerce.dsl` - E-commerce system
+- [ ] `examples/microservices.dsl` - Microservices architecture
 - [ ] `examples/deployment.dsl` - Deployment diagram
 
 ### 10.4 Development Documentation
@@ -728,15 +728,15 @@ public function generateFromTemplate(
 
 ### 10.5 Claude Desktop Integration
 - [ ] `docs/CLAUDE_DESKTOP.md`:
-  - [ ] Installation instructies
-  - [ ] Configuratie voorbeeld
+  - [ ] Installation instructions
+  - [ ] Configuration example
   - [ ] Usage tips
   - [ ] Troubleshooting
-- [ ] Screenshot van configuratie
+- [ ] Screenshot of configuration
 - [ ] Video tutorial (optional)
 
 ### 10.6 Publishing
-- [ ] Packagist.org registratie
+- [ ] Packagist.org registration
 - [ ] Semantic versioning setup
 - [ ] GitHub releases
 - [ ] License file (MIT)
@@ -760,33 +760,33 @@ public function generateFromTemplate(
 - Phase 3: Structurizr Integration (3.1, 3.2, 3.3)
 - Phase 4.1: Workspace Tools (create, get, list)
 - Phase 4.2: Model Building Tools (person, softwareSystem, relationship)
-- Phase 4.3: View Tools (system context view alleen)
+- Phase 4.3: View Tools (system context view only)
 - Phase 4.4: Export Tools (export_to_dsl)
 - Basic testing
 
-**Deliverable**: Werkende MCP server die workspaces kan maken, elementen toevoegen, en exporteren.
+**Deliverable**: Working MCP server that can create workspaces, add elements, and export.
 
 ### 🟡 Core Features
 **Target: Week 3-5**
-- Phase 4.2: Model Building Tools (volledige implementatie)
-- Phase 4.3: View Tools (alle view types)
-- Phase 4.4: Export Tools (alle formaten)
+- Phase 4.2: Model Building Tools (complete implementation)
+- Phase 4.3: View Tools (all view types)
+- Phase 4.4: Export Tools (all formats)
 - Phase 4.5: Analysis Tools
 - Phase 5: Resources Implementation
 - Phase 6: Prompts Implementation
 - Phase 8: Comprehensive Testing (8.1, 8.2, 8.3)
 
-**Deliverable**: Volledig functionele MCP server met alle core features.
+**Deliverable**: Fully functional MCP server with all core features.
 
 ### 🟢 Extended Features
 **Target: Week 6-8**
-- Phase 3.4: API Client (Cloud integratie)
+- Phase 3.4: API Client (Cloud integration)
 - Phase 7: Documentation & Styling
 - Phase 9: Advanced Features (9.1, 9.2, 9.3, 9.4)
 - Phase 8.4: E2E Testing
 - Phase 10: Documentation & Release
 
-**Deliverable**: Production-ready server met Cloud integratie en complete documentatie.
+**Deliverable**: Production-ready server with Cloud integration and complete documentation.
 
 ### 🔵 Optional Enhancements
 **Target: Week 9+**
@@ -799,37 +799,37 @@ public function generateFromTemplate(
 ## Development Guidelines
 
 ### Code Quality Standards
-- **PHP 8.1+ strict types**: `declare(strict_types=1);` in elk file
-- **PSR-12 coding style**: Gebruik PHP CS Fixer
-- **Type hints**: Overal waar mogelijk
-- **Return types**: Altijd specificeren
-- **Null safety**: Gebruik `?Type` voor nullable types
-- **PHPDoc**: Voor alle public methods
+- **PHP 8.1+ strict types**: `declare(strict_types=1);` in each file
+- **PSR-12 coding style**: Use PHP CS Fixer
+- **Type hints**: Everywhere possible
+- **Return types**: Always specify
+- **Null safety**: Use `?Type` for nullable types
+- **PHPDoc**: For all public methods
 - **PHPStan level 8**: Maximum static analysis
 
 ### Testing Strategy
 - **Unit test coverage**: Minimum 80%
-- **Integration tests**: Voor alle tools
-- **E2E tests**: Voor kritische workflows
-- **Test database**: Gebruik in-memory of temp folders
-- **Fixtures**: Voor test workspaces
+- **Integration tests**: For all tools
+- **E2E tests**: For critical workflows
+- **Test database**: Use in-memory or temp folders
+- **Fixtures**: For test workspaces
 
 ### Error Handling
-- **Specific exceptions**: Gebruik custom exceptions
+- **Specific exceptions**: Use custom exceptions
 - **Error context**: Include relevant details
-- **User-friendly messages**: Clear en actionable
-- **Logging**: Log alle errors met context
-- **Never expose**: Internal paths of secrets in errors
+- **User-friendly messages**: Clear and actionable
+- **Logging**: Log all errors with context
+- **Never expose**: Internal paths or secrets in errors
 
 ### Performance
 - **Cache discovery**: Always in production
-- **Lazy loading**: Voor grote resources
-- **Process pooling**: Voor CLI commands (indien mogelijk)
-- **Memory limits**: Monitor voor grote workspaces
+- **Lazy loading**: For large resources
+- **Process pooling**: For CLI commands (if possible)
+- **Memory limits**: Monitor for large workspaces
 
 ### Security
-- **Input validation**: Altijd valideren
-- **Path traversal**: Prevent met realpath checks
+- **Input validation**: Always validate
+- **Path traversal**: Prevent with realpath checks
 - **Command injection**: Escape all CLI arguments
 - **API credentials**: Only via environment variables
 - **Sensitive data**: Never log credentials
@@ -837,34 +837,34 @@ public function generateFromTemplate(
 ## Success Criteria
 
 ### MVP Success ✅
-- [x] MCP server start zonder errors
-- [x] Accepteert stdio connections
-- [x] Kan workspace creëren
-- [x] Kan person en softwareSystem toevoegen
-- [x] Kan relationships maken
-- [x] Kan system context view genereren
-- [x] Kan exporteren naar DSL
-- [x] Werkt met Claude Desktop
-- [x] Basic error handling werkt
+- [x] MCP server starts without errors
+- [x] Accepts stdio connections
+- [x] Can create workspace
+- [x] Can add person and softwareSystem
+- [x] Can make relationships
+- [x] Can generate system context view
+- [x] Can export to DSL
+- [x] Works with Claude Desktop
+- [x] Basic error handling works
 
 ### Core Features Success ✅
-- [x] Alle 25+ tools geïmplementeerd
-- [x] Resources beschikbaar via URIs
-- [x] Prompts genereren goede LLM context
+- [x] All 25+ tools implemented
+- [x] Resources available via URIs
+- [x] Prompts generate good LLM context
 - [x] Unit tests > 80% coverage
-- [x] Integration tests voor alle workflows
-- [x] PHPStan level 8 zonder errors
-- [x] Documentatie voor alle tools
+- [x] Integration tests for all workflows
+- [x] PHPStan level 8 without errors
+- [x] Documentation for all tools
 
 ### Production Ready Success ✅
-- [x] Cloud integratie werkt
-- [x] Complete user documentatie
-- [x] Example workspaces beschikbaar
-- [x] CI/CD pipeline actief
-- [x] Published op Packagist
+- [x] Cloud integration works
+- [x] Complete user documentation
+- [x] Example workspaces available
+- [x] CI/CD pipeline active
+- [x] Published on Packagist
 - [x] GitHub releases configured
 - [x] Security policy documented
-- [x] Positieve feedback van users
+- [x] Positive feedback from users
 
 ## Timeline Estimate
 
@@ -888,18 +888,18 @@ public function generateFromTemplate(
 
 ### Week 1 Focus
 1. Setup Composer project
-2. Install MCP SDK en dependencies
-3. Create basis server.php
+2. Install MCP SDK and dependencies
+3. Create basic server.php
 4. Implement WorkspaceManager
-5. Build eerste tools (create_workspace, add_person, add_software_system)
-6. Test met Claude Desktop
+5. Build first tools (create_workspace, add_person, add_software_system)
+6. Test with Claude Desktop
 
 ### First Milestone
 **Goal**: Demo workspace creation via Claude Desktop
-- User kan workspace maken
-- User kan person toevoegen
-- User kan system toevoegen
-- User kan relationship maken
-- User kan DSL exporteren
+- User can create workspace
+- User can add person
+- User can add system
+- User can make relationship
+- User can export DSL
 
-Start hier! 🚀
+Start here! 🚀

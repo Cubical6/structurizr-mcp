@@ -2,62 +2,62 @@
 
 ## Project Overview
 
-Dit project implementeert een Model Context Protocol (MCP) server voor Structurizr, een tool voor het maken van software architectuurdiagrammen als code op basis van het C4 model.
+This project implements a Model Context Protocol (MCP) server for Structurizr, a tool for creating software architecture diagrams as code based on the C4 model.
 
-## Wat is Structurizr?
+## What is Structurizr?
 
-Structurizr is een toolset voor het creëren van software architectuurdiagrammen via code in plaats van handmatig tekenen. Het lost het fundamentele probleem op van het gesynchroniseerd en consistent houden van architectuurdocumentatie.
+Structurizr is a toolset for creating software architecture diagrams via code instead of manual drawing. It solves the fundamental problem of keeping architecture documentation synchronized and consistent.
 
-### Kernwaarde
-- **Single source of truth**: Eén definitie, meerdere gegenereerde views
-- **Versiecontrole**: Architectuur als code in git
-- **Automatische generatie**: Meerdere diagrammen uit één model
-- **Consistentie**: Geen divergerende of tegenstrijdige documentatie
+### Core Value
+- **Single source of truth**: One definition, multiple generated views
+- **Version control**: Architecture as code in git
+- **Automatic generation**: Multiple diagrams from one model
+- **Consistency**: No diverging or contradictory documentation
 
-## Het C4 Model
+## The C4 Model
 
-Het C4 model biedt een gestructureerde methode voor het visualiseren van software architectuur met vier hiërarchische abstractieniveaus:
+The C4 model provides a structured method for visualizing software architecture with four hierarchical abstraction levels:
 
-### 1. System Context (Niveau 1)
-- Hoogste abstractieniveau
-- Toont het systeem in context met gebruikers en externe systemen
-- **Doel**: Big picture overzicht
+### 1. System Context (Level 1)
+- Highest abstraction level
+- Shows the system in context with users and external systems
+- **Purpose**: Big picture overview
 
-### 2. Container (Niveau 2)
-- Belangrijkste bouwstenen binnen een systeem
-- Containers = applicaties, databases, microservices, etc.
-- **Doel**: High-level technologie beslissingen en deployment architectuur
+### 2. Container (Level 2)
+- Main building blocks within a system
+- Containers = applications, databases, microservices, etc.
+- **Purpose**: High-level technology decisions and deployment architecture
 
-### 3. Component (Niveau 3)
-- Logische groeperingen binnen containers
-- Components = samenhangende functionaliteit
-- **Doel**: Gedetailleerd ontwerp van een enkele container
+### 3. Component (Level 3)
+- Logical groupings within containers
+- Components = cohesive functionality
+- **Purpose**: Detailed design of a single container
 
-### 4. Code (Niveau 4)
-- Laagste niveau - daadwerkelijke code structuur
-- **Doel**: Implementatie details (vaak gegenereerd uit code)
+### 4. Code (Level 4)
+- Lowest level - actual code structure
+- **Purpose**: Implementation details (often generated from code)
 
-### Aanvullende Diagram Types
-- **System Landscape**: Meerdere systemen en hun interacties
-- **Dynamic**: Sequenties en runtime gedrag
-- **Deployment**: Infrastructuur en deployment topologie
+### Additional Diagram Types
+- **System Landscape**: Multiple systems and their interactions
+- **Dynamic**: Sequences and runtime behavior
+- **Deployment**: Infrastructure and deployment topology
 
 ## Structurizr DSL
 
-De Structurizr Domain Specific Language (DSL) is een tekstgebaseerd formaat voor het definiëren van architectuurmodellen.
+The Structurizr Domain Specific Language (DSL) is a text-based format for defining architecture models.
 
-### Basis Structuur
+### Basic Structure
 
 ```dsl
-workspace "Naam" "Beschrijving" {
+workspace "Name" "Description" {
     model {
-        # Definieer elementen en relaties
-        user = person "Gebruiker" "Beschrijving"
-        system = softwareSystem "Systeem" "Beschrijving" {
-            webapp = container "Web App" "Beschrijving" "Technology"
+        # Define elements and relationships
+        user = person "User" "Description"
+        system = softwareSystem "System" "Description" {
+            webapp = container "Web App" "Description" "Technology"
         }
 
-        user -> system "Gebruikt"
+        user -> system "Uses"
     }
 
     views {
@@ -81,63 +81,63 @@ workspace "Naam" "Beschrijving" {
 }
 ```
 
-### Belangrijkste Elementen
-- **person**: Gebruikers van het systeem
-- **softwareSystem**: Software systemen
-- **container**: Deploybare/uitvoerbare eenheden
-- **component**: Logische groeperingen binnen containers
-- **Relaties**: `element1 -> element2 "Beschrijving" "Technology"`
+### Main Elements
+- **person**: Users of the system
+- **softwareSystem**: Software systems
+- **container**: Deployable/executable units
+- **component**: Logical groupings within containers
+- **Relationships**: `element1 -> element2 "Description" "Technology"`
 
 ## Structurizr Interfaces
 
 ### File Formats
-1. **DSL (.dsl)**: Primair formaat voor authoring
-2. **JSON (.json)**: Interne workspace definitie
+1. **DSL (.dsl)**: Primary format for authoring
+2. **JSON (.json)**: Internal workspace definition
 3. **Export formats**: PlantUML, Mermaid, DOT, etc.
 
 ### APIs
 1. **Workspace API (REST)**
-   - `GET /workspace/{id}` - Ophalen workspace
+   - `GET /workspace/{id}` - Retrieve workspace
    - `PUT /workspace/{id}` - Update workspace
-   - HMAC authenticatie
+   - HMAC authentication
 
-2. **Structurizr voor Java Libraries**
-   - structurizr-core: Workspace programmeren
+2. **Structurizr for Java Libraries**
+   - structurizr-core: Workspace programming
    - structurizr-client: Upload/download
-   - structurizr-export: Export naar andere formaten
+   - structurizr-export: Export to other formats
    - structurizr-component: Component discovery
 
 3. **Structurizr CLI**
-   - `push`: Upload DSL naar workspace
-   - `pull`: Download workspace als JSON
-   - `export`: Export naar verschillende formaten
-   - `validate`: Valideer workspace
+   - `push`: Upload DSL to workspace
+   - `pull`: Download workspace as JSON
+   - `export`: Export to various formats
+   - `validate`: Validate workspace
 
 ## Model Context Protocol (MCP)
 
-MCP is een universele, vendor-neutrale standaard voor interacties tussen Large Language Models en externe systemen.
+MCP is a universal, vendor-neutral standard for interactions between Large Language Models and external systems.
 
-### Kern Concepten
+### Core Concepts
 
 1. **Servers**: Expose capabilities (tools, resources, prompts)
-2. **Clients**: Verbinden met servers en integreren met LLMs
-3. **Resources**: URI-geadresseerde databronnen
-4. **Tools**: Uitvoerbare acties met input schemas
-5. **Prompts**: Herbruikbare instructie templates
+2. **Clients**: Connect with servers and integrate with LLMs
+3. **Resources**: URI-addressed data sources
+4. **Tools**: Executable actions with input schemas
+5. **Prompts**: Reusable instruction templates
 
-### Architectuur
-- **JSON-RPC 2.0** voor message exchange
-- **Transport opties**: stdio (lokaal), HTTP/SSE (web)
-- **Request handlers** voor capabilities
+### Architecture
+- **JSON-RPC 2.0** for message exchange
+- **Transport options**: stdio (local), HTTP/SSE (web)
+- **Request handlers** for capabilities
 
 ## Structurizr MCP Server Design
 
-### Aanbevolen Tools
+### Recommended Tools
 
 #### Workspace Management
 - `create_workspace(name, description)` → workspace_id
 - `get_workspace(workspace_id)` → workspace JSON
-- `list_workspaces()` → workspace lijst
+- `list_workspaces()` → workspace list
 - `delete_workspace(workspace_id)`
 
 #### Model Building
@@ -169,34 +169,34 @@ MCP is een universele, vendor-neutrale standaard voor interacties tussen Large L
 - `find_element(workspace_id, name)`
 - `validate_workspace(workspace_id)`
 
-### Aanbevolen Resources
+### Recommended Resources
 
 ```
-workspace://{id}                              - Volledige workspace JSON
-workspace://{id}/model                        - Alleen model
-workspace://{id}/views                        - Alleen views
-element://{workspace_id}/{element_id}         - Specifiek element
-view://{workspace_id}/{view_key}              - Specifieke view
-dsl://{workspace_id}                          - DSL representatie
+workspace://{id}                              - Complete workspace JSON
+workspace://{id}/model                        - Model only
+workspace://{id}/views                        - Views only
+element://{workspace_id}/{element_id}         - Specific element
+view://{workspace_id}/{view_key}              - Specific view
+dsl://{workspace_id}                          - DSL representation
 ```
 
-### Aanbevolen Prompts
+### Recommended Prompts
 
-- `analyze_architecture(workspace_id)` - Architectuur analyse
+- `analyze_architecture(workspace_id)` - Architecture analysis
 - `review_security(workspace_id)` - Security review
-- `generate_system_context(description)` - Genereer context uit beschrijving
-- `suggest_improvements(workspace_id)` - Verbeter suggesties
-- `explain_c4_model()` - Leg C4 model uit
-- `create_example_workspace(type)` - Voorbeeld workspace
+- `generate_system_context(description)` - Generate context from description
+- `suggest_improvements(workspace_id)` - Improvement suggestions
+- `explain_c4_model()` - Explain C4 model
+- `create_example_workspace(type)` - Example workspace
 
-## Technologie Stack
+## Technology Stack
 
-### Implementatie in PHP
-- **PHP 8.1+** met moderne features (attributes, enums, type hints)
+### PHP Implementation
+- **PHP 8.1+** with modern features (attributes, enums, type hints)
 - **MCP SDK**: `mcp/sdk` (via Composer)
-- **Transport**: stdio voor Claude Desktop, HTTP voor web
-- **Structurizr CLI** voor DSL parsing en export
-- **Guzzle HTTP client** voor Structurizr Cloud/On-Premises API
+- **Transport**: stdio for Claude Desktop, HTTP for web
+- **Structurizr CLI** for DSL parsing and export
+- **Guzzle HTTP client** for Structurizr Cloud/On-Premises API
 - **PSR standards**: PSR-3 (logging), PSR-11 (container), PSR-16 (cache)
 
 ### Composer Dependencies
@@ -217,7 +217,7 @@ dsl://{workspace_id}                          - DSL representatie
 }
 ```
 
-### Project Structuur
+### Project Structure
 ```
 structurizr-mcp/
 ├── src/
@@ -225,7 +225,7 @@ structurizr-mcp/
 │   │   ├── WorkspaceTools.php    # Workspace CRUD
 │   │   ├── ModelTools.php        # Element & relationship management
 │   │   ├── ViewTools.php         # View creation
-│   │   └── ExportTools.php       # Export functionaliteit
+│   │   └── ExportTools.php       # Export functionality
 │   ├── Resources/                # Resource handlers
 │   │   ├── WorkspaceResource.php
 │   │   └── ConfigResource.php
@@ -250,7 +250,7 @@ structurizr-mcp/
 └── phpunit.xml
 ```
 
-## PHP Implementation Voorbeelden
+## PHP Implementation Examples
 
 ### Server Setup (server.php)
 
@@ -268,7 +268,7 @@ use Monolog\Handler\StreamHandler;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Psr16Cache;
 
-// Setup logging (naar STDERR!)
+// Setup logging (to STDERR!)
 $logger = new Logger('structurizr-mcp');
 $logger->pushHandler(new StreamHandler('php://stderr', Logger::DEBUG));
 
@@ -276,7 +276,7 @@ $logger->pushHandler(new StreamHandler('php://stderr', Logger::DEBUG));
 $container = new Container();
 $container->set(LoggerInterface::class, $logger);
 
-// Setup cache voor discovery
+// Setup cache for discovery
 $cache = new Psr16Cache(
     new PhpFilesAdapter(directory: __DIR__ . '/cache')
 );
@@ -303,13 +303,13 @@ $server = Server::builder()
     )
     ->build();
 
-// Run met STDIO transport
+// Run with STDIO transport
 $transport = new StdioTransport(logger: $logger);
 $exitCode = $server->run($transport);
 exit($exitCode);
 ```
 
-### Tool Definition met Attributes
+### Tool Definition with Attributes
 
 ```php
 <?php
@@ -403,7 +403,7 @@ class WorkspaceResource
 }
 ```
 
-### Claude Desktop Configuratie
+### Claude Desktop Configuration
 
 ```json
 {
@@ -422,13 +422,13 @@ class WorkspaceResource
 
 ## Development Workflow
 
-### Lokale Development
-1. `composer install` - Installeer dependencies
-2. DSL file creëren/bewerken in `workspaces/`
+### Local Development
+1. `composer install` - Install dependencies
+2. Create/edit DSL file in `workspaces/`
 3. `php server.php` - Start MCP server
-4. Tools aanroepen via MCP client (Claude Desktop)
-5. Workspace valideren met Structurizr CLI
-6. Export naar gewenst formaat
+4. Call tools via MCP client (Claude Desktop)
+5. Validate workspace with Structurizr CLI
+6. Export to desired format
 
 ### Testing
 ```bash
@@ -442,14 +442,14 @@ class WorkspaceResource
 php server.php < test_request.json
 ```
 
-### Integratie met Structurizr Cloud
-1. Configureer API credentials via environment variables
+### Integration with Structurizr Cloud
+1. Configure API credentials via environment variables
 2. Workspace push/pull via API client
-3. Sync lokale en cloud workspaces
+3. Sync local and cloud workspaces
 
 ## Next Steps
 
-Zie [TASKS.md](./TASKS.md) voor de gedetailleerde implementatie roadmap.
+See [TASKS.md](./TASKS.md) for the detailed implementation roadmap.
 
 ## Resources
 
