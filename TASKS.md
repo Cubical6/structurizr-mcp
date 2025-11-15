@@ -999,22 +999,448 @@ public function generateFromTemplate(
 | Documentation | 1 week | - |
 | **Total** | **6-9 weeks** | - |
 
-## Next Actions
+## 🚀 IMMEDIATE NEXT ACTIONS - Detailed Implementation Plan
 
-### Week 1 Focus
-1. Setup Composer project
-2. Install MCP SDK and dependencies
-3. Create basic server.php
-4. Implement WorkspaceManager
-5. Build first tools (create_workspace, add_person, add_software_system)
-6. Test with Claude Desktop
+**Status**: Ready to execute step-by-step
+**Total Estimated Time**: 1-2 weeks for all priorities
+**Last Updated**: 2025-11-15
 
-### First Milestone
-**Goal**: Demo workspace creation via Claude Desktop
-- User can create workspace
-- User can add person
-- User can add system
-- User can make relationship
-- User can export DSL
+### Priority System
+- 🔴 **CRITICAL** - Blocks MVP completion (must do first)
+- 🟡 **HIGH** - Required for core functionality
+- 🟢 **MEDIUM** - Enhances completeness
+- 🔵 **LOW** - Nice to have
+
+---
+
+## PRIORITY 1: Fix Cache Setup in server.php (🔴 CRITICAL - 15 minutes)
+
+**Why Critical**: Server re-scans filesystem on every startup without cache
+**Blocks**: Performance optimization, production readiness
+**Complexity**: ✅ Trivial (copy-paste with minor adjustments)
+
+### Actionable Steps:
+
+- [ ] **Step 1**: Add import statements after line 15 in `server.php`
+  ```php
+  use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
+  use Symfony\Component\Cache\Psr16Cache;
+  ```
+
+- [ ] **Step 2**: Add cache directory check before line 38
+  ```php
+  // Ensure cache directory exists
+  $cacheDir = __DIR__ . '/cache';
+  if (!is_dir($cacheDir)) {
+      mkdir($cacheDir, 0755, true);
+  }
+  ```
+
+- [ ] **Step 3**: Initialize cache after line 43 (after WorkspaceManager setup)
+  ```php
+  // Initialize PSR-16 cache for discovery
+  $phpFileCache = new PhpFilesAdapter(
+      directory: __DIR__ . '/cache',
+      namespace: 'structurizr-mcp',
+      defaultLifetime: 3600
+  );
+  $cache = new Psr16Cache($phpFileCache);
+
+  $logger->debug('Cache initialized', ['cacheDir' => __DIR__ . '/cache']);
+  ```
+
+- [ ] **Step 4**: Update `setDiscovery()` call (lines 63-67) to include cache parameter
+  ```php
+  ->setDiscovery(
+      basePath: __DIR__,
+      scanDirs: ['src'],
+      excludeDirs: ['vendor', 'tests', 'cache', 'sessions', 'workspaces', 'docs', 'examples'],
+      cache: $cache  // ADD THIS LINE
+  )
+  ```
+
+- [ ] **Step 5**: Verify with `php -l server.php` (no syntax errors)
+- [ ] **Step 6**: Test server start: `php server.php < /dev/null`
+- [ ] **Step 7**: Commit changes with message "Fix cache setup in server.php for discovery performance"
+
+**Expected Outcome**:
+- ✅ Server startup 10x faster on subsequent runs
+- ✅ Critical Gap #2 resolved
+
+---
+
+## PRIORITY 2: Add Schema Attributes to WorkspaceTools.php (🔴 CRITICAL - 30 minutes)
+
+**Why Critical**: MCP clients cannot validate input without Schema attributes
+**Blocks**: Proper MCP client integration, production use
+**Parameters to Fix**: 6 parameters across 4 methods
+
+### Actionable Steps:
+
+- [ ] **Step 1**: Add Schema import after line 7
+  ```php
+  use Mcp\Capability\Attribute\Schema;
+  ```
+
+- [ ] **Step 2**: Update `createWorkspace()` method (lines 34-37)
+  - [ ] Add to `$name`: `#[Schema(description: 'Workspace name', minLength: 1, maxLength: 100)]`
+  - [ ] Add to `$description`: `#[Schema(description: 'Workspace description', maxLength: 500)]`
+
+- [ ] **Step 3**: Update `getWorkspace()` method (lines 69-72)
+  - [ ] Add to `$workspaceId`: `#[Schema(description: 'Workspace ID to retrieve', minLength: 1)]`
+  - [ ] Add to `$format`: `#[Schema(description: 'Output format', enum: ['json', 'dsl'])]`
+
+- [ ] **Step 4**: Update `deleteWorkspace()` method (line 121)
+  - [ ] Add to `$workspaceId`: `#[Schema(description: 'Workspace ID to delete', minLength: 1)]`
+
+- [ ] **Step 5**: Update `exportToDsl()` method (line 151)
+  - [ ] Add to `$workspaceId`: `#[Schema(description: 'Workspace ID to export', minLength: 1)]`
+
+- [ ] **Step 6**: Verify with `php -l src/Tools/WorkspaceTools.php`
+- [ ] **Step 7**: Run PHPStan: `./vendor/bin/phpstan analyse src/Tools/WorkspaceTools.php`
+- [ ] **Step 8**: Commit changes with message "Add Schema attributes to all WorkspaceTools parameters"
+
+**Expected Outcome**:
+- ✅ 6 parameters have Schema validation
+- ✅ MCP clients can validate input before sending
+
+---
+
+## PRIORITY 3: Add Schema Attributes to ModelTools.php (🔴 CRITICAL - 1 hour)
+
+**Why Critical**: MCP clients cannot validate input without Schema attributes
+**Blocks**: Proper MCP client integration
+**Parameters to Fix**: 31 parameters across 6 methods
+
+### Actionable Steps:
+
+- [ ] **Step 1**: Add Schema import after line 7
+  ```php
+  use Mcp\Capability\Attribute\Schema;
+  ```
+
+- [ ] **Step 2**: Update `addPerson()` method (lines 36-41) - 4 parameters
+  - [ ] `$workspaceId`: `#[Schema(description: 'Workspace ID', minLength: 1)]`
+  - [ ] `$name`: `#[Schema(description: 'Name of the person/user', minLength: 1, maxLength: 100)]`
+  - [ ] `$description`: `#[Schema(description: 'Description of the person', maxLength: 500)]`
+  - [ ] `$tags`: `#[Schema(description: 'Tags for styling', type: 'array')]`
+
+- [ ] **Step 3**: Update `addSoftwareSystem()` method (lines 78-84) - 5 parameters
+  - [ ] `$workspaceId`: `#[Schema(description: 'Workspace ID', minLength: 1)]`
+  - [ ] `$name`: `#[Schema(description: 'System name', minLength: 1, maxLength: 100)]`
+  - [ ] `$description`: `#[Schema(description: 'System description', maxLength: 500)]`
+  - [ ] `$location`: `#[Schema(description: 'System location', enum: ['Internal', 'External'])]`
+  - [ ] `$tags`: `#[Schema(description: 'Tags for styling', type: 'array')]`
+
+- [ ] **Step 4**: Update `addContainer()` method (lines 125-132) - 6 parameters
+  - [ ] `$workspaceId`: `#[Schema(description: 'Workspace ID', minLength: 1)]`
+  - [ ] `$systemId`: `#[Schema(description: 'Parent system ID', minLength: 1)]`
+  - [ ] `$name`: `#[Schema(description: 'Container name', minLength: 1, maxLength: 100)]`
+  - [ ] `$description`: `#[Schema(description: 'Container description', maxLength: 500)]`
+  - [ ] `$technology`: `#[Schema(description: 'Technology/platform', maxLength: 200)]`
+  - [ ] `$tags`: `#[Schema(description: 'Tags for styling', type: 'array')]`
+
+- [ ] **Step 5**: Update `addComponent()` method (lines 170-177) - 6 parameters
+  - [ ] `$workspaceId`: `#[Schema(description: 'Workspace ID', minLength: 1)]`
+  - [ ] `$containerId`: `#[Schema(description: 'Parent container ID', minLength: 1)]`
+  - [ ] `$name`: `#[Schema(description: 'Component name', minLength: 1, maxLength: 100)]`
+  - [ ] `$description`: `#[Schema(description: 'Component description', maxLength: 500)]`
+  - [ ] `$technology`: `#[Schema(description: 'Technology/framework', maxLength: 200)]`
+  - [ ] `$tags`: `#[Schema(description: 'Tags for styling', type: 'array')]`
+
+- [ ] **Step 6**: Update `addRelationship()` method (lines 215-222) - 6 parameters
+  - [ ] `$workspaceId`: `#[Schema(description: 'Workspace ID', minLength: 1)]`
+  - [ ] `$sourceId`: `#[Schema(description: 'Source element ID', minLength: 1)]`
+  - [ ] `$destinationId`: `#[Schema(description: 'Destination element ID', minLength: 1)]`
+  - [ ] `$description`: `#[Schema(description: 'Relationship description', minLength: 1, maxLength: 200)]`
+  - [ ] `$technology`: `#[Schema(description: 'Technology/protocol', maxLength: 200)]`
+  - [ ] `$tags`: `#[Schema(description: 'Tags for styling', type: 'array')]`
+
+- [ ] **Step 7**: Update `createSystemContextView()` method (lines 257-262) - 4 parameters
+  - [ ] `$workspaceId`: `#[Schema(description: 'Workspace ID', minLength: 1)]`
+  - [ ] `$systemId`: `#[Schema(description: 'System ID to visualize', minLength: 1)]`
+  - [ ] `$key`: `#[Schema(description: 'Unique view key', minLength: 1, maxLength: 50, pattern: '^[a-zA-Z0-9_-]+$')]`
+  - [ ] `$description`: `#[Schema(description: 'View description', maxLength: 500)]`
+
+- [ ] **Step 8**: Verify with `php -l src/Tools/ModelTools.php`
+- [ ] **Step 9**: Run PHPStan: `./vendor/bin/phpstan analyse src/Tools/ModelTools.php`
+- [ ] **Step 10**: Commit changes with message "Add Schema attributes to all ModelTools parameters"
+
+**Expected Outcome**:
+- ✅ 31 parameters have Schema validation
+- ✅ Critical Gap #1 FULLY RESOLVED
+- ✅ All 12 existing tools have complete Schema validation
+
+---
+
+## PRIORITY 4: Implement ViewTools.php (🟡 HIGH - 2-3 hours)
+
+**Why Important**: Completes view functionality for Container and Component diagrams
+**Blocks**: Complete C4 model support
+**Tools to Create**: 3 new tools + 1 moved from ModelTools
+
+### Actionable Steps:
+
+- [ ] **Step 1**: Create file `src/Tools/ViewTools.php` with class structure (15 min)
+  - [ ] Add strict types declaration
+  - [ ] Add namespace: `namespace StructurizrMcp\Tools;`
+  - [ ] Add imports: McpTool, Schema, WorkspaceManager, DslBuilder, LoggerInterface
+  - [ ] Add constructor with WorkspaceManager and Logger
+  - [ ] Copy `createBuilderFromWorkspace()` helper from ModelTools
+
+- [ ] **Step 2**: Move `createSystemContextView()` from ModelTools.php (30 min)
+  - [ ] Copy method from ModelTools.php (lines 256-281)
+  - [ ] Add Schema attributes to all 4 parameters
+  - [ ] Add input validation for `$key` (pattern: `^[a-zA-Z0-9_-]+$`)
+  - [ ] Test that method works in new location
+  - [ ] Delete method from ModelTools.php
+
+- [ ] **Step 3**: Implement `createContainerView()` tool (30 min)
+  - [ ] Create method signature with 4 parameters
+  - [ ] Add Schema attributes (same pattern as createSystemContextView)
+  - [ ] Implement method body using `$builder->addContainerView()`
+  - [ ] Add logging and error handling
+  - [ ] Return array with viewKey, systemId, type='container'
+
+- [ ] **Step 4**: Implement `createComponentView()` tool (30 min)
+  - [ ] Create method signature with 4 parameters ($containerId instead of $systemId)
+  - [ ] Add Schema attributes
+  - [ ] Implement method body using `$builder->addComponentView()`
+  - [ ] Add logging and error handling
+  - [ ] Return array with viewKey, containerId, type='component'
+
+- [ ] **Step 5**: Implement `applyAutoLayout()` tool (20 min - MVP version)
+  - [ ] Create method signature with 3 parameters
+  - [ ] Add Schema enum for direction: `['tb', 'bt', 'lr', 'rl']`
+  - [ ] Implement validation-only version (CLI integration later)
+  - [ ] Add TODO comment for Phase 3.1 CLI integration
+  - [ ] Return success message
+
+- [ ] **Step 6**: Testing and verification (1 hour)
+  - [ ] Run `php -l src/Tools/ViewTools.php`
+  - [ ] Run PHPStan analysis
+  - [ ] Test integration workflow (create workspace → add elements → create all 3 view types)
+  - [ ] Verify all 4 tools appear in MCP discovery
+  - [ ] Test error handling (invalid IDs, invalid keys)
+
+- [ ] **Step 7**: Commit changes
+  ```
+  git commit -m "Implement ViewTools.php with three C4 view types
+
+  - Create ViewTools.php for all view operations
+  - Move createSystemContextView from ModelTools
+  - Implement createContainerView with Schema validation
+  - Implement createComponentView with Schema validation
+  - Implement applyAutoLayout (MVP version)
+  - Add comprehensive error handling and logging"
+  ```
+
+**Expected Outcome**:
+- ✅ ViewTools.php created with 4 working tools
+- ✅ Critical Gap #3 RESOLVED
+- ✅ Complete C4 view hierarchy support (system, container, component)
+
+---
+
+## PRIORITY 5: Implement CliWrapper.php (🟡 HIGH - 1 day / 6-8 hours)
+
+**Why Important**: Enables export functionality and DSL validation
+**Blocks**: ExportTools (PlantUML, Mermaid), validation tools
+**Files to Create**: 3 files (CliWrapper + 2 DTOs)
+
+### Actionable Steps:
+
+**Phase A: Create DTOs (30 minutes)**
+
+- [ ] **Step 1**: Create `src/Structurizr/ProcessResult.php`
+  - [ ] Add class with properties: exitCode, stdout, stderr, success
+  - [ ] Add constructor and getter methods
+  - [ ] Add `isSuccess()` method
+
+- [ ] **Step 2**: Create `src/Structurizr/ValidationResult.php`
+  - [ ] Add class with properties: valid, errors, warnings
+  - [ ] Add constructor and getter methods
+  - [ ] Add `isValid()` method
+
+**Phase B: Implement CliWrapper Core (2 hours)**
+
+- [ ] **Step 3**: Create `src/Structurizr/CliWrapper.php` with constructor
+  - [ ] Add constructor accepting CLI path and logger
+  - [ ] Validate CLI executable exists and is executable
+  - [ ] Store FilesystemOperator for file operations
+
+- [ ] **Step 4**: Implement `executeCommand()` method
+  - [ ] Use Symfony Process with array arguments (security)
+  - [ ] Set timeout (default 30 seconds)
+  - [ ] Capture stdout and stderr
+  - [ ] Return ProcessResult DTO
+  - [ ] Add comprehensive error logging
+
+**Phase C: Implement CLI Operations (3 hours)**
+
+- [ ] **Step 5**: Implement `validate()` method
+  - [ ] Execute `structurizr-cli validate <dsl-path>`
+  - [ ] Parse output for errors and warnings
+  - [ ] Return ValidationResult DTO
+  - [ ] Handle CLI not found errors
+
+- [ ] **Step 6**: Implement `export()` method
+  - [ ] Support formats: plantuml, mermaid, json, dot, ilograph
+  - [ ] Execute `structurizr-cli export -workspace <dsl> -format <format>`
+  - [ ] Handle optional viewKey parameter
+  - [ ] Return exported content as string
+  - [ ] Clean up temporary files
+
+- [ ] **Step 7**: Implement `push()` method (Cloud integration)
+  - [ ] Execute `structurizr-cli push -id <id> -key <key> -secret <secret> -workspace <dsl>`
+  - [ ] Timeout: 60 seconds (longer for cloud)
+  - [ ] Never log API credentials
+  - [ ] Return boolean success
+
+- [ ] **Step 8**: Implement `pull()` method (Cloud integration)
+  - [ ] Execute `structurizr-cli pull -id <id> -key <key> -secret <secret>`
+  - [ ] Save to output path or temp file
+  - [ ] Return workspace JSON as string
+  - [ ] Handle authentication errors
+
+**Phase D: Testing & Verification (2-3 hours)**
+
+- [ ] **Step 9**: Create unit tests `tests/Unit/Structurizr/CliWrapperTest.php`
+  - [ ] Test executeCommand() with mock process
+  - [ ] Test validate() with valid/invalid DSL
+  - [ ] Test export() for all formats
+  - [ ] Test push/pull with mock API
+  - [ ] Test error handling (CLI not found, timeouts, invalid args)
+  - [ ] Target >95% code coverage
+
+- [ ] **Step 10**: Integration testing with real CLI
+  - [ ] Download Structurizr CLI to `bin/` directory
+  - [ ] Test validate with example DSL files
+  - [ ] Test export to PlantUML and Mermaid
+  - [ ] Verify output correctness
+
+- [ ] **Step 11**: Security audit
+  - [ ] Verify no shell string execution (only array form)
+  - [ ] Verify no credentials in logs
+  - [ ] Verify path traversal protection
+  - [ ] Verify all file operations are safe
+
+- [ ] **Step 12**: Commit changes
+  ```
+  git commit -m "Implement CliWrapper.php with 6 core methods
+
+  - Create ProcessResult and ValidationResult DTOs
+  - Implement CliWrapper with executeCommand() core method
+  - Add validate() for DSL validation
+  - Add export() for PlantUML, Mermaid, JSON formats
+  - Add push() and pull() for Structurizr Cloud integration
+  - Comprehensive security: no shell injection, credential protection
+  - Unit tests with >95% coverage
+  - Integration tests with real CLI"
+  ```
+
+**Expected Outcome**:
+- ✅ CliWrapper.php fully implemented with 6 methods
+- ✅ Critical Gap #4 RESOLVED
+- ✅ Unblocks Phase 4.4 (ExportTools)
+- ✅ Unblocks Phase 4.5 (AnalysisTools - validate)
+
+---
+
+## PRIORITY 6: Implement ExportTools.php (🟢 MEDIUM - 2-3 hours)
+
+**Depends On**: CliWrapper.php (Priority 5)
+**Why Important**: Enables diagram export to PlantUML and Mermaid
+
+### Actionable Steps:
+
+- [ ] **Step 1**: Create `src/Tools/ExportTools.php` with class structure
+- [ ] **Step 2**: Move `exportToDsl()` from WorkspaceTools.php
+- [ ] **Step 3**: Implement `exportToPlantUml()` tool using CliWrapper
+- [ ] **Step 4**: Implement `exportToMermaid()` tool using CliWrapper
+- [ ] **Step 5**: Implement `importFromDsl()` tool (parse and create workspace)
+- [ ] **Step 6**: Add Schema attributes to all parameters
+- [ ] **Step 7**: Test export with example workspaces
+- [ ] **Step 8**: Commit changes
+
+---
+
+## PRIORITY 7: Create Test Suite (🟡 HIGH - Ongoing)
+
+**Why Important**: 0% test coverage is unacceptable for production
+**Current Status**: tests/ directory doesn't exist
+
+### Actionable Steps:
+
+- [ ] **Step 1**: Create directory structure
+  - [ ] `tests/Unit/` - Unit tests
+  - [ ] `tests/Integration/` - Integration tests
+  - [ ] `tests/Fixtures/` - Test data
+
+- [ ] **Step 2**: Configure PHPUnit
+  - [ ] Verify `phpunit.xml` configuration
+  - [ ] Add coverage reporting
+
+- [ ] **Step 3**: Write unit tests for WorkspaceManager (1-2 hours)
+  - [ ] Test create, load, save, delete operations
+  - [ ] Test error cases (not found, invalid data)
+  - [ ] Target >90% coverage
+
+- [ ] **Step 4**: Write unit tests for DslBuilder (2-3 hours)
+  - [ ] Test all element creation methods
+  - [ ] Test DSL generation
+  - [ ] Test validation logic
+
+- [ ] **Step 5**: Write integration tests for Tools (3-4 hours)
+  - [ ] Test complete workflows
+  - [ ] Test MCP protocol compliance
+  - [ ] Test error handling
+
+---
+
+## Summary: Implementation Order
+
+| Priority | Task | Time | Complexity | Status |
+|----------|------|------|------------|--------|
+| 1 | Fix cache setup | 15 min | ✅ Trivial | [ ] TODO |
+| 2 | Schema: WorkspaceTools | 30 min | ✅ Simple | [ ] TODO |
+| 3 | Schema: ModelTools | 1 hour | ✅ Simple | [ ] TODO |
+| 4 | Implement ViewTools | 2-3 hours | 🟡 Medium | [ ] TODO |
+| 5 | Implement CliWrapper | 6-8 hours | 🔴 Complex | [ ] TODO |
+| 6 | Implement ExportTools | 2-3 hours | 🟡 Medium | [ ] BLOCKED |
+| 7 | Create test suite | Ongoing | 🔴 Complex | [ ] TODO |
+
+**Total Time to MVP Completion**: ~2 weeks (including testing)
+
+**Quick Wins (1-2 hours)**: Priorities 1-3 can be done today!
+
+---
+
+## 🎯 Recommended Execution Strategy
+
+### Day 1 (2-3 hours): Quick Wins
+1. Fix cache setup (15 min) → ✅ Critical gap resolved
+2. Add Schema to WorkspaceTools (30 min) → ✅ 6 params complete
+3. Add Schema to ModelTools (1 hour) → ✅ 31 params complete
+4. **Result**: All critical Schema gaps resolved, server performance improved
+
+### Day 2-3 (6-8 hours): View Support
+5. Implement ViewTools.php (2-3 hours) → ✅ Complete view hierarchy
+6. Write ViewTools tests (1-2 hours) → ✅ Coverage for views
+7. **Result**: Full C4 model support (system, container, component views)
+
+### Day 4-5 (8-10 hours): Export Functionality
+8. Implement CliWrapper.php (6-8 hours) → ✅ CLI integration
+9. Write CliWrapper tests (2-3 hours) → ✅ Coverage for CLI
+10. **Result**: Export to PlantUML, Mermaid, validation enabled
+
+### Week 2: Complete MVP
+11. Implement ExportTools.php (2-3 hours)
+12. Write comprehensive integration tests (4-6 hours)
+13. Documentation updates (2-3 hours)
+14. Final testing and bug fixes (4-6 hours)
+15. **Result**: MVP COMPLETE, ready for production testing
+
+---
 
 Start here! 🚀
