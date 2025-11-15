@@ -839,14 +839,25 @@ public function generateFromTemplate(
 - [ ] Screenshot of configuration ❌ MISSING
 - [ ] Video tutorial (optional) ❌ MISSING
 
-### 10.6 Publishing ❌ NOT STARTED
+### 10.6 Claude Code Integration ❌ NOT STARTED
+- [ ] `docs/CLAUDE_CODE.md` (dedicated guide) ❌ MISSING:
+  - [ ] Installation instructions
+  - [ ] Configuration example for MCP settings
+  - [ ] Usage examples within Claude Code
+  - [ ] Differences from Claude Desktop setup
+  - [ ] Troubleshooting common issues
+  - [ ] Best practices for using Structurizr MCP in Claude Code
+- [ ] Add Claude Code configuration to README.md ❌ MISSING
+- [ ] Example workflows for architecture documentation in code projects ❌ MISSING
+
+### 10.7 Publishing ❌ NOT STARTED
 - [ ] Packagist.org registration ❌ NOT DONE
 - [ ] Semantic versioning setup ❌ NOT DONE (no git tags)
 - [ ] GitHub releases ❌ NOT DONE
 - [x] License file (MIT) ✅ EXISTS
 - [ ] Security policy (SECURITY.md) ❌ MISSING
 
-### 10.7 CI/CD ❌ NOT STARTED
+### 10.8 CI/CD ❌ NOT STARTED
 - [ ] GitHub Actions workflow (`.github/workflows/`):
   - [ ] Run tests on push ❌ MISSING `.github/workflows/tests.yml`
   - [ ] Static analysis (PHPStan) ❌ MISSING workflow
