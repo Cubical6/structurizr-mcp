@@ -13,6 +13,8 @@ use StructurizrMcp\Configuration;
 use StructurizrMcp\Structurizr\WorkspaceManager;
 use StructurizrMcp\Tools\WorkspaceTools;
 use StructurizrMcp\Tools\ModelTools;
+use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
+use Symfony\Component\Cache\Psr16Cache;
 
 // Load configuration
 $config = new Configuration();
@@ -35,12 +37,28 @@ $logger->debug('Configuration loaded', [
     'serverVersion' => $config->getServerVersion(),
 ]);
 
+// Ensure cache directory exists
+$cacheDir = __DIR__ . '/cache';
+if (!is_dir($cacheDir)) {
+    mkdir($cacheDir, 0755, true);
+}
+
 try {
     // Initialize workspace manager
     $workspaceManager = new WorkspaceManager(
         storagePath: $config->getWorkspacePath(),
         logger: $logger
     );
+
+    // Initialize PSR-16 cache for discovery
+    $phpFileCache = new PhpFilesAdapter(
+        directory: __DIR__ . '/cache',
+        namespace: 'structurizr-mcp',
+        defaultLifetime: 3600
+    );
+    $cache = new Psr16Cache($phpFileCache);
+
+    $logger->debug('Cache initialized', ['cacheDir' => __DIR__ . '/cache']);
 
     // Initialize tool classes
     $workspaceTools = new WorkspaceTools($workspaceManager, $logger);
@@ -63,7 +81,8 @@ try {
         ->setDiscovery(
             basePath: __DIR__,
             scanDirs: ['src'],
-            excludeDirs: ['vendor', 'tests', 'cache', 'sessions', 'workspaces', 'docs', 'examples']
+            excludeDirs: ['vendor', 'tests', 'cache', 'sessions', 'workspaces', 'docs', 'examples'],
+            cache: $cache
         )
         ->build();
 
