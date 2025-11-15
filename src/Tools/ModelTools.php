@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace StructurizrMcp\Tools;
 
 use Mcp\Capability\Attribute\McpTool;
+use Mcp\Capability\Attribute\Schema;
 use StructurizrMcp\Structurizr\WorkspaceManager;
 use StructurizrMcp\Structurizr\DslBuilder;
 use Psr\Log\LoggerInterface;
@@ -34,9 +35,13 @@ class ModelTools
      */
     #[McpTool(name: 'add_person', description: 'Add a person to the C4 model')]
     public function addPerson(
+        #[Schema(description: 'Workspace ID', minLength: 1)]
         string $workspaceId,
+        #[Schema(description: 'Name of the person/user', minLength: 1, maxLength: 100)]
         string $name,
+        #[Schema(description: 'Description of the person', maxLength: 500)]
         string $description = '',
+        #[Schema(description: 'Tags for styling', type: 'array')]
         array $tags = []
     ): array {
         $this->logger->info("Adding person '{$name}' to workspace: {$workspaceId}");
@@ -76,10 +81,15 @@ class ModelTools
      */
     #[McpTool(name: 'add_software_system', description: 'Add a software system to the C4 model')]
     public function addSoftwareSystem(
+        #[Schema(description: 'Workspace ID', minLength: 1)]
         string $workspaceId,
+        #[Schema(description: 'System name', minLength: 1, maxLength: 100)]
         string $name,
+        #[Schema(description: 'System description', maxLength: 500)]
         string $description = '',
+        #[Schema(description: 'System location', enum: ['Internal', 'External'])]
         string $location = 'Internal',
+        #[Schema(description: 'Tags for styling', type: 'array')]
         array $tags = []
     ): array {
         $this->logger->info("Adding software system '{$name}' to workspace: {$workspaceId}");
@@ -123,11 +133,17 @@ class ModelTools
      */
     #[McpTool(name: 'add_container', description: 'Add a container to a software system')]
     public function addContainer(
+        #[Schema(description: 'Workspace ID', minLength: 1)]
         string $workspaceId,
+        #[Schema(description: 'Parent system ID', minLength: 1)]
         string $systemId,
+        #[Schema(description: 'Container name', minLength: 1, maxLength: 100)]
         string $name,
+        #[Schema(description: 'Container description', maxLength: 500)]
         string $description = '',
+        #[Schema(description: 'Technology/platform', maxLength: 200)]
         string $technology = '',
+        #[Schema(description: 'Tags for styling', type: 'array')]
         array $tags = []
     ): array {
         $this->logger->info("Adding container '{$name}' to system '{$systemId}' in workspace: {$workspaceId}");
@@ -168,11 +184,17 @@ class ModelTools
      */
     #[McpTool(name: 'add_component', description: 'Add a component to a container')]
     public function addComponent(
+        #[Schema(description: 'Workspace ID', minLength: 1)]
         string $workspaceId,
+        #[Schema(description: 'Parent container ID', minLength: 1)]
         string $containerId,
+        #[Schema(description: 'Component name', minLength: 1, maxLength: 100)]
         string $name,
+        #[Schema(description: 'Component description', maxLength: 500)]
         string $description = '',
+        #[Schema(description: 'Technology/framework', maxLength: 200)]
         string $technology = '',
+        #[Schema(description: 'Tags for styling', type: 'array')]
         array $tags = []
     ): array {
         $this->logger->info("Adding component '{$name}' to container '{$containerId}' in workspace: {$workspaceId}");
@@ -213,11 +235,17 @@ class ModelTools
      */
     #[McpTool(name: 'add_relationship', description: 'Add a relationship between two elements')]
     public function addRelationship(
+        #[Schema(description: 'Workspace ID', minLength: 1)]
         string $workspaceId,
+        #[Schema(description: 'Source element ID', minLength: 1)]
         string $sourceId,
+        #[Schema(description: 'Destination element ID', minLength: 1)]
         string $destinationId,
+        #[Schema(description: 'Relationship description', minLength: 1, maxLength: 200)]
         string $description,
+        #[Schema(description: 'Technology/protocol', maxLength: 200)]
         string $technology = '',
+        #[Schema(description: 'Tags for styling', type: 'array')]
         array $tags = []
     ): array {
         $this->logger->info("Adding relationship from '{$sourceId}' to '{$destinationId}' in workspace: {$workspaceId}");
@@ -255,9 +283,13 @@ class ModelTools
      */
     #[McpTool(name: 'create_system_context_view', description: 'Create a system context diagram view')]
     public function createSystemContextView(
+        #[Schema(description: 'Workspace ID', minLength: 1)]
         string $workspaceId,
+        #[Schema(description: 'System ID to visualize', minLength: 1)]
         string $systemId,
+        #[Schema(description: 'Unique view key', minLength: 1, maxLength: 50, pattern: '^[a-zA-Z0-9_-]+$')]
         string $key,
+        #[Schema(description: 'View description', maxLength: 500)]
         string $description = ''
     ): array {
         $this->logger->info("Creating system context view '{$key}' for system '{$systemId}' in workspace: {$workspaceId}");

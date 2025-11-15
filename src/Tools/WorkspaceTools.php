@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace StructurizrMcp\Tools;
 
 use Mcp\Capability\Attribute\McpTool;
+use Mcp\Capability\Attribute\Schema;
 use StructurizrMcp\Structurizr\WorkspaceManager;
 use StructurizrMcp\Exception\WorkspaceNotFoundException;
 use Psr\Log\LoggerInterface;
@@ -32,7 +33,9 @@ class WorkspaceTools
      */
     #[McpTool(name: 'create_workspace', description: 'Create a new Structurizr workspace')]
     public function createWorkspace(
+        #[Schema(description: 'Workspace name', minLength: 1, maxLength: 100)]
         string $name,
+        #[Schema(description: 'Workspace description', maxLength: 500)]
         string $description = ''
     ): array {
         $this->logger->info("Creating workspace: {$name}");
@@ -67,7 +70,9 @@ class WorkspaceTools
      */
     #[McpTool(name: 'get_workspace', description: 'Get workspace details by ID')]
     public function getWorkspace(
+        #[Schema(description: 'Workspace ID to retrieve', minLength: 1)]
         string $workspaceId,
+        #[Schema(description: 'Output format', enum: ['json', 'dsl'])]
         string $format = 'json'
     ): array {
         $this->logger->debug("Getting workspace: {$workspaceId} in format: {$format}");
@@ -118,7 +123,10 @@ class WorkspaceTools
      * @return array Deletion confirmation with success status and message
      */
     #[McpTool(name: 'delete_workspace', description: 'Delete a workspace by ID')]
-    public function deleteWorkspace(string $workspaceId): array
+    public function deleteWorkspace(
+        #[Schema(description: 'Workspace ID to delete', minLength: 1)]
+        string $workspaceId
+    ): array
     {
         $this->logger->info("Deleting workspace: {$workspaceId}");
 
@@ -148,7 +156,10 @@ class WorkspaceTools
      * @return array Workspace DSL string
      */
     #[McpTool(name: 'export_to_dsl', description: 'Export workspace to Structurizr DSL format')]
-    public function exportToDsl(string $workspaceId): array
+    public function exportToDsl(
+        #[Schema(description: 'Workspace ID to export', minLength: 1)]
+        string $workspaceId
+    ): array
     {
         $this->logger->debug("Exporting workspace to DSL: {$workspaceId}");
 
