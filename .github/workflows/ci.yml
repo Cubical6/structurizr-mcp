@@ -30,17 +30,17 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       - name: Cache composer dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist
+        run: composer install --prefer-dist --no-progress --no-interaction
 
       - name: Run PHP-CS-Fixer check
-        run: ./vendor/bin/php-cs-fixer fix --dry-run --diff
+        run: ./vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.php
 
       - name: Run PHPStan
         continue-on-error: true
@@ -54,7 +54,7 @@ jobs:
 
       - name: Run Composer audit
         continue-on-error: true
-        run: composer audit
+        run: composer audit --format=plain
 
   test:
     name: Run Tests
@@ -81,17 +81,17 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       - name: Cache composer dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-php${{ matrix.php-version }}-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-php${{ matrix.php-version }}-
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist
+        run: composer install --prefer-dist --no-progress --no-interaction
 
       - name: Run PHPUnit with coverage
-        run: ./vendor/bin/phpunit --coverage-clover coverage.xml
+        run: ./vendor/bin/phpunit --coverage-text --coverage-clover coverage.xml
 
       - name: Upload coverage artifacts
         uses: codecov/codecov-action@v3

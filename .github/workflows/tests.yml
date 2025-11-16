@@ -37,10 +37,10 @@ jobs:
           restore-keys: ${{ runner.os }}-composer-php${{ matrix.php-version }}-
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress
+        run: composer install --prefer-dist --no-progress --no-interaction
 
       - name: Run PHPUnit
-        run: vendor/bin/phpunit --coverage-text --coverage-clover=coverage-${{ matrix.php-version }}.xml
+        run: ./vendor/bin/phpunit --coverage-text --coverage-clover=coverage-${{ matrix.php-version }}.xml
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4

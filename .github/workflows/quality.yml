@@ -37,19 +37,20 @@ jobs:
             ${{ runner.os }}-composer-
 
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress
+        run: composer install --prefer-dist --no-progress --no-interaction
 
       - name: Run PHP-CS-Fixer check
-        run: vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.php
+        run: ./vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.php
 
       - name: Run PHPStan
         continue-on-error: true
-        run: vendor/bin/phpstan analyse --error-format=sarif > phpstan-results.sarif
+        run: ./vendor/bin/phpstan analyse --no-progress --error-format=sarif > phpstan-report.sarif
 
       - name: Upload SARIF to GitHub Security
+        if: always()
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: phpstan-results.sarif
+          sarif_file: phpstan-report.sarif
           category: phpstan
           wait-for-processing: true
 
