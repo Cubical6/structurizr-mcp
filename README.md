@@ -13,24 +13,36 @@ This MCP server allows Large Language Models to:
 
 ## Features
 
-✨ **Workspace Management**
+✨ **Workspace Management** (23 Tools)
 - Create, retrieve, list, and delete workspaces
 - Local file-based storage
+- Full CRUD operations
 
 🏗️ **C4 Model Building**
 - Add people, software systems, containers, and components
 - Define relationships with technology and tags
 - Hierarchical element organization
+- Component discovery and analysis
 
 📊 **Views & Visualization**
-- System context views
-- Container views
-- Component views
+- System context, container, and component views
+- Dynamic views for runtime behavior
 - Automatic layout support
+- Multiple export formats
 
-📝 **Export Capabilities**
-- Export to Structurizr DSL
-- Future: PlantUML, Mermaid support
+📝 **Export & Import**
+- Export to Structurizr DSL, PlantUML, Mermaid
+- Import from DSL
+- Validation and analysis tools
+
+📚 **Documentation**
+- Add documentation sections
+- Architecture Decision Records (ADRs)
+
+🔍 **MCP Resources** (7 Resources)
+- URI-based workspace access
+- Real-time element and view retrieval
+- Server configuration endpoint
 
 ## Installation
 
@@ -79,17 +91,16 @@ This MCP server allows Large Language Models to:
 
 5. **Restart Claude Desktop**
 
-## Available Tools
+## Available Tools (23 Total)
 
-### Workspace Management
+### Workspace Management (4 tools)
 
 - **`create_workspace`** - Create a new Structurizr workspace
 - **`get_workspace`** - Retrieve workspace details (JSON or DSL format)
 - **`list_workspaces`** - List all available workspaces
 - **`delete_workspace`** - Delete a workspace
-- **`export_to_dsl`** - Export workspace to Structurizr DSL
 
-### Model Building
+### Model Building (5 tools)
 
 - **`add_person`** - Add a person (user, actor) to the model
 - **`add_software_system`** - Add a software system
@@ -97,9 +108,49 @@ This MCP server allows Large Language Models to:
 - **`add_component`** - Add a component to a container
 - **`add_relationship`** - Create a relationship between elements
 
-### Views
+### Views (5 tools)
 
 - **`create_system_context_view`** - Create a system context diagram
+- **`create_container_view`** - Create a container diagram
+- **`create_component_view`** - Create a component diagram
+- **`create_dynamic_view`** - Create a dynamic diagram (runtime behavior)
+- **`apply_auto_layout`** - Apply automatic layout to a view
+
+### Documentation (2 tools)
+
+- **`add_documentation_section`** - Add a documentation section
+- **`add_adr`** - Add an Architecture Decision Record
+
+### Export/Import (4 tools)
+
+- **`export_to_dsl`** - Export workspace to Structurizr DSL
+- **`export_to_plantuml`** - Export view to PlantUML
+- **`export_to_mermaid`** - Export view to Mermaid
+- **`import_from_dsl`** - Import workspace from DSL
+
+### Analysis (3 tools)
+
+- **`analyze_dependencies`** - Analyze element dependencies
+- **`find_element`** - Find elements by name
+- **`validate_workspace`** - Validate workspace structure
+
+## Available Resources (7 Total)
+
+### Static Resources
+
+- **`structurizr://config`** - Server configuration and status
+
+### Workspace Resources
+
+- **`structurizr://workspace/{workspaceId}`** - Full workspace data
+- **`structurizr://workspace/{workspaceId}/model`** - Model elements only
+- **`structurizr://workspace/{workspaceId}/views`** - View definitions only
+- **`structurizr://workspace/{workspaceId}/dsl`** - DSL representation
+
+### Element & View Resources
+
+- **`structurizr://workspace/{workspaceId}/element/{elementId}`** - Specific element data
+- **`structurizr://workspace/{workspaceId}/view/{viewKey}`** - Specific view data
 
 ## Usage Examples
 

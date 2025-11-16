@@ -171,9 +171,26 @@ MCP is a universal, vendor-neutral standard for interactions between Large Langu
 - ✓ `find_element(workspace_id, name)`
 - ✓ `validate_workspace(workspace_id)`
 
-### Resources and Prompts
+### Resources
 
-**Note**: Resources and Prompts are planned for future enhancement and are not currently implemented. The server focuses on providing comprehensive tool capabilities for workspace management.
+**All 7 MCP resources are fully implemented and tested.**
+
+#### Static Resources (1/1 implemented ✓)
+- ✓ `structurizr://config` → Server configuration
+
+#### Workspace Resources (4/4 implemented ✓)
+- ✓ `structurizr://workspace/{workspaceId}` → Full workspace data
+- ✓ `structurizr://workspace/{workspaceId}/model` → Model elements only
+- ✓ `structurizr://workspace/{workspaceId}/views` → View definitions only
+- ✓ `structurizr://workspace/{workspaceId}/dsl` → DSL representation
+
+#### Element & View Resources (2/2 implemented ✓)
+- ✓ `structurizr://workspace/{workspaceId}/element/{elementId}` → Element data
+- ✓ `structurizr://workspace/{workspaceId}/view/{viewKey}` → View data
+
+### Prompts
+
+**Note**: Prompts are planned for future enhancement and are not currently implemented. The server focuses on providing comprehensive tool and resource capabilities for workspace management.
 
 ## Technology Stack
 
@@ -218,6 +235,11 @@ structurizr-mcp/
 │   │   ├── ExportTools.php            # DSL, PlantUML, Mermaid export
 │   │   ├── DocumentationTools.php     # Documentation & ADR management
 │   │   └── AnalysisTools.php          # Dependency analysis & validation
+│   ├── Resources/                     # MCP resource implementations
+│   │   ├── ConfigResource.php         # Static server configuration
+│   │   ├── WorkspaceResource.php      # Workspace data resources
+│   │   ├── ElementResource.php        # Element retrieval resource
+│   │   └── ViewResource.php           # View retrieval resource
 │   ├── Structurizr/                   # Core Structurizr integration
 │   │   ├── CliWrapper.php             # CLI command execution wrapper
 │   │   ├── DslBuilder.php             # DSL generation utility
@@ -232,7 +254,7 @@ structurizr-mcp/
 │   │   ├── CliExecutionException.php
 │   │   └── StructurizrException.php
 │   └── Configuration.php              # Environment configuration
-├── tests/                             # PHPUnit tests (100 tests, all passing)
+├── tests/                             # PHPUnit tests (286 tests, all passing)
 │   ├── Unit/
 │   │   ├── Tools/
 │   │   │   ├── WorkspaceToolsTest.php
@@ -241,6 +263,11 @@ structurizr-mcp/
 │   │   │   ├── ExportToolsTest.php
 │   │   │   ├── DocumentationToolsTest.php
 │   │   │   └── AnalysisToolsTest.php
+│   │   ├── Resources/
+│   │   │   ├── ConfigResourceTest.php
+│   │   │   ├── WorkspaceResourceTest.php
+│   │   │   ├── ElementResourceTest.php
+│   │   │   └── ViewResourceTest.php
 │   │   ├── Structurizr/
 │   │   │   ├── DslBuilderTest.php
 │   │   │   ├── WorkspaceManagerTest.php
@@ -483,6 +510,8 @@ All configuration is handled via environment variables:
 
 ## Implementation Status
 
+### Tools Implementation
+
 | Category | Tools | Status |
 |----------|-------|--------|
 | Workspace Management | 4 tools | ✅ 100% Complete |
@@ -491,15 +520,26 @@ All configuration is handled via environment variables:
 | Documentation | 2 tools | ✅ 100% Complete |
 | Export/Import | 4 tools | ✅ 100% Complete |
 | Analysis | 3 tools | ✅ 100% Complete |
-| **Total** | **23 tools** | **✅ 100% Complete** |
+| **Total Tools** | **23 tools** | **✅ 100% Complete** |
+
+### Resources Implementation
+
+| Category | Resources | Status |
+|----------|-----------|--------|
+| Static Resources | 1 resource | ✅ 100% Complete |
+| Workspace Resources | 4 resources | ✅ 100% Complete |
+| Element & View Resources | 2 resources | ✅ 100% Complete |
+| **Total Resources** | **7 resources** | **✅ 100% Complete** |
 
 ### Test Coverage
 
 | Test Suite | Tests | Coverage |
 |------------|-------|----------|
-| Unit Tests | 92 tests | >90% coverage |
+| Unit Tests (Tools) | 224 tests | >95% coverage |
+| Unit Tests (Resources) | 31 tests | >95% coverage |
+| Unit Tests (Core) | 23 tests | >95% coverage |
 | Integration Tests | 8 tests | 100% passing |
-| **Total** | **100 tests** | **✅ 100% passing** |
+| **Total** | **286 tests** | **✅ 100% passing** |
 
 ### Quality Assurance
 - **PHPStan Level 8**: All code passes strict static analysis
