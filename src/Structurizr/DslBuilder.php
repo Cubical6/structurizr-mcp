@@ -29,15 +29,11 @@ class DslBuilder
 
     /**
      * Name of the workspace
-     *
-     * @var string
      */
     private string $workspaceName = '';
 
     /**
      * Description of the workspace
-     *
-     * @var string
      */
     private string $workspaceDescription = '';
 
@@ -64,8 +60,6 @@ class DslBuilder
 
     /**
      * Counter for generating unique element IDs
-     *
-     * @var int
      */
     private int $elementCounter = 0;
 

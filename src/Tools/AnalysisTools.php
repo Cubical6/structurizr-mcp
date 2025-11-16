@@ -94,15 +94,12 @@ class AnalysisTools
             }
 
             // Analyze entire workspace
-            /** @var array<string, array<string, mixed>> $dependencyGraph */
             $dependencyGraph = [];
             foreach ($elements as $id => $element) {
-                /** @var array<int, array<string, mixed>> $inbound */
                 $inbound = array_filter(
                     $relationships,
                     fn ($rel) => $rel['destination'] === $id,
                 );
-                /** @var array<int, array<string, mixed>> $outbound */
                 $outbound = array_filter(
                     $relationships,
                     fn ($rel) => $rel['source'] === $id,
@@ -163,12 +160,10 @@ class AnalysisTools
             $workspace = $this->workspaceManager->load($workspaceId);
 
             // Parse DSL to extract elements
-            /** @var array<string, array<string, mixed>> $elements */
             $elements = $this->parseElements($workspace->dsl);
 
             // Search for matching elements (case-insensitive, partial match)
             $searchTerm = strtolower($name);
-            /** @var array<int, array<string, mixed>> $matches */
             $matches = [];
 
             foreach ($elements as $id => $element) {

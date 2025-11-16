@@ -57,9 +57,7 @@ class WorkspaceManager
         $id = $this->generateWorkspaceId();
         $now = new \DateTimeImmutable();
 
-        /** @var array<string, mixed> $model */
         $model = [];
-        /** @var array<string, mixed> $views */
         $views = [];
 
         $workspace = new Workspace(
@@ -100,7 +98,6 @@ class WorkspaceManager
             throw new \RuntimeException("Failed to read workspace file: {$id}");
         }
 
-        /** @var array<string, mixed> $data */
         $data = json_decode($content, true);
 
         if ($data === null) {
