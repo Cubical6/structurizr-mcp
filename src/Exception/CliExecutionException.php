@@ -21,7 +21,7 @@ class CliExecutionException extends StructurizrException
         parent::__construct(
             "CLI execution failed for command '{$command}': {$error}",
             500,
-            $previous
+            $previous,
         );
     }
 }

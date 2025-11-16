@@ -20,7 +20,7 @@ class WorkspaceNotFoundException extends StructurizrException
         parent::__construct(
             "Workspace not found: {$workspaceId}",
             404,
-            $previous
+            $previous,
         );
     }
 }

@@ -8,3 +8,11 @@ parameters:
     ignoreErrors:
         -
             identifier: missingType.iterableValue
+
+services:
+    errorFormatter.sarif:
+        class: PHPStanSarifErrorFormatter\SarifErrorFormatter
+        arguments:
+            relativePathHelper: @simpleRelativePathHelper
+            currentWorkingDirectory: %currentWorkingDirectory%
+            pretty: true

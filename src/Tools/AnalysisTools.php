@@ -9,8 +9,8 @@ use Mcp\Capability\Attribute\Schema;
 use Mcp\Exception\ToolCallException;
 use Psr\Log\LoggerInterface;
 use StructurizrMcp\Exception\WorkspaceNotFoundException;
-use StructurizrMcp\Structurizr\WorkspaceManager;
 use StructurizrMcp\Structurizr\CliWrapper;
+use StructurizrMcp\Structurizr\WorkspaceManager;
 
 /**
  * MCP Tools for workspace analysis and validation
@@ -30,7 +30,7 @@ class AnalysisTools
     public function __construct(
         private readonly WorkspaceManager $workspaceManager,
         private readonly CliWrapper $cliWrapper,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -47,13 +47,13 @@ class AnalysisTools
      */
     #[McpTool(
         name: 'analyze_dependencies',
-        description: 'Analyzes dependencies between elements in the workspace'
+        description: 'Analyzes dependencies between elements in the workspace',
     )]
     public function analyzeDependencies(
         #[Schema(description: 'Workspace ID', minLength: 1)]
         string $workspaceId,
         #[Schema(description: 'Specific element ID to analyze (optional)')]
-        ?string $elementId = null
+        ?string $elementId = null,
     ): array {
         $this->logger->info("Analyzing dependencies for workspace: {$workspaceId}", [
             'elementId' => $elementId,
@@ -74,12 +74,12 @@ class AnalysisTools
 
                 $inbound = array_filter(
                     $relationships,
-                    fn($rel) => $rel['destination'] === $elementId
+                    fn ($rel) => $rel['destination'] === $elementId,
                 );
 
                 $outbound = array_filter(
                     $relationships,
-                    fn($rel) => $rel['source'] === $elementId
+                    fn ($rel) => $rel['source'] === $elementId,
                 );
 
                 return [
@@ -98,11 +98,11 @@ class AnalysisTools
             foreach ($elements as $id => $element) {
                 $inbound = array_filter(
                     $relationships,
-                    fn($rel) => $rel['destination'] === $id
+                    fn ($rel) => $rel['destination'] === $id,
                 );
                 $outbound = array_filter(
                     $relationships,
-                    fn($rel) => $rel['source'] === $id
+                    fn ($rel) => $rel['source'] === $id,
                 );
 
                 $dependencyGraph[$id] = [
@@ -114,7 +114,7 @@ class AnalysisTools
             }
 
             // Sort by total dependencies (most connected first)
-            uasort($dependencyGraph, fn($a, $b) => $b['totalDependencies'] <=> $a['totalDependencies']);
+            uasort($dependencyGraph, fn ($a, $b) => $b['totalDependencies'] <=> $a['totalDependencies']);
 
             return [
                 'workspaceId' => $workspaceId,
@@ -144,13 +144,13 @@ class AnalysisTools
      */
     #[McpTool(
         name: 'find_element',
-        description: 'Searches for elements by name in the workspace'
+        description: 'Searches for elements by name in the workspace',
     )]
     public function findElement(
         #[Schema(description: 'Workspace ID', minLength: 1)]
         string $workspaceId,
         #[Schema(description: 'Element name to search for', minLength: 1)]
-        string $name
+        string $name,
     ): array {
         $this->logger->info("Finding elements in workspace: {$workspaceId}", [
             'searchName' => $name,
@@ -204,11 +204,11 @@ class AnalysisTools
      */
     #[McpTool(
         name: 'validate_workspace',
-        description: 'Validates workspace DSL syntax and structure'
+        description: 'Validates workspace DSL syntax and structure',
     )]
     public function validateWorkspace(
         #[Schema(description: 'Workspace ID', minLength: 1)]
-        string $workspaceId
+        string $workspaceId,
     ): array {
         $this->logger->info("Validating workspace: {$workspaceId}");
 

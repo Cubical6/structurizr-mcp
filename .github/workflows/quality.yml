@@ -1,0 +1,58 @@
+name: Code Quality & Security
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+
+permissions:
+  security-events: write
+  contents: read
+  actions: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.1
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          coverage: none
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Run PHP-CS-Fixer check
+        run: ./vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.php
+
+      - name: Run PHPStan
+        continue-on-error: true
+        run: ./vendor/bin/phpstan analyse --no-progress --error-format=sarif > phpstan-report.sarif || true
+
+      - name: Upload SARIF to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: phpstan-report.sarif
+          category: phpstan
+
+      - name: Run composer audit
+        continue-on-error: true
+        run: composer audit --format=plain

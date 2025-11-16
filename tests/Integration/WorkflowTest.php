@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace StructurizrMcp\Tests\Integration;
 
+use Mcp\Exception\ToolCallException;
 use PHPUnit\Framework\TestCase;
-use StructurizrMcp\Structurizr\WorkspaceManager;
-use StructurizrMcp\Structurizr\DslBuilder;
+use Psr\Log\NullLogger;
 use StructurizrMcp\Structurizr\CliWrapper;
-use StructurizrMcp\Tools\WorkspaceTools;
+use StructurizrMcp\Structurizr\DslBuilder;
+use StructurizrMcp\Structurizr\WorkspaceManager;
+use StructurizrMcp\Tools\ExportTools;
 use StructurizrMcp\Tools\ModelTools;
 use StructurizrMcp\Tools\ViewTools;
-use StructurizrMcp\Tools\ExportTools;
-use StructurizrMcp\Exception\WorkspaceNotFoundException;
-use Mcp\Exception\ToolCallException;
-use Psr\Log\NullLogger;
+use StructurizrMcp\Tools\WorkspaceTools;
 
 /**
  * Integration tests for complete workflows
@@ -73,7 +72,7 @@ class WorkflowTest extends TestCase
         // Step 1: Create workspace
         $workspaceResult = $this->workspaceTools->createWorkspace(
             'E-Commerce System',
-            'Online shopping platform'
+            'Online shopping platform',
         );
 
         $this->assertNotEmpty($workspaceResult['workspaceId']);
@@ -84,7 +83,7 @@ class WorkflowTest extends TestCase
             $workspaceId,
             'Customer',
             'A customer of the online store',
-            ['External']
+            ['External'],
         );
 
         $this->assertEquals('person', $customer['type']);
@@ -94,7 +93,7 @@ class WorkflowTest extends TestCase
             $workspaceId,
             'Admin',
             'System administrator',
-            ['Internal']
+            ['Internal'],
         );
 
         // Step 3: Add software systems
@@ -102,7 +101,7 @@ class WorkflowTest extends TestCase
             $workspaceId,
             'E-Commerce System',
             'Allows customers to purchase products online',
-            'Internal'
+            'Internal',
         );
 
         $this->assertEquals('softwareSystem', $ecommerce['type']);
@@ -111,14 +110,14 @@ class WorkflowTest extends TestCase
             $workspaceId,
             'Payment Gateway',
             'Processes credit card payments',
-            'External'
+            'External',
         );
 
         $email = $this->modelTools->addSoftwareSystem(
             $workspaceId,
             'Email System',
             'Sends emails to customers',
-            'External'
+            'External',
         );
 
         // Step 4: Add containers
@@ -127,7 +126,7 @@ class WorkflowTest extends TestCase
             $ecommerce['elementId'],
             'Web Application',
             'Delivers the static content and the e-commerce single page application',
-            'JavaScript and React'
+            'JavaScript and React',
         );
 
         $this->assertEquals('container', $webapp['type']);
@@ -137,7 +136,7 @@ class WorkflowTest extends TestCase
             $ecommerce['elementId'],
             'API Application',
             'Provides e-commerce functionality via a RESTful JSON API',
-            'Node.js and Express'
+            'Node.js and Express',
         );
 
         $database = $this->modelTools->addContainer(
@@ -145,7 +144,7 @@ class WorkflowTest extends TestCase
             $ecommerce['elementId'],
             'Database',
             'Stores product information, customer information, orders, etc.',
-            'PostgreSQL'
+            'PostgreSQL',
         );
 
         // Step 5: Add components
@@ -154,7 +153,7 @@ class WorkflowTest extends TestCase
             $api['elementId'],
             'Order Controller',
             'Handles order processing requests',
-            'Express Controller'
+            'Express Controller',
         );
 
         $this->assertEquals('component', $orderController['type']);
@@ -164,7 +163,7 @@ class WorkflowTest extends TestCase
             $api['elementId'],
             'Product Controller',
             'Handles product catalog requests',
-            'Express Controller'
+            'Express Controller',
         );
 
         // Step 6: Add relationships
@@ -173,7 +172,7 @@ class WorkflowTest extends TestCase
             $customer['elementId'],
             $webapp['elementId'],
             'Visits using',
-            'HTTPS'
+            'HTTPS',
         );
 
         $this->assertNotEmpty($rel1['relationshipId']);
@@ -183,7 +182,7 @@ class WorkflowTest extends TestCase
             $webapp['elementId'],
             $api['elementId'],
             'Makes API calls to',
-            'JSON/HTTPS'
+            'JSON/HTTPS',
         );
 
         $this->modelTools->addRelationship(
@@ -191,7 +190,7 @@ class WorkflowTest extends TestCase
             $api['elementId'],
             $database['elementId'],
             'Reads from and writes to',
-            'SQL/TCP'
+            'SQL/TCP',
         );
 
         $this->modelTools->addRelationship(
@@ -199,7 +198,7 @@ class WorkflowTest extends TestCase
             $api['elementId'],
             $payment['elementId'],
             'Processes payments using',
-            'HTTPS/REST'
+            'HTTPS/REST',
         );
 
         $this->modelTools->addRelationship(
@@ -207,7 +206,7 @@ class WorkflowTest extends TestCase
             $api['elementId'],
             $email['elementId'],
             'Sends emails using',
-            'SMTP'
+            'SMTP',
         );
 
         $this->modelTools->addRelationship(
@@ -215,7 +214,7 @@ class WorkflowTest extends TestCase
             $admin['elementId'],
             $webapp['elementId'],
             'Manages products using',
-            'HTTPS'
+            'HTTPS',
         );
 
         // Step 7: Create views
@@ -223,7 +222,7 @@ class WorkflowTest extends TestCase
             $workspaceId,
             $ecommerce['elementId'],
             'SystemContext',
-            'The system context diagram for the E-Commerce System'
+            'The system context diagram for the E-Commerce System',
         );
 
         $this->assertEquals('SystemContext', $contextView['viewKey']);
@@ -233,7 +232,7 @@ class WorkflowTest extends TestCase
             $workspaceId,
             $ecommerce['elementId'],
             'Containers',
-            'The container diagram for the E-Commerce System'
+            'The container diagram for the E-Commerce System',
         );
 
         $this->assertEquals('Containers', $containerView['viewKey']);
@@ -242,7 +241,7 @@ class WorkflowTest extends TestCase
             $workspaceId,
             $api['elementId'],
             'Components',
-            'The component diagram for the API Application'
+            'The component diagram for the API Application',
         );
 
         $this->assertEquals('Components', $componentView['viewKey']);
@@ -251,7 +250,7 @@ class WorkflowTest extends TestCase
         $layoutResult = $this->viewTools->applyAutoLayout(
             $workspaceId,
             'Containers',
-            'tb'
+            'tb',
         );
 
         $this->assertEquals('tb', $layoutResult['autoLayout']);
@@ -307,7 +306,7 @@ class WorkflowTest extends TestCase
             $workspaceId,
             $person['elementId'],
             $system['elementId'],
-            'Uses'
+            'Uses',
         );
 
         $this->assertNotEmpty($result['relationshipId']);

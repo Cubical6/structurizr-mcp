@@ -73,6 +73,7 @@ class DslBuilder
     {
         $this->workspaceName = $name;
         $this->workspaceDescription = $description;
+
         return $this;
     }
 
@@ -86,6 +87,7 @@ class DslBuilder
             'description' => $description,
             'tags' => $tags,
         ];
+
         return $id;
     }
 
@@ -101,6 +103,7 @@ class DslBuilder
             'tags' => $tags,
             'containers' => [],
         ];
+
         return $id;
     }
 
@@ -182,6 +185,7 @@ class DslBuilder
             'description' => $description,
             'autoLayout' => 'lr',
         ];
+
         return $key;
     }
 
@@ -194,6 +198,7 @@ class DslBuilder
             'description' => $description,
             'autoLayout' => 'lr',
         ];
+
         return $key;
     }
 
@@ -206,6 +211,7 @@ class DslBuilder
             'description' => $description,
             'autoLayout' => 'lr',
         ];
+
         return $key;
     }
 
@@ -218,6 +224,7 @@ class DslBuilder
             'description' => $description,
             'autoLayout' => 'lr',
         ];
+
         return $key;
     }
 
@@ -226,9 +233,11 @@ class DslBuilder
         foreach ($this->views as &$view) {
             if ($view['key'] === $viewKey) {
                 $view['autoLayout'] = $direction;
+
                 return;
             }
         }
+
         throw new \InvalidArgumentException("View not found: {$viewKey}");
     }
 
@@ -281,6 +290,7 @@ class DslBuilder
     private function generatePersonDsl(array $element): string
     {
         $tags = $this->formatTags($element['tags']);
+
         return "        {$element['id']} = person \"{$element['name']}\" \"{$element['description']}\"{$tags}\n";
     }
 
@@ -308,7 +318,7 @@ class DslBuilder
     {
         $techAndTags = $this->formatTechnologyAndTags(
             $element['technology'] ?? '',
-            $element['tags']
+            $element['tags'],
         );
         $dsl = "            {$element['id']} = container \"{$element['name']}\" \"{$element['description']}\"{$techAndTags}";
 
@@ -331,8 +341,9 @@ class DslBuilder
     {
         $techAndTags = $this->formatTechnologyAndTags(
             $element['technology'] ?? '',
-            $element['tags']
+            $element['tags'],
         );
+
         return "                {$element['id']} = component \"{$element['name']}\" \"{$element['description']}\"{$techAndTags}\n";
     }
 
@@ -340,8 +351,9 @@ class DslBuilder
     {
         $techAndTags = $this->formatTechnologyAndTags(
             $rel['technology'] ?? '',
-            $rel['tags']
+            $rel['tags'],
         );
+
         return "        {$rel['sourceId']} -> {$rel['destinationId']} \"{$rel['description']}\"{$techAndTags}\n";
     }
 
@@ -356,26 +368,31 @@ class DslBuilder
                 $dsl .= "            include *\n";
                 $dsl .= "            autoLayout {$autoLayout}\n";
                 $dsl .= "        }\n";
+
                 break;
             case 'container':
                 $dsl .= "        container {$view['systemId']} \"{$view['key']}\" {\n";
                 $dsl .= "            include *\n";
                 $dsl .= "            autoLayout {$autoLayout}\n";
                 $dsl .= "        }\n";
+
                 break;
             case 'component':
                 $dsl .= "        component {$view['containerId']} \"{$view['key']}\" {\n";
                 $dsl .= "            include *\n";
                 $dsl .= "            autoLayout {$autoLayout}\n";
                 $dsl .= "        }\n";
+
                 break;
             case 'dynamic':
                 $description = !empty($view['description']) ? " \"{$view['description']}\"" : '';
                 $dsl .= "        dynamic {$view['elementId']} \"{$view['key']}\"{$description} {\n";
                 $dsl .= "            autoLayout {$autoLayout}\n";
                 $dsl .= "        }\n";
+
                 break;
         }
+
         return $dsl;
     }
 
@@ -454,6 +471,7 @@ class DslBuilder
                 }
             }
         }
+
         return null;
     }
 
@@ -519,6 +537,7 @@ class DslBuilder
             if ($element = $this->parsePerson($trimmed)) {
                 $this->elements[$element['id']] = $element;
                 $this->updateElementCounter($element['id']);
+
                 continue;
             }
 
@@ -527,6 +546,7 @@ class DslBuilder
                 $this->updateElementCounter($element['id']);
                 $currentSystem = $element['id'];
                 $systemStack[] = $element['id'];
+
                 continue;
             }
 
@@ -538,6 +558,7 @@ class DslBuilder
                     $currentContainer = $element['id'];
                     $containerStack[] = $element['id'];
                 }
+
                 continue;
             }
 
@@ -547,12 +568,14 @@ class DslBuilder
                     $this->elements[$currentContainer]['components'][] = $element['id'];
                     $this->updateElementCounter($element['id']);
                 }
+
                 continue;
             }
 
             if ($relationship = $this->parseRelationship($trimmed)) {
                 $id = $this->generateId('relationship');
                 $this->relationships[$id] = array_merge(['id' => $id], $relationship);
+
                 continue;
             }
 

@@ -7,10 +7,10 @@ namespace StructurizrMcp\Tests\Unit\Structurizr;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use StructurizrMcp\Exception\CliExecutionException;
 use StructurizrMcp\Structurizr\CliWrapper;
 use StructurizrMcp\Structurizr\ProcessResult;
 use StructurizrMcp\Structurizr\ValidationResult;
-use StructurizrMcp\Exception\CliExecutionException;
 
 /**
  * Unit tests for CliWrapper
@@ -30,7 +30,7 @@ class CliWrapperTest extends TestCase
         // Create temporary CLI executable for testing
         $this->tempCliPath = sys_get_temp_dir() . '/structurizr-cli-' . uniqid();
         file_put_contents($this->tempCliPath, '#!/bin/sh' . PHP_EOL . 'echo "test"');
-        chmod($this->tempCliPath, 0755);
+        chmod($this->tempCliPath, 0o755);
 
         // Create temporary DSL file
         $this->tempDslPath = sys_get_temp_dir() . '/test-workspace-' . uniqid() . '.dsl';
@@ -89,7 +89,7 @@ class CliWrapperTest extends TestCase
         // Create a non-executable file
         $nonExecutable = sys_get_temp_dir() . '/non-executable-' . uniqid();
         file_put_contents($nonExecutable, 'not executable');
-        chmod($nonExecutable, 0644);
+        chmod($nonExecutable, 0o644);
 
         try {
             $this->expectException(CliExecutionException::class);
@@ -119,7 +119,7 @@ class CliWrapperTest extends TestCase
         // Create a script that exits successfully
         $tempCli = $this->tempOutputDir . '/success-cli';
         file_put_contents($tempCli, "#!/bin/sh\necho 'Success output'\nexit 0");
-        chmod($tempCli, 0755);
+        chmod($tempCli, 0o755);
 
         $wrapper = new CliWrapper($tempCli, $this->logger);
         $result = $wrapper->executeCommand(['version'], 30);
@@ -135,7 +135,7 @@ class CliWrapperTest extends TestCase
         // Create a script that fails
         $tempCli = $this->tempOutputDir . '/fail-cli';
         file_put_contents($tempCli, "#!/bin/sh\necho 'Error message' >&2\nexit 1");
-        chmod($tempCli, 0755);
+        chmod($tempCli, 0o755);
 
         $wrapper = new CliWrapper($tempCli, $this->logger);
         $result = $wrapper->executeCommand(['invalid'], 30);
@@ -150,7 +150,7 @@ class CliWrapperTest extends TestCase
         // Create a script that sleeps longer than the timeout
         $tempCli = $this->tempOutputDir . '/slow-cli';
         file_put_contents($tempCli, "#!/bin/sh\nsleep 10\necho 'Done'\nexit 0");
-        chmod($tempCli, 0755);
+        chmod($tempCli, 0o755);
 
         $wrapper = new CliWrapper($tempCli, $this->logger);
 
@@ -172,7 +172,7 @@ class CliWrapperTest extends TestCase
             exitCode: 0,
             stdout: 'Workspace is valid',
             stderr: '',
-            success: true
+            success: true,
         );
 
         $wrapper->setMockedResult($result);
@@ -193,7 +193,7 @@ class CliWrapperTest extends TestCase
             exitCode: 1,
             stdout: "ERROR: Syntax error on line 5\nERROR: Missing closing brace",
             stderr: '',
-            success: false
+            success: false,
         );
 
         $wrapper->setMockedResult($result);
@@ -214,7 +214,7 @@ class CliWrapperTest extends TestCase
             exitCode: 0,
             stdout: "WARNING: Unused element detected\nWARNING: Missing description for component",
             stderr: '',
-            success: true
+            success: true,
         );
 
         $wrapper->setMockedResult($result);
@@ -251,7 +251,7 @@ class CliWrapperTest extends TestCase
             exitCode: 0,
             stdout: $expectedOutput,
             stderr: '',
-            success: true
+            success: true,
         );
 
         $wrapper->setMockedResult($result);
@@ -270,7 +270,7 @@ class CliWrapperTest extends TestCase
             exitCode: 0,
             stdout: '',
             stderr: '',
-            success: true
+            success: true,
         );
 
         $wrapper->setMockedResult($result);
@@ -288,7 +288,7 @@ class CliWrapperTest extends TestCase
             exitCode: 1,
             stdout: '',
             stderr: 'Export failed: Invalid format',
-            success: false
+            success: false,
         );
 
         $wrapper->setMockedResult($result);
@@ -321,7 +321,7 @@ class CliWrapperTest extends TestCase
             exitCode: 0,
             stdout: 'Workspace pushed successfully',
             stderr: '',
-            success: true
+            success: true,
         );
 
         $wrapper->setMockedResult($result);
@@ -330,7 +330,7 @@ class CliWrapperTest extends TestCase
             $this->tempWorkspacePath,
             12345,
             'test-key',
-            'test-secret'
+            'test-secret',
         );
 
         $this->assertTrue($pushResult->isSuccess());
@@ -353,7 +353,7 @@ class CliWrapperTest extends TestCase
             exitCode: 0,
             stdout: 'Workspace pushed successfully',
             stderr: '',
-            success: true
+            success: true,
         );
 
         $wrapper->setMockedResult($result);
@@ -363,7 +363,7 @@ class CliWrapperTest extends TestCase
             12345,
             'test-key',
             'test-secret',
-            'https://custom.structurizr.com'
+            'https://custom.structurizr.com',
         );
 
         $lastArgs = $wrapper->getLastCommandArgs();
@@ -379,7 +379,7 @@ class CliWrapperTest extends TestCase
             exitCode: 1,
             stdout: '',
             stderr: 'Authentication failed',
-            success: false
+            success: false,
         );
 
         $wrapper->setMockedResult($result);
@@ -391,7 +391,7 @@ class CliWrapperTest extends TestCase
             $this->tempWorkspacePath,
             12345,
             'invalid-key',
-            'invalid-secret'
+            'invalid-secret',
         );
     }
 
@@ -408,7 +408,7 @@ class CliWrapperTest extends TestCase
             exitCode: 0,
             stdout: 'Workspace pulled successfully',
             stderr: '',
-            success: true
+            success: true,
         );
 
         $wrapper->setMockedResult($result);
@@ -417,7 +417,7 @@ class CliWrapperTest extends TestCase
             12345,
             'test-key',
             'test-secret',
-            $outputPath
+            $outputPath,
         );
 
         $this->assertTrue($pullResult->isSuccess());
@@ -438,7 +438,7 @@ class CliWrapperTest extends TestCase
             exitCode: 0,
             stdout: 'Workspace pulled successfully',
             stderr: '',
-            success: true
+            success: true,
         );
 
         $wrapper->setMockedResult($result);
@@ -448,7 +448,7 @@ class CliWrapperTest extends TestCase
             'test-key',
             'test-secret',
             $outputPath,
-            'https://custom.structurizr.com'
+            'https://custom.structurizr.com',
         );
 
         $lastArgs = $wrapper->getLastCommandArgs();
@@ -465,7 +465,7 @@ class CliWrapperTest extends TestCase
             exitCode: 1,
             stdout: '',
             stderr: 'Workspace not found',
-            success: false
+            success: false,
         );
 
         $wrapper->setMockedResult($result);
@@ -477,7 +477,7 @@ class CliWrapperTest extends TestCase
             99999,
             'test-key',
             'test-secret',
-            $outputPath
+            $outputPath,
         );
     }
 
@@ -492,7 +492,7 @@ class CliWrapperTest extends TestCase
             12345,
             'test-key',
             'test-secret',
-            '/nonexistent/dir/workspace.json'
+            '/nonexistent/dir/workspace.json',
         );
     }
 
@@ -508,7 +508,7 @@ class CliWrapperTest extends TestCase
             exitCode: 0,
             stdout: 'Structurizr CLI v1.30.0',
             stderr: '',
-            success: true
+            success: true,
         );
 
         $wrapper->setMockedResult($result);
@@ -526,7 +526,7 @@ class CliWrapperTest extends TestCase
             exitCode: 1,
             stdout: '',
             stderr: 'Command not found',
-            success: false
+            success: false,
         );
 
         $wrapper->setMockedResult($result);
@@ -554,7 +554,7 @@ class CliWrapperTest extends TestCase
             'push',
             '-key', 'my-secret-key',
             '-secret', 'my-secret-secret',
-            '-workspace', '/path/to/workspace.dsl'
+            '-workspace', '/path/to/workspace.dsl',
         ];
 
         $sanitized = $method->invoke($wrapper, $command);
@@ -586,7 +586,7 @@ class CliWrapperTest extends TestCase
             '/path/to/cli',
             'push',
             '-apiKey', 'my-api-key',
-            '-workspace', '/path/to/workspace.dsl'
+            '-workspace', '/path/to/workspace.dsl',
         ];
 
         $sanitized = $method->invoke($wrapper, $command);
@@ -609,7 +609,7 @@ class CliWrapperTest extends TestCase
             '/path/to/cli',
             'push',
             '-apiSecret', 'my-api-secret',
-            '-id', '12345'
+            '-id', '12345',
         ];
 
         $sanitized = $method->invoke($wrapper, $command);
@@ -635,7 +635,7 @@ class CliWrapperTest extends TestCase
             '-secret', 'secret-secret',
             '-apiKey', 'api-key-value',
             '-apiSecret', 'api-secret-value',
-            '-workspace', '/path/to/workspace.dsl'
+            '-workspace', '/path/to/workspace.dsl',
         ];
 
         $sanitized = $method->invoke($wrapper, $command);
@@ -665,18 +665,18 @@ class CliWrapperTest extends TestCase
         $wrapper = new TestableCliWrapper($this->tempCliPath, $this->logger);
 
         $output = <<<OUTPUT
-[INFO] Starting validation
-ERROR: Undefined element 'database'
-WARNING: Element 'api' has no description
-[ERROR] Relationship missing source
-WARNING: View 'SystemContext' is empty
-OUTPUT;
+            [INFO] Starting validation
+            ERROR: Undefined element 'database'
+            WARNING: Element 'api' has no description
+            [ERROR] Relationship missing source
+            WARNING: View 'SystemContext' is empty
+            OUTPUT;
 
         $result = new ProcessResult(
             exitCode: 1,
             stdout: $output,
             stderr: '',
-            success: false
+            success: false,
         );
 
         $wrapper->setMockedResult($result);
@@ -696,7 +696,7 @@ OUTPUT;
             exitCode: 1,
             stdout: '',
             stderr: 'Fatal error: Could not parse DSL file',
-            success: false
+            success: false,
         );
 
         $wrapper->setMockedResult($result);
@@ -742,7 +742,7 @@ OUTPUT;
         // Create a file and make it non-readable
         $nonReadable = $this->tempOutputDir . '/non-readable.json';
         file_put_contents($nonReadable, '{}');
-        chmod($nonReadable, 0000);
+        chmod($nonReadable, 0o000);
 
         $wrapper = new CliWrapper($this->tempCliPath, $this->logger);
 
@@ -753,7 +753,7 @@ OUTPUT;
             $wrapper->export($nonReadable, 'plantuml');
         } finally {
             // Restore permissions for cleanup
-            chmod($nonReadable, 0644);
+            chmod($nonReadable, 0o644);
         }
     }
 }

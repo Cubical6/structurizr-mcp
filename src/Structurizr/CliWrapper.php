@@ -42,21 +42,21 @@ class CliWrapper
      */
     public function __construct(
         string $cliPath,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
     ) {
         // Validate CLI path exists and is executable
         $resolvedPath = realpath($cliPath);
         if ($resolvedPath === false) {
             throw new CliExecutionException(
                 'structurizr-cli',
-                "CLI executable not found at path: {$cliPath}"
+                "CLI executable not found at path: {$cliPath}",
             );
         }
 
         if (!is_executable($resolvedPath)) {
             throw new CliExecutionException(
                 'structurizr-cli',
-                "CLI path is not executable: {$resolvedPath}"
+                "CLI path is not executable: {$resolvedPath}",
             );
         }
 
@@ -95,7 +95,7 @@ class CliWrapper
                 exitCode: $process->getExitCode() ?? 1,
                 stdout: $process->getOutput(),
                 stderr: $process->getErrorOutput(),
-                success: $process->isSuccessful()
+                success: $process->isSuccessful(),
             );
 
             if ($result->isSuccess()) {
@@ -119,7 +119,7 @@ class CliWrapper
             throw new CliExecutionException(
                 implode(' ', $sanitizedCommand),
                 $e->getMessage(),
-                $e
+                $e,
             );
         } catch (\Throwable $e) {
             $this->logger->error('Unexpected error during CLI execution', [
@@ -130,7 +130,7 @@ class CliWrapper
             throw new CliExecutionException(
                 implode(' ', $sanitizedCommand),
                 'Unexpected error: ' . $e->getMessage(),
-                $e
+                $e,
             );
         }
     }
@@ -151,7 +151,7 @@ class CliWrapper
 
         $result = $this->executeCommand(
             ['validate', '-workspace', $resolvedPath],
-            self::TIMEOUT_VALIDATION
+            self::TIMEOUT_VALIDATION,
         );
 
         return $this->parseValidationResult($result);
@@ -185,7 +185,7 @@ class CliWrapper
             if (!is_dir($outputDir)) {
                 throw new CliExecutionException(
                     'export',
-                    "Output directory does not exist: {$outputDir}"
+                    "Output directory does not exist: {$outputDir}",
                 );
             }
 
@@ -198,7 +198,7 @@ class CliWrapper
         if (!$result->isSuccess()) {
             throw new CliExecutionException(
                 'export',
-                "Export failed: {$result->getErrorMessage()}"
+                "Export failed: {$result->getErrorMessage()}",
             );
         }
 
@@ -222,7 +222,7 @@ class CliWrapper
         int $workspaceId,
         string $apiKey,
         string $apiSecret,
-        ?string $apiUrl = null
+        ?string $apiUrl = null,
     ): ProcessResult {
         // Validate and resolve workspace path
         $resolvedWorkspacePath = $this->validateFilePath($workspacePath, 'Workspace file');
@@ -251,7 +251,7 @@ class CliWrapper
         if (!$result->isSuccess()) {
             throw new CliExecutionException(
                 'push',
-                "Push failed: {$result->getErrorMessage()}"
+                "Push failed: {$result->getErrorMessage()}",
             );
         }
 
@@ -276,14 +276,14 @@ class CliWrapper
         string $apiKey,
         string $apiSecret,
         string $outputPath,
-        ?string $apiUrl = null
+        ?string $apiUrl = null,
     ): ProcessResult {
         // Validate output directory exists
         $outputDir = dirname($outputPath);
         if (!is_dir($outputDir)) {
             throw new CliExecutionException(
                 'pull',
-                "Output directory does not exist: {$outputDir}"
+                "Output directory does not exist: {$outputDir}",
             );
         }
 
@@ -311,7 +311,7 @@ class CliWrapper
         if (!$result->isSuccess()) {
             throw new CliExecutionException(
                 'pull',
-                "Pull failed: {$result->getErrorMessage()}"
+                "Pull failed: {$result->getErrorMessage()}",
             );
         }
 
@@ -354,21 +354,21 @@ class CliWrapper
         if ($resolvedPath === false) {
             throw new CliExecutionException(
                 'validate-path',
-                "{$description} not found: {$path}"
+                "{$description} not found: {$path}",
             );
         }
 
         if (!is_file($resolvedPath)) {
             throw new CliExecutionException(
                 'validate-path',
-                "{$description} is not a file: {$resolvedPath}"
+                "{$description} is not a file: {$resolvedPath}",
             );
         }
 
         if (!is_readable($resolvedPath)) {
             throw new CliExecutionException(
                 'validate-path',
-                "{$description} is not readable: {$resolvedPath}"
+                "{$description} is not readable: {$resolvedPath}",
             );
         }
 
@@ -419,7 +419,7 @@ class CliWrapper
         return new ValidationResult(
             valid: $valid,
             errors: $errors,
-            warnings: $warnings
+            warnings: $warnings,
         );
     }
 
@@ -464,6 +464,7 @@ class CliWrapper
             if ($redactNext) {
                 $sanitized[] = '[REDACTED]';
                 $redactNext = false;
+
                 continue;
             }
 
@@ -471,6 +472,7 @@ class CliWrapper
             if (in_array($arg, ['-key', '-secret', '-apiKey', '-apiSecret'], true)) {
                 $sanitized[] = $arg;
                 $redactNext = true;
+
                 continue;
             }
 

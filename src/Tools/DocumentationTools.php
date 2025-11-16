@@ -27,7 +27,7 @@ class DocumentationTools extends AbstractWorkspaceTool
      */
     public function __construct(
         private readonly WorkspaceManager $workspaceManager,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -47,17 +47,15 @@ class DocumentationTools extends AbstractWorkspaceTool
      */
     #[McpTool(
         name: 'add_documentation_section',
-        description: 'Adds a documentation section to the workspace'
+        description: 'Adds a documentation section to the workspace',
     )]
     public function addDocumentationSection(
         #[Schema(description: 'Workspace ID', minLength: 1)]
         string $workspaceId,
-
         #[Schema(description: 'Section title', minLength: 1, maxLength: 200)]
         string $title,
-
         #[Schema(description: 'Section content (Markdown supported)', minLength: 1)]
-        string $content
+        string $content,
     ): array {
         $this->logger->info("Adding documentation section '{$title}' to workspace: {$workspaceId}");
 
@@ -108,7 +106,7 @@ class DocumentationTools extends AbstractWorkspaceTool
             throw new ToolCallException("Workspace not found: {$workspaceId}");
         } catch (\Exception $e) {
             throw new ToolCallException(
-                "Failed to add documentation section to workspace '{$workspaceId}': " . $e->getMessage()
+                "Failed to add documentation section to workspace '{$workspaceId}': " . $e->getMessage(),
             );
         }
     }
@@ -131,26 +129,21 @@ class DocumentationTools extends AbstractWorkspaceTool
      */
     #[McpTool(
         name: 'add_adr',
-        description: 'Adds an Architecture Decision Record (ADR) to the workspace'
+        description: 'Adds an Architecture Decision Record (ADR) to the workspace',
     )]
     public function addAdr(
         #[Schema(description: 'Workspace ID', minLength: 1)]
         string $workspaceId,
-
         #[Schema(description: 'ADR ID/number', pattern: '^\d+$')]
         string $id,
-
         #[Schema(description: 'Decision date (YYYY-MM-DD)', pattern: '^\d{4}-\d{2}-\d{2}$')]
         string $date,
-
         #[Schema(description: 'ADR title', minLength: 1, maxLength: 200)]
         string $title,
-
         #[Schema(description: 'ADR status', enum: ['Proposed', 'Accepted', 'Rejected', 'Deprecated', 'Superseded'])]
         string $status,
-
         #[Schema(description: 'ADR content (Markdown supported)', minLength: 1)]
-        string $content
+        string $content,
     ): array {
         $this->logger->info("Adding ADR {$id} '{$title}' to workspace: {$workspaceId}");
 
@@ -220,7 +213,7 @@ class DocumentationTools extends AbstractWorkspaceTool
             throw $e;
         } catch (\Exception $e) {
             throw new ToolCallException(
-                "Failed to add ADR to workspace '{$workspaceId}': " . $e->getMessage()
+                "Failed to add ADR to workspace '{$workspaceId}': " . $e->getMessage(),
             );
         }
     }

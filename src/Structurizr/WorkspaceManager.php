@@ -14,7 +14,7 @@ use Symfony\Component\Filesystem\Filesystem;
 class WorkspaceManager
 {
     /** File permissions for created directories */
-    private const DIRECTORY_PERMISSIONS = 0755;
+    private const DIRECTORY_PERMISSIONS = 0o755;
 
     /** Pattern to sanitize workspace IDs (removes invalid characters) */
     private const WORKSPACE_ID_PATTERN = '/[^a-zA-Z0-9_-]/';
@@ -34,7 +34,7 @@ class WorkspaceManager
 
     public function __construct(
         private readonly string $storagePath,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
     ) {
         $this->filesystem = new Filesystem();
 
@@ -196,6 +196,7 @@ class WorkspaceManager
     {
         // Sanitize workspace ID to prevent directory traversal
         $sanitizedId = preg_replace(self::WORKSPACE_ID_PATTERN, '', $id);
+
         return $this->storagePath . '/' . $sanitizedId . '.json';
     }
 

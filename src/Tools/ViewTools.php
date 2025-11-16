@@ -19,7 +19,7 @@ class ViewTools extends AbstractWorkspaceTool
 {
     public function __construct(
         private readonly WorkspaceManager $workspaceManager,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -45,7 +45,7 @@ class ViewTools extends AbstractWorkspaceTool
         #[Schema(description: 'Unique view key', minLength: 1, maxLength: 50, pattern: '^[a-zA-Z0-9_-]+$')]
         string $key,
         #[Schema(description: 'View description', maxLength: 500)]
-        string $description = ''
+        string $description = '',
     ): array {
         $this->logger->info("Creating system context view '{$key}' for system '{$systemId}' in workspace: {$workspaceId}");
 
@@ -96,7 +96,7 @@ class ViewTools extends AbstractWorkspaceTool
         #[Schema(description: 'Unique view key', minLength: 1, maxLength: 50, pattern: '^[a-zA-Z0-9_-]+$')]
         string $key,
         #[Schema(description: 'View description', maxLength: 500)]
-        string $description = ''
+        string $description = '',
     ): array {
         $this->logger->info("Creating container view '{$key}' for system '{$systemId}' in workspace: {$workspaceId}");
 
@@ -147,7 +147,7 @@ class ViewTools extends AbstractWorkspaceTool
         #[Schema(description: 'Unique view key', minLength: 1, maxLength: 50, pattern: '^[a-zA-Z0-9_-]+$')]
         string $key,
         #[Schema(description: 'View description', maxLength: 500)]
-        string $description = ''
+        string $description = '',
     ): array {
         $this->logger->info("Creating component view '{$key}' for container '{$containerId}' in workspace: {$workspaceId}");
 
@@ -191,7 +191,7 @@ class ViewTools extends AbstractWorkspaceTool
      */
     #[McpTool(
         name: 'create_dynamic_view',
-        description: 'Creates a dynamic view showing runtime behavior and interactions'
+        description: 'Creates a dynamic view showing runtime behavior and interactions',
     )]
     public function createDynamicView(
         #[Schema(description: 'Workspace ID', minLength: 1)]
@@ -201,7 +201,7 @@ class ViewTools extends AbstractWorkspaceTool
         #[Schema(description: 'Unique view key', minLength: 1, maxLength: 50, pattern: '^[a-zA-Z0-9_-]+$')]
         string $key,
         #[Schema(description: 'View description', maxLength: 500)]
-        string $description = ''
+        string $description = '',
     ): array {
         $this->logger->info("Creating dynamic view '{$key}' for element '{$elementId}' in workspace: {$workspaceId}");
 
@@ -248,7 +248,7 @@ class ViewTools extends AbstractWorkspaceTool
         #[Schema(description: 'View key to modify', minLength: 1, maxLength: 50, pattern: '^[a-zA-Z0-9_-]+$')]
         string $viewKey,
         #[Schema(description: 'Layout direction', enum: ['tb', 'bt', 'lr', 'rl'])]
-        string $direction = 'lr'
+        string $direction = 'lr',
     ): array {
         $this->logger->info("Applying auto-layout '{$direction}' to view '{$viewKey}' in workspace: {$workspaceId}");
 
