@@ -121,7 +121,6 @@ class WorkspaceManager
     public function save(Workspace $workspace): void
     {
         $filepath = $this->getWorkspacePath($workspace->id);
-        /** @var string $data */
         $data = json_encode($workspace->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
         if ($data === false) {
