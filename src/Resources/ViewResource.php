@@ -80,7 +80,8 @@ class ViewResource
      * Find a view in the workspace by key
      *
      * Searches through all view types to find a view with the given key.
-     * Searches in: systemLandscape, systemContext, container, component, dynamic, deployment.
+     * Searches in: systemLandscapeViews, systemContextViews, containerViews,
+     * componentViews, dynamicViews, deploymentViews.
      *
      * @param array<string, mixed> $views The workspace views
      * @param string $viewKey The view key to find
