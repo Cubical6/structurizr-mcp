@@ -47,18 +47,27 @@ class WorkspaceManager
 
     /**
      * Create a new workspace
+     *
+     * @param string $name Workspace name
+     * @param string $description Workspace description
+     * @return Workspace Created workspace object
      */
     public function create(string $name, string $description = ''): Workspace
     {
         $id = $this->generateWorkspaceId();
         $now = new \DateTimeImmutable();
 
+        /** @var array<string, mixed> $model */
+        $model = [];
+        /** @var array<string, mixed> $views */
+        $views = [];
+
         $workspace = new Workspace(
             id: $id,
             name: $name,
             description: $description,
-            model: [],
-            views: [],
+            model: $model,
+            views: $views,
             dsl: '',
             createdAt: $now,
             updatedAt: $now,
@@ -72,6 +81,11 @@ class WorkspaceManager
 
     /**
      * Load a workspace by ID
+     *
+     * @param string $id Workspace ID
+     * @return Workspace Loaded workspace object
+     * @throws WorkspaceNotFoundException If workspace does not exist
+     * @throws \RuntimeException If workspace file cannot be read or parsed
      */
     public function load(string $id): Workspace
     {
@@ -86,6 +100,7 @@ class WorkspaceManager
             throw new \RuntimeException("Failed to read workspace file: {$id}");
         }
 
+        /** @var array<string, mixed> $data */
         $data = json_decode($content, true);
 
         if ($data === null) {
@@ -99,10 +114,14 @@ class WorkspaceManager
 
     /**
      * Save a workspace
+     *
+     * @param Workspace $workspace Workspace to save
+     * @return void
      */
     public function save(Workspace $workspace): void
     {
         $filepath = $this->getWorkspacePath($workspace->id);
+        /** @var string $data */
         $data = json_encode($workspace->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 
         if ($data === false) {
@@ -130,6 +149,8 @@ class WorkspaceManager
 
     /**
      * List all workspaces
+     *
+     * @return array<int, array<string, mixed>> Array of workspace summaries
      */
     public function list(): array
     {

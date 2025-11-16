@@ -36,6 +36,11 @@ class Configuration
         $this->config = $this->loadConfiguration();
     }
 
+    /**
+     * Load configuration from environment variables and .env file
+     *
+     * @return array<string, array<string, string>>
+     */
     private function loadConfiguration(): array
     {
         // Load .env file if it exists

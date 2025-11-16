@@ -42,7 +42,7 @@ class DocumentationTools extends AbstractWorkspaceTool
      * @param string $workspaceId The ID of the workspace to add documentation to
      * @param string $title The title of the documentation section
      * @param string $content The content of the documentation section (Markdown supported)
-     * @return array Confirmation with section details
+     * @return array<string, mixed> Confirmation with section details
      * @throws ToolCallException If workspace not found or operation fails
      */
     #[McpTool(
@@ -55,7 +55,7 @@ class DocumentationTools extends AbstractWorkspaceTool
         #[Schema(description: 'Section title', minLength: 1, maxLength: 200)]
         string $title,
         #[Schema(description: 'Section content (Markdown supported)', minLength: 1)]
-        string $content,
+        string $content
     ): array {
         $this->logger->info("Adding documentation section '{$title}' to workspace: {$workspaceId}");
 
@@ -124,7 +124,7 @@ class DocumentationTools extends AbstractWorkspaceTool
      * @param string $title The ADR title describing the decision
      * @param string $status The ADR status (Proposed, Accepted, Rejected, Deprecated, Superseded)
      * @param string $content The ADR content including context, decision, and consequences (Markdown supported)
-     * @return array Confirmation with ADR details
+     * @return array<string, mixed> Confirmation with ADR details
      * @throws ToolCallException If workspace not found or operation fails
      */
     #[McpTool(
@@ -143,7 +143,7 @@ class DocumentationTools extends AbstractWorkspaceTool
         #[Schema(description: 'ADR status', enum: ['Proposed', 'Accepted', 'Rejected', 'Deprecated', 'Superseded'])]
         string $status,
         #[Schema(description: 'ADR content (Markdown supported)', minLength: 1)]
-        string $content,
+        string $content
     ): array {
         $this->logger->info("Adding ADR {$id} '{$title}' to workspace: {$workspaceId}");
 
