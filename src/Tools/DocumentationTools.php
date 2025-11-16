@@ -55,7 +55,7 @@ class DocumentationTools extends AbstractWorkspaceTool
         #[Schema(description: 'Section title', minLength: 1, maxLength: 200)]
         string $title,
         #[Schema(description: 'Section content (Markdown supported)', minLength: 1)]
-        string $content
+        string $content,
     ): array {
         $this->logger->info("Adding documentation section '{$title}' to workspace: {$workspaceId}");
 
@@ -143,7 +143,7 @@ class DocumentationTools extends AbstractWorkspaceTool
         #[Schema(description: 'ADR status', enum: ['Proposed', 'Accepted', 'Rejected', 'Deprecated', 'Superseded'])]
         string $status,
         #[Schema(description: 'ADR content (Markdown supported)', minLength: 1)]
-        string $content
+        string $content,
     ): array {
         $this->logger->info("Adding ADR {$id} '{$title}' to workspace: {$workspaceId}");
 
