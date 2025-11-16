@@ -6,9 +6,9 @@ namespace StructurizrMcp\Tools;
 
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Capability\Attribute\Schema;
-use StructurizrMcp\Structurizr\WorkspaceManager;
-use StructurizrMcp\Exception\WorkspaceNotFoundException;
 use Psr\Log\LoggerInterface;
+use StructurizrMcp\Exception\WorkspaceNotFoundException;
+use StructurizrMcp\Structurizr\WorkspaceManager;
 
 /**
  * MCP Tools for Structurizr workspace management
@@ -17,7 +17,7 @@ class WorkspaceTools
 {
     public function __construct(
         private readonly WorkspaceManager $workspaceManager,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -36,7 +36,7 @@ class WorkspaceTools
         #[Schema(description: 'Workspace name', minLength: 1, maxLength: 100)]
         string $name,
         #[Schema(description: 'Workspace description', maxLength: 500)]
-        string $description = ''
+        string $description = '',
     ): array {
         $this->logger->info("Creating workspace: {$name}");
 
@@ -73,7 +73,7 @@ class WorkspaceTools
         #[Schema(description: 'Workspace ID to retrieve', minLength: 1)]
         string $workspaceId,
         #[Schema(description: 'Output format', enum: ['json', 'dsl'])]
-        string $format = 'json'
+        string $format = 'json',
     ): array {
         $this->logger->debug("Getting workspace: {$workspaceId} in format: {$format}");
 
@@ -125,9 +125,8 @@ class WorkspaceTools
     #[McpTool(name: 'delete_workspace', description: 'Delete a workspace by ID')]
     public function deleteWorkspace(
         #[Schema(description: 'Workspace ID to delete', minLength: 1)]
-        string $workspaceId
-    ): array
-    {
+        string $workspaceId,
+    ): array {
         $this->logger->info("Deleting workspace: {$workspaceId}");
 
         try {

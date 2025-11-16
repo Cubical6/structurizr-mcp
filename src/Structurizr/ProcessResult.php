@@ -19,7 +19,7 @@ class ProcessResult
         private readonly int $exitCode,
         private readonly string $stdout,
         private readonly string $stderr,
-        private readonly bool $success
+        private readonly bool $success,
     ) {
     }
 
@@ -64,6 +64,7 @@ class ProcessResult
         if (!empty($this->stderr)) {
             $output .= "\n" . trim($this->stderr);
         }
+
         return $output;
     }
 

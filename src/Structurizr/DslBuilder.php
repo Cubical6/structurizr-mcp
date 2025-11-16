@@ -20,6 +20,7 @@ class DslBuilder
     {
         $this->workspaceName = $name;
         $this->workspaceDescription = $description;
+
         return $this;
     }
 
@@ -33,6 +34,7 @@ class DslBuilder
             'description' => $description,
             'tags' => $tags,
         ];
+
         return $id;
     }
 
@@ -48,6 +50,7 @@ class DslBuilder
             'tags' => $tags,
             'containers' => [],
         ];
+
         return $id;
     }
 
@@ -129,6 +132,7 @@ class DslBuilder
             'description' => $description,
             'autoLayout' => 'lr',
         ];
+
         return $key;
     }
 
@@ -141,6 +145,7 @@ class DslBuilder
             'description' => $description,
             'autoLayout' => 'lr',
         ];
+
         return $key;
     }
 
@@ -153,6 +158,7 @@ class DslBuilder
             'description' => $description,
             'autoLayout' => 'lr',
         ];
+
         return $key;
     }
 
@@ -161,9 +167,11 @@ class DslBuilder
         foreach ($this->views as &$view) {
             if ($view['key'] === $viewKey) {
                 $view['autoLayout'] = $direction;
+
                 return;
             }
         }
+
         throw new \InvalidArgumentException("View not found: {$viewKey}");
     }
 
@@ -216,6 +224,7 @@ class DslBuilder
     private function generatePersonDsl(array $element): string
     {
         $tags = !empty($element['tags']) ? ' "' . implode(',', $element['tags']) . '"' : '';
+
         return "        {$element['id']} = person \"{$element['name']}\" \"{$element['description']}\"{$tags}\n";
     }
 
@@ -264,6 +273,7 @@ class DslBuilder
     {
         $tags = !empty($element['tags']) ? ' "' . implode(',', $element['tags']) . '"' : '';
         $tech = $element['technology'] ? " \"{$element['technology']}\"" : '';
+
         return "                {$element['id']} = component \"{$element['name']}\" \"{$element['description']}\"{$tech}{$tags}\n";
     }
 
@@ -271,6 +281,7 @@ class DslBuilder
     {
         $tech = $rel['technology'] ? " \"{$rel['technology']}\"" : '';
         $tags = !empty($rel['tags']) ? ' "' . implode(',', $rel['tags']) . '"' : '';
+
         return "        {$rel['sourceId']} -> {$rel['destinationId']} \"{$rel['description']}\"{$tech}{$tags}\n";
     }
 
@@ -285,20 +296,24 @@ class DslBuilder
                 $dsl .= "            include *\n";
                 $dsl .= "            autoLayout {$autoLayout}\n";
                 $dsl .= "        }\n";
+
                 break;
             case 'container':
                 $dsl .= "        container {$view['systemId']} \"{$view['key']}\" {\n";
                 $dsl .= "            include *\n";
                 $dsl .= "            autoLayout {$autoLayout}\n";
                 $dsl .= "        }\n";
+
                 break;
             case 'component':
                 $dsl .= "        component {$view['containerId']} \"{$view['key']}\" {\n";
                 $dsl .= "            include *\n";
                 $dsl .= "            autoLayout {$autoLayout}\n";
                 $dsl .= "        }\n";
+
                 break;
         }
+
         return $dsl;
     }
 
@@ -332,6 +347,7 @@ class DslBuilder
                 }
             }
         }
+
         return null;
     }
 }

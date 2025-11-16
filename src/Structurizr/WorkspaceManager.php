@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace StructurizrMcp\Structurizr;
 
+use Psr\Log\LoggerInterface;
 use StructurizrMcp\Exception\WorkspaceNotFoundException;
 use Symfony\Component\Filesystem\Filesystem;
-use Psr\Log\LoggerInterface;
 
 /**
  * Manages local workspace storage and retrieval
@@ -17,13 +17,13 @@ class WorkspaceManager
 
     public function __construct(
         private readonly string $storagePath,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
     ) {
         $this->filesystem = new Filesystem();
 
         // Ensure storage directory exists
         if (!is_dir($this->storagePath)) {
-            $this->filesystem->mkdir($this->storagePath, 0755);
+            $this->filesystem->mkdir($this->storagePath, 0o755);
             $this->logger->info("Created workspace storage directory: {$this->storagePath}");
         }
     }
@@ -179,6 +179,7 @@ class WorkspaceManager
     {
         // Sanitize workspace ID to prevent directory traversal
         $sanitizedId = preg_replace('/[^a-zA-Z0-9_-]/', '', $id);
+
         return $this->storagePath . '/' . $sanitizedId . '.json';
     }
 

@@ -6,10 +6,10 @@ namespace StructurizrMcp\Tools;
 
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Capability\Attribute\Schema;
-use StructurizrMcp\Structurizr\WorkspaceManager;
+use Psr\Log\LoggerInterface;
 use StructurizrMcp\Structurizr\DslBuilder;
 use StructurizrMcp\Structurizr\Workspace;
-use Psr\Log\LoggerInterface;
+use StructurizrMcp\Structurizr\WorkspaceManager;
 
 /**
  * MCP Tools for C4 model building (adding elements and relationships)
@@ -18,7 +18,7 @@ class ModelTools
 {
     public function __construct(
         private readonly WorkspaceManager $workspaceManager,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -43,7 +43,7 @@ class ModelTools
         #[Schema(description: 'Description of the person', maxLength: 500)]
         string $description = '',
         #[Schema(description: 'Tags for styling', type: 'array')]
-        array $tags = []
+        array $tags = [],
     ): array {
         $this->logger->info("Adding person '{$name}' to workspace: {$workspaceId}");
 
@@ -91,7 +91,7 @@ class ModelTools
         #[Schema(description: 'System location', enum: ['Internal', 'External'])]
         string $location = 'Internal',
         #[Schema(description: 'Tags for styling', type: 'array')]
-        array $tags = []
+        array $tags = [],
     ): array {
         $this->logger->info("Adding software system '{$name}' to workspace: {$workspaceId}");
 
@@ -145,7 +145,7 @@ class ModelTools
         #[Schema(description: 'Technology/platform', maxLength: 200)]
         string $technology = '',
         #[Schema(description: 'Tags for styling', type: 'array')]
-        array $tags = []
+        array $tags = [],
     ): array {
         $this->logger->info("Adding container '{$name}' to system '{$systemId}' in workspace: {$workspaceId}");
 
@@ -196,7 +196,7 @@ class ModelTools
         #[Schema(description: 'Technology/framework', maxLength: 200)]
         string $technology = '',
         #[Schema(description: 'Tags for styling', type: 'array')]
-        array $tags = []
+        array $tags = [],
     ): array {
         $this->logger->info("Adding component '{$name}' to container '{$containerId}' in workspace: {$workspaceId}");
 
@@ -247,7 +247,7 @@ class ModelTools
         #[Schema(description: 'Technology/protocol', maxLength: 200)]
         string $technology = '',
         #[Schema(description: 'Tags for styling', type: 'array')]
-        array $tags = []
+        array $tags = [],
     ): array {
         $this->logger->info("Adding relationship from '{$sourceId}' to '{$destinationId}' in workspace: {$workspaceId}");
 

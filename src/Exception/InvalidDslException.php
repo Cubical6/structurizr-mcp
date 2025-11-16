@@ -14,7 +14,7 @@ class InvalidDslException extends StructurizrException
         parent::__construct(
             "Invalid DSL: {$message}",
             400,
-            $previous
+            $previous,
         );
     }
 }

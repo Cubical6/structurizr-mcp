@@ -47,7 +47,7 @@ jobs:
         run: ./vendor/bin/phpstan analyse --no-progress --error-format=sarif > phpstan-report.sarif || true
 
       - name: Upload SARIF to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: phpstan-report.sarif
