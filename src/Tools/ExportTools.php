@@ -34,7 +34,7 @@ class ExportTools
     public function __construct(
         private readonly WorkspaceManager $workspaceManager,
         private readonly CliWrapper $cliWrapper,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -49,7 +49,7 @@ class ExportTools
     #[McpTool(name: 'export_to_dsl', description: 'Export workspace to Structurizr DSL format')]
     public function exportToDsl(
         #[Schema(description: 'Workspace ID to export', minLength: 1)]
-        string $workspaceId
+        string $workspaceId,
     ): array {
         $this->logger->debug("Exporting workspace to DSL: {$workspaceId}");
 
@@ -83,7 +83,7 @@ class ExportTools
         #[Schema(description: 'Workspace ID to export', minLength: 1)]
         string $workspaceId,
         #[Schema(description: 'Optional view key to export specific view', minLength: 1)]
-        ?string $viewKey = null
+        ?string $viewKey = null,
     ): array {
         $this->logger->debug("Exporting workspace to PlantUML: {$workspaceId}", [
             'viewKey' => $viewKey,
@@ -122,7 +122,7 @@ class ExportTools
         #[Schema(description: 'Workspace ID to export', minLength: 1)]
         string $workspaceId,
         #[Schema(description: 'Optional view key to export specific view', minLength: 1)]
-        ?string $viewKey = null
+        ?string $viewKey = null,
     ): array {
         $this->logger->debug("Exporting workspace to Mermaid: {$workspaceId}", [
             'viewKey' => $viewKey,
@@ -158,7 +158,7 @@ class ExportTools
     #[McpTool(name: 'import_from_dsl', description: 'Import a workspace from Structurizr DSL')]
     public function importFromDsl(
         #[Schema(description: 'DSL content to import', minLength: 1)]
-        string $dsl
+        string $dsl,
     ): array {
         $this->logger->info('Importing workspace from DSL');
 
@@ -211,6 +211,7 @@ class ExportTools
 
         try {
             file_put_contents($tempPath, $dsl);
+
             return $this->cliWrapper->export($tempPath, $format);
         } finally {
             if (file_exists($tempPath)) {

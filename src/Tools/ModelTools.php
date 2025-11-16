@@ -19,7 +19,7 @@ class ModelTools extends AbstractWorkspaceTool
 {
     public function __construct(
         private readonly WorkspaceManager $workspaceManager,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -44,7 +44,7 @@ class ModelTools extends AbstractWorkspaceTool
         #[Schema(description: 'Description of the person', maxLength: 500)]
         string $description = '',
         #[Schema(description: 'Tags for styling', type: 'array')]
-        array $tags = []
+        array $tags = [],
     ): array {
         $this->logger->info("Adding person '{$name}' to workspace: {$workspaceId}");
 
@@ -99,7 +99,7 @@ class ModelTools extends AbstractWorkspaceTool
         #[Schema(description: 'System location', enum: ['Internal', 'External'])]
         string $location = 'Internal',
         #[Schema(description: 'Tags for styling', type: 'array')]
-        array $tags = []
+        array $tags = [],
     ): array {
         $this->logger->info("Adding software system '{$name}' to workspace: {$workspaceId}");
 
@@ -156,7 +156,7 @@ class ModelTools extends AbstractWorkspaceTool
         #[Schema(description: 'Technology/platform', maxLength: 200)]
         string $technology = '',
         #[Schema(description: 'Tags for styling', type: 'array')]
-        array $tags = []
+        array $tags = [],
     ): array {
         $this->logger->info("Adding container '{$name}' to system '{$systemId}' in workspace: {$workspaceId}");
 
@@ -214,7 +214,7 @@ class ModelTools extends AbstractWorkspaceTool
         #[Schema(description: 'Technology/framework', maxLength: 200)]
         string $technology = '',
         #[Schema(description: 'Tags for styling', type: 'array')]
-        array $tags = []
+        array $tags = [],
     ): array {
         $this->logger->info("Adding component '{$name}' to container '{$containerId}' in workspace: {$workspaceId}");
 
@@ -272,7 +272,7 @@ class ModelTools extends AbstractWorkspaceTool
         #[Schema(description: 'Technology/protocol', maxLength: 200)]
         string $technology = '',
         #[Schema(description: 'Tags for styling', type: 'array')]
-        array $tags = []
+        array $tags = [],
     ): array {
         $this->logger->info("Adding relationship from '{$sourceId}' to '{$destinationId}' in workspace: {$workspaceId}");
 

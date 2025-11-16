@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace StructurizrMcp\Tests\Unit\Tools;
 
-use PHPUnit\Framework\TestCase;
+use Mcp\Exception\ToolCallException;
 use PHPUnit\Framework\MockObject\MockObject;
-use StructurizrMcp\Tools\ExportTools;
-use StructurizrMcp\Structurizr\WorkspaceManager;
+use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
+use StructurizrMcp\Exception\InvalidDslException;
+use StructurizrMcp\Exception\WorkspaceNotFoundException;
 use StructurizrMcp\Structurizr\CliWrapper;
 use StructurizrMcp\Structurizr\Workspace;
-use StructurizrMcp\Exception\WorkspaceNotFoundException;
-use StructurizrMcp\Exception\InvalidDslException;
-use Mcp\Exception\ToolCallException;
-use Psr\Log\LoggerInterface;
+use StructurizrMcp\Structurizr\WorkspaceManager;
+use StructurizrMcp\Tools\ExportTools;
 
 /**
  * Unit tests for ExportTools
@@ -35,7 +35,7 @@ class ExportToolsTest extends TestCase
         $this->tools = new ExportTools(
             $this->workspaceManager,
             $this->cliWrapper,
-            $this->logger
+            $this->logger,
         );
     }
 
@@ -117,7 +117,7 @@ skinparam componentStyle rectangle
             ->method('export')
             ->with(
                 $this->stringContains('ws_export_'),
-                'plantuml'
+                'plantuml',
             )
             ->willReturn($plantUmlContent);
 
@@ -163,7 +163,7 @@ skinparam componentStyle rectangle
             ->method('export')
             ->with(
                 $this->stringContains('ws_export_'),
-                'plantuml'
+                'plantuml',
             )
             ->willReturn($plantUmlContent);
 
@@ -228,7 +228,7 @@ skinparam componentStyle rectangle
             ->method('export')
             ->with(
                 $this->stringContains('ws_export_'),
-                'mermaid'
+                'mermaid',
             )
             ->willReturn($mermaidContent);
 
@@ -277,7 +277,7 @@ skinparam componentStyle rectangle
             ->method('export')
             ->with(
                 $this->stringContains('ws_export_'),
-                'mermaid'
+                'mermaid',
             )
             ->willReturn($mermaidContent);
 
@@ -680,7 +680,7 @@ skinparam componentStyle rectangle
     public function testImportFromDslWithVariousDslFormats(
         string $dslContent,
         string $expectedName,
-        string $expectedDescription
+        string $expectedDescription,
     ): void {
         $workspace = new Workspace(
             id: 'ws_varied',

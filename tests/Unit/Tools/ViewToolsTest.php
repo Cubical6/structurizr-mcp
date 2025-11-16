@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace StructurizrMcp\Tests\Unit\Tools;
 
-use PHPUnit\Framework\TestCase;
-use PHPUnit\Framework\MockObject\MockObject;
-use StructurizrMcp\Tools\ViewTools;
-use StructurizrMcp\Structurizr\WorkspaceManager;
-use StructurizrMcp\Structurizr\Workspace;
-use StructurizrMcp\Exception\WorkspaceNotFoundException;
 use Mcp\Exception\ToolCallException;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use StructurizrMcp\Exception\WorkspaceNotFoundException;
+use StructurizrMcp\Structurizr\Workspace;
+use StructurizrMcp\Structurizr\WorkspaceManager;
+use StructurizrMcp\Tools\ViewTools;
 
 /**
  * Unit tests for ViewTools
@@ -73,7 +73,7 @@ class ViewToolsTest extends TestCase
             'ws_test',
             'system_1',
             'SystemContext',
-            'Overview of the system'
+            'Overview of the system',
         );
 
         $this->assertEquals('ws_test', $result['workspaceId']);
@@ -93,7 +93,7 @@ class ViewToolsTest extends TestCase
         $result = $this->tools->createSystemContextView(
             'ws_test',
             'system_1',
-            'Context'
+            'Context',
         );
 
         $this->assertEquals('', $result['description']);
@@ -141,7 +141,7 @@ class ViewToolsTest extends TestCase
             'ws_test',
             'system_1',
             'Containers',
-            'Container diagram'
+            'Container diagram',
         );
 
         $this->assertEquals('ws_test', $result['workspaceId']);
@@ -161,7 +161,7 @@ class ViewToolsTest extends TestCase
         $result = $this->tools->createContainerView(
             'ws_test',
             'system_1',
-            'Containers'
+            'Containers',
         );
 
         $this->assertEquals('', $result['description']);
@@ -195,7 +195,7 @@ class ViewToolsTest extends TestCase
             'ws_test',
             'container_1',
             'Components',
-            'Component diagram'
+            'Component diagram',
         );
 
         $this->assertEquals('ws_test', $result['workspaceId']);
@@ -215,7 +215,7 @@ class ViewToolsTest extends TestCase
         $result = $this->tools->createComponentView(
             'ws_test',
             'container_1',
-            'APIComponents'
+            'APIComponents',
         );
 
         $this->assertEquals('', $result['description']);
