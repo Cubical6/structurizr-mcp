@@ -209,6 +209,18 @@ class DslBuilder
         return $key;
     }
 
+    public function dynamicView(string $elementId, string $key, string $description = ''): string
+    {
+        $this->views[] = [
+            'type' => 'dynamic',
+            'elementId' => $elementId,
+            'key' => $key,
+            'description' => $description,
+            'autoLayout' => 'lr',
+        ];
+        return $key;
+    }
+
     public function setViewAutoLayout(string $viewKey, string $direction): void
     {
         foreach ($this->views as &$view) {
@@ -348,6 +360,12 @@ class DslBuilder
             case 'component':
                 $dsl .= "        component {$view['containerId']} \"{$view['key']}\" {\n";
                 $dsl .= "            include *\n";
+                $dsl .= "            autoLayout {$autoLayout}\n";
+                $dsl .= "        }\n";
+                break;
+            case 'dynamic':
+                $description = !empty($view['description']) ? " \"{$view['description']}\"" : '';
+                $dsl .= "        dynamic {$view['elementId']} \"{$view['key']}\"{$description} {\n";
                 $dsl .= "            autoLayout {$autoLayout}\n";
                 $dsl .= "        }\n";
                 break;
@@ -635,6 +653,22 @@ class DslBuilder
                     'key' => $match[2],
                     'description' => '',
                     'autoLayout' => $match[3],
+                ];
+            }
+        }
+
+        // Parse dynamic views
+        if (preg_match_all('/dynamic\s+(\w+)\s+"([^"]+)"(?:\s+"([^"]*)")?\s*\{[^}]*autoLayout\s+(\w+)/s', $content, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                // Description is optional in DSL, may be empty string if not provided
+                $description = array_key_exists(3, $match) ? $match[3] : '';
+                $autoLayout = array_key_exists(4, $match) ? $match[4] : 'lr';
+                $this->views[] = [
+                    'type' => 'dynamic',
+                    'elementId' => $match[1],
+                    'key' => $match[2],
+                    'description' => $description,
+                    'autoLayout' => $autoLayout,
                 ];
             }
         }

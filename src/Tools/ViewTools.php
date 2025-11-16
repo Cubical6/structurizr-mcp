@@ -177,6 +177,60 @@ class ViewTools extends AbstractWorkspaceTool
     }
 
     /**
+     * Create a dynamic view
+     *
+     * Creates a dynamic diagram view showing runtime behavior and interactions between
+     * elements. Dynamic views illustrate sequences of interactions, data flows, or
+     * runtime scenarios, providing a time-based perspective of the architecture.
+     *
+     * @param string $workspaceId The workspace ID
+     * @param string $elementId The scope element ID (system or container)
+     * @param string $key Unique key for the view (alphanumeric, hyphens, underscores)
+     * @param string $description Optional description of the view
+     * @return array View details including key and type
+     */
+    #[McpTool(
+        name: 'create_dynamic_view',
+        description: 'Creates a dynamic view showing runtime behavior and interactions'
+    )]
+    public function createDynamicView(
+        #[Schema(description: 'Workspace ID', minLength: 1)]
+        string $workspaceId,
+        #[Schema(description: 'Scope element ID (system or container)', minLength: 1)]
+        string $elementId,
+        #[Schema(description: 'Unique view key', minLength: 1, maxLength: 50, pattern: '^[a-zA-Z0-9_-]+$')]
+        string $key,
+        #[Schema(description: 'View description', maxLength: 500)]
+        string $description = ''
+    ): array {
+        $this->logger->info("Creating dynamic view '{$key}' for element '{$elementId}' in workspace: {$workspaceId}");
+
+        try {
+            $workspace = $this->workspaceManager->load($workspaceId);
+
+            $builder = $this->createBuilderFromWorkspace($workspace);
+            $viewKey = $builder->dynamicView($elementId, $key, $description);
+            $dsl = $builder->toDsl();
+
+            $updated = $workspace->withDsl($dsl);
+            $this->workspaceManager->save($updated);
+
+
+            return [
+                'workspaceId' => $workspaceId,
+                'viewKey' => $viewKey,
+                'elementId' => $elementId,
+                'type' => 'dynamic',
+                'description' => $description,
+            ];
+        } catch (WorkspaceNotFoundException $e) {
+            throw new ToolCallException("Workspace not found: {$workspaceId}");
+        } catch (\Exception $e) {
+            throw new ToolCallException("Failed to create dynamic view '{$key}': " . $e->getMessage());
+        }
+    }
+
+    /**
      * Apply auto-layout to a view
      *
      * Configures the automatic layout direction for a view. Auto-layout automatically
