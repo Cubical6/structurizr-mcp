@@ -147,28 +147,4 @@ class WorkspaceTools
         }
     }
 
-    /**
-     * Export workspace to DSL
-     *
-     * Exports the workspace definition to Structurizr DSL format.
-     *
-     * @param string $workspaceId The ID of the workspace to export
-     * @return array Workspace DSL string
-     */
-    #[McpTool(name: 'export_to_dsl', description: 'Export workspace to Structurizr DSL format')]
-    public function exportToDsl(
-        #[Schema(description: 'Workspace ID to export', minLength: 1)]
-        string $workspaceId
-    ): array
-    {
-        $this->logger->debug("Exporting workspace to DSL: {$workspaceId}");
-
-        $workspace = $this->workspaceManager->load($workspaceId);
-
-        return [
-            'workspaceId' => $workspace->id,
-            'name' => $workspace->name,
-            'dsl' => $workspace->dsl,
-        ];
-    }
 }

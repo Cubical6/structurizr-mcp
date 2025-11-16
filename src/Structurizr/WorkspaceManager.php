@@ -64,7 +64,12 @@ class WorkspaceManager
             throw new WorkspaceNotFoundException($id);
         }
 
-        $data = json_decode(file_get_contents($filepath), true);
+        $content = file_get_contents($filepath);
+        if ($content === false) {
+            throw new \RuntimeException("Failed to read workspace file: {$id}");
+        }
+
+        $data = json_decode($content, true);
 
         if ($data === null) {
             throw new \RuntimeException("Failed to parse workspace JSON: {$id}");
@@ -120,7 +125,12 @@ class WorkspaceManager
 
         foreach ($files as $file) {
             try {
-                $data = json_decode(file_get_contents($file), true);
+                $content = file_get_contents($file);
+                if ($content === false) {
+                    continue;
+                }
+
+                $data = json_decode($content, true);
                 if ($data !== null && isset($data['id'])) {
                     $workspaces[] = [
                         'id' => $data['id'],

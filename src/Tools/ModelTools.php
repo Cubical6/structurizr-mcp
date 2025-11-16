@@ -271,49 +271,6 @@ class ModelTools
     }
 
     /**
-     * Create a system context view
-     *
-     * Creates a system context diagram view showing a system and its relationships
-     * with users and other systems.
-     *
-     * @param string $workspaceId The workspace ID
-     * @param string $systemId The software system to focus on
-     * @param string $key Unique key for the view
-     * @param string $description Optional description of the view
-     * @return array View details including key and type
-     */
-    #[McpTool(name: 'create_system_context_view', description: 'Create a system context diagram view')]
-    public function createSystemContextView(
-        #[Schema(description: 'Workspace ID', minLength: 1)]
-        string $workspaceId,
-        #[Schema(description: 'System ID to visualize', minLength: 1)]
-        string $systemId,
-        #[Schema(description: 'Unique view key', minLength: 1, maxLength: 50, pattern: '^[a-zA-Z0-9_-]+$')]
-        string $key,
-        #[Schema(description: 'View description', maxLength: 500)]
-        string $description = ''
-    ): array {
-        $this->logger->info("Creating system context view '{$key}' for system '{$systemId}' in workspace: {$workspaceId}");
-
-        $workspace = $this->workspaceManager->load($workspaceId);
-
-        $builder = $this->createBuilderFromWorkspace($workspace);
-        $viewKey = $builder->addSystemContextView($systemId, $key, $description);
-        $dsl = $builder->toDsl();
-
-        $updated = $workspace->withDsl($dsl);
-        $this->workspaceManager->save($updated);
-
-        return [
-            'workspaceId' => $workspaceId,
-            'viewKey' => $viewKey,
-            'systemId' => $systemId,
-            'type' => 'systemContext',
-            'description' => $description,
-        ];
-    }
-
-    /**
      * Create DSL builder from existing workspace
      */
     private function createBuilderFromWorkspace(Workspace $workspace): DslBuilder

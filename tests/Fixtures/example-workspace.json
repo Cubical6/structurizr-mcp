@@ -1,0 +1,176 @@
+{
+    "id": "ws_example123",
+    "name": "Big Bank plc",
+    "description": "Internet Banking System for Big Bank plc",
+    "model": {
+        "people": [
+            {
+                "id": "person_1",
+                "name": "Personal Banking Customer",
+                "description": "A customer of the bank, with personal bank accounts",
+                "tags": ["External"]
+            }
+        ],
+        "softwareSystems": [
+            {
+                "id": "system_1",
+                "name": "Internet Banking System",
+                "description": "Allows customers to view information about their bank accounts, and make payments",
+                "location": "Internal",
+                "containers": [
+                    {
+                        "id": "container_1",
+                        "name": "Web Application",
+                        "description": "Delivers the static content and the Internet banking single page application",
+                        "technology": "Java and Spring MVC",
+                        "tags": []
+                    },
+                    {
+                        "id": "container_2",
+                        "name": "API Application",
+                        "description": "Provides Internet banking functionality via a JSON/HTTPS API",
+                        "technology": "Java and Spring Boot",
+                        "tags": [],
+                        "components": [
+                            {
+                                "id": "component_1",
+                                "name": "Sign In Controller",
+                                "description": "Allows users to sign in to the Internet Banking System",
+                                "technology": "Spring MVC Rest Controller",
+                                "tags": []
+                            },
+                            {
+                                "id": "component_2",
+                                "name": "Accounts Summary Controller",
+                                "description": "Provides customers with a summary of their bank accounts",
+                                "technology": "Spring MVC Rest Controller",
+                                "tags": []
+                            }
+                        ]
+                    },
+                    {
+                        "id": "container_3",
+                        "name": "Database",
+                        "description": "Stores user registration information, hashed authentication credentials, access logs, etc.",
+                        "technology": "Oracle Database Schema",
+                        "tags": ["Database"]
+                    }
+                ]
+            },
+            {
+                "id": "system_2",
+                "name": "Mainframe Banking System",
+                "description": "Stores all of the core banking information about customers, accounts, transactions, etc.",
+                "location": "Internal",
+                "tags": []
+            },
+            {
+                "id": "system_3",
+                "name": "Email System",
+                "description": "The internal Microsoft Exchange e-mail system",
+                "location": "Internal",
+                "tags": []
+            }
+        ],
+        "relationships": [
+            {
+                "id": "relationship_1",
+                "sourceId": "person_1",
+                "destinationId": "system_1",
+                "description": "Views account balances, and makes payments using",
+                "technology": "HTTPS",
+                "tags": []
+            },
+            {
+                "id": "relationship_2",
+                "sourceId": "system_1",
+                "destinationId": "system_2",
+                "description": "Gets account information from, and makes payments using",
+                "technology": "XML/HTTPS",
+                "tags": []
+            },
+            {
+                "id": "relationship_3",
+                "sourceId": "system_1",
+                "destinationId": "system_3",
+                "description": "Sends e-mail using",
+                "technology": "SMTP",
+                "tags": []
+            },
+            {
+                "id": "relationship_4",
+                "sourceId": "system_3",
+                "destinationId": "person_1",
+                "description": "Sends e-mails to",
+                "technology": "",
+                "tags": []
+            },
+            {
+                "id": "relationship_5",
+                "sourceId": "person_1",
+                "destinationId": "container_1",
+                "description": "Visits bigbank.com/ib using",
+                "technology": "HTTPS",
+                "tags": []
+            },
+            {
+                "id": "relationship_6",
+                "sourceId": "container_1",
+                "destinationId": "container_2",
+                "description": "Makes API calls to",
+                "technology": "JSON/HTTPS",
+                "tags": []
+            },
+            {
+                "id": "relationship_7",
+                "sourceId": "container_2",
+                "destinationId": "container_3",
+                "description": "Reads from and writes to",
+                "technology": "JDBC",
+                "tags": []
+            },
+            {
+                "id": "relationship_8",
+                "sourceId": "container_2",
+                "destinationId": "system_2",
+                "description": "Makes API calls to",
+                "technology": "XML/HTTPS",
+                "tags": []
+            },
+            {
+                "id": "relationship_9",
+                "sourceId": "container_2",
+                "destinationId": "system_3",
+                "description": "Sends e-mail using",
+                "technology": "SMTP",
+                "tags": []
+            }
+        ]
+    },
+    "views": [
+        {
+            "type": "systemContext",
+            "key": "SystemContext",
+            "systemId": "system_1",
+            "description": "The system context diagram for the Internet Banking System",
+            "autoLayout": "lr"
+        },
+        {
+            "type": "container",
+            "key": "Containers",
+            "systemId": "system_1",
+            "description": "The container diagram for the Internet Banking System",
+            "autoLayout": "tb"
+        },
+        {
+            "type": "component",
+            "key": "Components",
+            "containerId": "container_2",
+            "description": "The component diagram for the API Application",
+            "autoLayout": "lr"
+        }
+    ],
+    "dsl": "workspace \"Big Bank plc\" \"Internet Banking System for Big Bank plc\" {\n\n    model {\n        person_1 = person \"Personal Banking Customer\" \"A customer of the bank, with personal bank accounts\" \"External\"\n        system_1 = softwareSystem \"Internet Banking System\" \"Allows customers to view information about their bank accounts, and make payments\" {\n            container_1 = container \"Web Application\" \"Delivers the static content and the Internet banking single page application\" \"Java and Spring MVC\"\n            container_2 = container \"API Application\" \"Provides Internet banking functionality via a JSON/HTTPS API\" \"Java and Spring Boot\" {\n                component_1 = component \"Sign In Controller\" \"Allows users to sign in to the Internet Banking System\" \"Spring MVC Rest Controller\"\n                component_2 = component \"Accounts Summary Controller\" \"Provides customers with a summary of their bank accounts\" \"Spring MVC Rest Controller\"\n            }\n            container_3 = container \"Database\" \"Stores user registration information, hashed authentication credentials, access logs, etc.\" \"Oracle Database Schema\" \"Database\"\n        }\n        system_2 = softwareSystem \"Mainframe Banking System\" \"Stores all of the core banking information about customers, accounts, transactions, etc.\"\n        system_3 = softwareSystem \"Email System\" \"The internal Microsoft Exchange e-mail system\"\n        person_1 -> system_1 \"Views account balances, and makes payments using\" \"HTTPS\"\n        system_1 -> system_2 \"Gets account information from, and makes payments using\" \"XML/HTTPS\"\n        system_1 -> system_3 \"Sends e-mail using\" \"SMTP\"\n        system_3 -> person_1 \"Sends e-mails to\"\n        person_1 -> container_1 \"Visits bigbank.com/ib using\" \"HTTPS\"\n        container_1 -> container_2 \"Makes API calls to\" \"JSON/HTTPS\"\n        container_2 -> container_3 \"Reads from and writes to\" \"JDBC\"\n        container_2 -> system_2 \"Makes API calls to\" \"XML/HTTPS\"\n        container_2 -> system_3 \"Sends e-mail using\" \"SMTP\"\n    }\n\n    views {\n        systemContext system_1 \"SystemContext\" {\n            include *\n            autoLayout lr\n        }\n        container system_1 \"Containers\" {\n            include *\n            autoLayout tb\n        }\n        component container_2 \"Components\" {\n            include *\n            autoLayout lr\n        }\n\n        styles {\n            element \"Software System\" {\n                background #1168bd\n                color #ffffff\n            }\n            element \"Person\" {\n                background #08427b\n                color #ffffff\n                shape person\n            }\n        }\n    }\n}\n",
+    "createdAt": "2024-01-01T10:00:00+00:00",
+    "updatedAt": "2024-01-01T12:00:00+00:00"
+}

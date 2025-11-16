@@ -127,6 +127,7 @@ class DslBuilder
             'systemId' => $systemId,
             'key' => $key,
             'description' => $description,
+            'autoLayout' => 'lr',
         ];
         return $key;
     }
@@ -138,6 +139,7 @@ class DslBuilder
             'systemId' => $systemId,
             'key' => $key,
             'description' => $description,
+            'autoLayout' => 'lr',
         ];
         return $key;
     }
@@ -149,8 +151,20 @@ class DslBuilder
             'containerId' => $containerId,
             'key' => $key,
             'description' => $description,
+            'autoLayout' => 'lr',
         ];
         return $key;
+    }
+
+    public function setViewAutoLayout(string $viewKey, string $direction): void
+    {
+        foreach ($this->views as &$view) {
+            if ($view['key'] === $viewKey) {
+                $view['autoLayout'] = $direction;
+                return;
+            }
+        }
+        throw new \InvalidArgumentException("View not found: {$viewKey}");
     }
 
     public function toDsl(): string
@@ -263,23 +277,25 @@ class DslBuilder
     private function generateViewDsl(array $view): string
     {
         $dsl = '';
+        $autoLayout = $view['autoLayout'] ?? 'lr';
+
         switch ($view['type']) {
             case 'systemContext':
                 $dsl .= "        systemContext {$view['systemId']} \"{$view['key']}\" {\n";
                 $dsl .= "            include *\n";
-                $dsl .= "            autoLayout lr\n";
+                $dsl .= "            autoLayout {$autoLayout}\n";
                 $dsl .= "        }\n";
                 break;
             case 'container':
                 $dsl .= "        container {$view['systemId']} \"{$view['key']}\" {\n";
                 $dsl .= "            include *\n";
-                $dsl .= "            autoLayout lr\n";
+                $dsl .= "            autoLayout {$autoLayout}\n";
                 $dsl .= "        }\n";
                 break;
             case 'component':
                 $dsl .= "        component {$view['containerId']} \"{$view['key']}\" {\n";
                 $dsl .= "            include *\n";
-                $dsl .= "            autoLayout lr\n";
+                $dsl .= "            autoLayout {$autoLayout}\n";
                 $dsl .= "        }\n";
                 break;
         }
