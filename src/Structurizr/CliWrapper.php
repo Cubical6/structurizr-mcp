@@ -27,6 +27,12 @@ class CliWrapper
     private const TIMEOUT_EXPORT = 30;
     private const TIMEOUT_CLOUD_OPS = 60;
 
+    /** Timeout for credential check operations (in seconds) */
+    private const CREDENTIAL_CHECK_TIMEOUT_SECONDS = 5;
+
+    /** Default Structurizr API URL */
+    private const DEFAULT_API_URL = 'https://api.structurizr.com';
+
     private readonly string $cliPath;
 
     /**
@@ -224,7 +230,7 @@ class CliWrapper
         $this->logger->info('Pushing workspace to Structurizr', [
             'workspace' => $resolvedWorkspacePath,
             'workspaceId' => $workspaceId,
-            'apiUrl' => $apiUrl ?? 'https://api.structurizr.com',
+            'apiUrl' => $apiUrl ?? self::DEFAULT_API_URL,
         ]);
 
         $args = [
@@ -284,7 +290,7 @@ class CliWrapper
         $this->logger->info('Pulling workspace from Structurizr', [
             'workspaceId' => $workspaceId,
             'output' => $outputPath,
-            'apiUrl' => $apiUrl ?? 'https://api.structurizr.com',
+            'apiUrl' => $apiUrl ?? self::DEFAULT_API_URL,
         ]);
 
         $args = [
@@ -324,7 +330,7 @@ class CliWrapper
      */
     public function getVersion(): string
     {
-        $result = $this->executeCommand(['version'], 5);
+        $result = $this->executeCommand(['version'], self::CREDENTIAL_CHECK_TIMEOUT_SECONDS);
 
         if (!$result->isSuccess()) {
             return 'unknown';

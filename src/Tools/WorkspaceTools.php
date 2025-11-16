@@ -6,6 +6,7 @@ namespace StructurizrMcp\Tools;
 
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Capability\Attribute\Schema;
+use Mcp\Exception\ToolCallException;
 use Psr\Log\LoggerInterface;
 use StructurizrMcp\Exception\WorkspaceNotFoundException;
 use StructurizrMcp\Structurizr\WorkspaceManager;
@@ -15,9 +16,15 @@ use StructurizrMcp\Structurizr\WorkspaceManager;
  */
 class WorkspaceTools
 {
+    /**
+     * Constructor
+     *
+     * @param WorkspaceManager $workspaceManager Manager for workspace operations
+     * @param LoggerInterface $logger Logger for debugging and info messages
+     */
     public function __construct(
         private readonly WorkspaceManager $workspaceManager,
-        private readonly LoggerInterface $logger,
+        private readonly LoggerInterface $logger
     ) {
     }
 
@@ -36,27 +43,23 @@ class WorkspaceTools
         #[Schema(description: 'Workspace name', minLength: 1, maxLength: 100)]
         string $name,
         #[Schema(description: 'Workspace description', maxLength: 500)]
-        string $description = '',
+        string $description = ''
     ): array {
         $this->logger->info("Creating workspace: {$name}");
 
-        if (empty(trim($name))) {
-            throw new \InvalidArgumentException('Workspace name cannot be empty');
+        try {
+            $workspace = $this->workspaceManager->create($name, $description);
+
+            return [
+                'workspaceId' => $workspace->id,
+                'name' => $workspace->name,
+                'description' => $workspace->description,
+                'dsl' => $workspace->dsl,
+                'createdAt' => $workspace->createdAt?->format('c'),
+            ];
+        } catch (\Exception $e) {
+            throw new ToolCallException("Failed to create workspace '{$name}': " . $e->getMessage());
         }
-
-        if (strlen($name) > 100) {
-            throw new \InvalidArgumentException('Workspace name must be 100 characters or less');
-        }
-
-        $workspace = $this->workspaceManager->create($name, $description);
-
-        return [
-            'workspaceId' => $workspace->id,
-            'name' => $workspace->name,
-            'description' => $workspace->description,
-            'dsl' => $workspace->dsl,
-            'createdAt' => $workspace->createdAt?->format('c'),
-        ];
     }
 
     /**
@@ -73,25 +76,27 @@ class WorkspaceTools
         #[Schema(description: 'Workspace ID to retrieve', minLength: 1)]
         string $workspaceId,
         #[Schema(description: 'Output format', enum: ['json', 'dsl'])]
-        string $format = 'json',
+        string $format = 'json'
     ): array {
         $this->logger->debug("Getting workspace: {$workspaceId} in format: {$format}");
 
-        if (!in_array($format, ['json', 'dsl'], true)) {
-            throw new \InvalidArgumentException("Invalid format: {$format}. Must be 'json' or 'dsl'");
+        try {
+            $workspace = $this->workspaceManager->load($workspaceId);
+
+            if ($format === 'dsl') {
+                return [
+                    'workspaceId' => $workspace->id,
+                    'name' => $workspace->name,
+                    'dsl' => $workspace->dsl,
+                ];
+            }
+
+            return $workspace->toArray();
+        } catch (WorkspaceNotFoundException $e) {
+            throw new ToolCallException("Workspace not found: {$workspaceId}");
+        } catch (\Exception $e) {
+            throw new ToolCallException("Failed to get workspace '{$workspaceId}': " . $e->getMessage());
         }
-
-        $workspace = $this->workspaceManager->load($workspaceId);
-
-        if ($format === 'dsl') {
-            return [
-                'workspaceId' => $workspace->id,
-                'name' => $workspace->name,
-                'dsl' => $workspace->dsl,
-            ];
-        }
-
-        return $workspace->toArray();
     }
 
     /**
@@ -106,12 +111,16 @@ class WorkspaceTools
     {
         $this->logger->debug('Listing all workspaces');
 
-        $workspaces = $this->workspaceManager->list();
+        try {
+            $workspaces = $this->workspaceManager->list();
 
-        return [
-            'workspaces' => $workspaces,
-            'count' => count($workspaces),
-        ];
+            return [
+                'workspaces' => $workspaces,
+                'count' => count($workspaces),
+            ];
+        } catch (\Exception $e) {
+            throw new ToolCallException("Failed to list workspaces: " . $e->getMessage());
+        }
     }
 
     /**
@@ -125,7 +134,7 @@ class WorkspaceTools
     #[McpTool(name: 'delete_workspace', description: 'Delete a workspace by ID')]
     public function deleteWorkspace(
         #[Schema(description: 'Workspace ID to delete', minLength: 1)]
-        string $workspaceId,
+        string $workspaceId
     ): array {
         $this->logger->info("Deleting workspace: {$workspaceId}");
 
@@ -138,11 +147,14 @@ class WorkspaceTools
                 'workspaceId' => $workspaceId,
             ];
         } catch (WorkspaceNotFoundException $e) {
+            // Return failure instead of throwing for workspace not found
             return [
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => "Workspace not found: {$workspaceId}",
                 'workspaceId' => $workspaceId,
             ];
+        } catch (\Exception $e) {
+            throw new ToolCallException("Failed to delete workspace '{$workspaceId}': " . $e->getMessage());
         }
     }
 

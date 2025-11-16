@@ -6,19 +6,20 @@ namespace StructurizrMcp\Tools;
 
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Capability\Attribute\Schema;
+use Mcp\Exception\ToolCallException;
 use Psr\Log\LoggerInterface;
-use StructurizrMcp\Structurizr\DslBuilder;
+use StructurizrMcp\Exception\WorkspaceNotFoundException;
 use StructurizrMcp\Structurizr\Workspace;
 use StructurizrMcp\Structurizr\WorkspaceManager;
 
 /**
  * MCP Tools for C4 model building (adding elements and relationships)
  */
-class ModelTools
+class ModelTools extends AbstractWorkspaceTool
 {
     public function __construct(
         private readonly WorkspaceManager $workspaceManager,
-        private readonly LoggerInterface $logger,
+        private readonly LoggerInterface $logger
     ) {
     }
 
@@ -43,28 +44,35 @@ class ModelTools
         #[Schema(description: 'Description of the person', maxLength: 500)]
         string $description = '',
         #[Schema(description: 'Tags for styling', type: 'array')]
-        array $tags = [],
+        array $tags = []
     ): array {
         $this->logger->info("Adding person '{$name}' to workspace: {$workspaceId}");
 
-        $workspace = $this->workspaceManager->load($workspaceId);
+        try {
+            $workspace = $this->workspaceManager->load($workspaceId);
 
-        // Build/update DSL
-        $builder = $this->createBuilderFromWorkspace($workspace);
-        $elementId = $builder->addPerson($name, $description, $tags);
-        $dsl = $builder->toDsl();
+            // Build/update DSL
+            $builder = $this->createBuilderFromWorkspace($workspace);
+            $elementId = $builder->addPerson($name, $description, $tags);
+            $dsl = $builder->toDsl();
 
-        // Save updated workspace
-        $updated = $workspace->withDsl($dsl);
-        $this->workspaceManager->save($updated);
+            // Save updated workspace
+            $updated = $workspace->withDsl($dsl);
+            $this->workspaceManager->save($updated);
 
-        return [
-            'workspaceId' => $workspaceId,
-            'elementId' => $elementId,
-            'name' => $name,
-            'type' => 'person',
-            'description' => $description,
-        ];
+
+            return [
+                'workspaceId' => $workspaceId,
+                'elementId' => $elementId,
+                'name' => $name,
+                'type' => 'person',
+                'description' => $description,
+            ];
+        } catch (WorkspaceNotFoundException $e) {
+            throw new ToolCallException("Workspace not found: {$workspaceId}");
+        } catch (\Exception $e) {
+            throw new ToolCallException("Failed to add person '{$name}': " . $e->getMessage());
+        }
     }
 
     /**
@@ -91,31 +99,34 @@ class ModelTools
         #[Schema(description: 'System location', enum: ['Internal', 'External'])]
         string $location = 'Internal',
         #[Schema(description: 'Tags for styling', type: 'array')]
-        array $tags = [],
+        array $tags = []
     ): array {
         $this->logger->info("Adding software system '{$name}' to workspace: {$workspaceId}");
 
-        if (!in_array($location, ['Internal', 'External'], true)) {
-            throw new \InvalidArgumentException("Location must be 'Internal' or 'External'");
+        try {
+            $workspace = $this->workspaceManager->load($workspaceId);
+
+            $builder = $this->createBuilderFromWorkspace($workspace);
+            $elementId = $builder->addSoftwareSystem($name, $description, $location, $tags);
+            $dsl = $builder->toDsl();
+
+            $updated = $workspace->withDsl($dsl);
+            $this->workspaceManager->save($updated);
+
+
+            return [
+                'workspaceId' => $workspaceId,
+                'elementId' => $elementId,
+                'name' => $name,
+                'type' => 'softwareSystem',
+                'location' => $location,
+                'description' => $description,
+            ];
+        } catch (WorkspaceNotFoundException $e) {
+            throw new ToolCallException("Workspace not found: {$workspaceId}");
+        } catch (\Exception $e) {
+            throw new ToolCallException("Failed to add software system '{$name}': " . $e->getMessage());
         }
-
-        $workspace = $this->workspaceManager->load($workspaceId);
-
-        $builder = $this->createBuilderFromWorkspace($workspace);
-        $elementId = $builder->addSoftwareSystem($name, $description, $location, $tags);
-        $dsl = $builder->toDsl();
-
-        $updated = $workspace->withDsl($dsl);
-        $this->workspaceManager->save($updated);
-
-        return [
-            'workspaceId' => $workspaceId,
-            'elementId' => $elementId,
-            'name' => $name,
-            'type' => 'softwareSystem',
-            'location' => $location,
-            'description' => $description,
-        ];
     }
 
     /**
@@ -145,28 +156,35 @@ class ModelTools
         #[Schema(description: 'Technology/platform', maxLength: 200)]
         string $technology = '',
         #[Schema(description: 'Tags for styling', type: 'array')]
-        array $tags = [],
+        array $tags = []
     ): array {
         $this->logger->info("Adding container '{$name}' to system '{$systemId}' in workspace: {$workspaceId}");
 
-        $workspace = $this->workspaceManager->load($workspaceId);
+        try {
+            $workspace = $this->workspaceManager->load($workspaceId);
 
-        $builder = $this->createBuilderFromWorkspace($workspace);
-        $elementId = $builder->addContainer($systemId, $name, $description, $technology, $tags);
-        $dsl = $builder->toDsl();
+            $builder = $this->createBuilderFromWorkspace($workspace);
+            $elementId = $builder->addContainer($systemId, $name, $description, $technology, $tags);
+            $dsl = $builder->toDsl();
 
-        $updated = $workspace->withDsl($dsl);
-        $this->workspaceManager->save($updated);
+            $updated = $workspace->withDsl($dsl);
+            $this->workspaceManager->save($updated);
 
-        return [
-            'workspaceId' => $workspaceId,
-            'elementId' => $elementId,
-            'systemId' => $systemId,
-            'name' => $name,
-            'type' => 'container',
-            'technology' => $technology,
-            'description' => $description,
-        ];
+
+            return [
+                'workspaceId' => $workspaceId,
+                'elementId' => $elementId,
+                'systemId' => $systemId,
+                'name' => $name,
+                'type' => 'container',
+                'technology' => $technology,
+                'description' => $description,
+            ];
+        } catch (WorkspaceNotFoundException $e) {
+            throw new ToolCallException("Workspace not found: {$workspaceId}");
+        } catch (\Exception $e) {
+            throw new ToolCallException("Failed to add container '{$name}' to system '{$systemId}': " . $e->getMessage());
+        }
     }
 
     /**
@@ -196,28 +214,35 @@ class ModelTools
         #[Schema(description: 'Technology/framework', maxLength: 200)]
         string $technology = '',
         #[Schema(description: 'Tags for styling', type: 'array')]
-        array $tags = [],
+        array $tags = []
     ): array {
         $this->logger->info("Adding component '{$name}' to container '{$containerId}' in workspace: {$workspaceId}");
 
-        $workspace = $this->workspaceManager->load($workspaceId);
+        try {
+            $workspace = $this->workspaceManager->load($workspaceId);
 
-        $builder = $this->createBuilderFromWorkspace($workspace);
-        $elementId = $builder->addComponent($containerId, $name, $description, $technology, $tags);
-        $dsl = $builder->toDsl();
+            $builder = $this->createBuilderFromWorkspace($workspace);
+            $elementId = $builder->addComponent($containerId, $name, $description, $technology, $tags);
+            $dsl = $builder->toDsl();
 
-        $updated = $workspace->withDsl($dsl);
-        $this->workspaceManager->save($updated);
+            $updated = $workspace->withDsl($dsl);
+            $this->workspaceManager->save($updated);
 
-        return [
-            'workspaceId' => $workspaceId,
-            'elementId' => $elementId,
-            'containerId' => $containerId,
-            'name' => $name,
-            'type' => 'component',
-            'technology' => $technology,
-            'description' => $description,
-        ];
+
+            return [
+                'workspaceId' => $workspaceId,
+                'elementId' => $elementId,
+                'containerId' => $containerId,
+                'name' => $name,
+                'type' => 'component',
+                'technology' => $technology,
+                'description' => $description,
+            ];
+        } catch (WorkspaceNotFoundException $e) {
+            throw new ToolCallException("Workspace not found: {$workspaceId}");
+        } catch (\Exception $e) {
+            throw new ToolCallException("Failed to add component '{$name}' to container '{$containerId}': " . $e->getMessage());
+        }
     }
 
     /**
@@ -247,43 +272,33 @@ class ModelTools
         #[Schema(description: 'Technology/protocol', maxLength: 200)]
         string $technology = '',
         #[Schema(description: 'Tags for styling', type: 'array')]
-        array $tags = [],
+        array $tags = []
     ): array {
         $this->logger->info("Adding relationship from '{$sourceId}' to '{$destinationId}' in workspace: {$workspaceId}");
 
-        $workspace = $this->workspaceManager->load($workspaceId);
+        try {
+            $workspace = $this->workspaceManager->load($workspaceId);
 
-        $builder = $this->createBuilderFromWorkspace($workspace);
-        $relationshipId = $builder->addRelationship($sourceId, $destinationId, $description, $technology, $tags);
-        $dsl = $builder->toDsl();
+            $builder = $this->createBuilderFromWorkspace($workspace);
+            $relationshipId = $builder->addRelationship($sourceId, $destinationId, $description, $technology, $tags);
+            $dsl = $builder->toDsl();
 
-        $updated = $workspace->withDsl($dsl);
-        $this->workspaceManager->save($updated);
+            $updated = $workspace->withDsl($dsl);
+            $this->workspaceManager->save($updated);
 
-        return [
-            'workspaceId' => $workspaceId,
-            'relationshipId' => $relationshipId,
-            'sourceId' => $sourceId,
-            'destinationId' => $destinationId,
-            'description' => $description,
-            'technology' => $technology,
-        ];
-    }
 
-    /**
-     * Create DSL builder from existing workspace
-     */
-    private function createBuilderFromWorkspace(Workspace $workspace): DslBuilder
-    {
-        $builder = new DslBuilder();
-
-        // If workspace already has a model, we need to reconstruct the builder
-        // For now, start fresh with workspace name and description
-        $builder->workspace($workspace->name, $workspace->description);
-
-        // TODO: If we need to support editing existing workspaces,
-        // we would parse the existing DSL here to rebuild the builder state
-
-        return $builder;
+            return [
+                'workspaceId' => $workspaceId,
+                'relationshipId' => $relationshipId,
+                'sourceId' => $sourceId,
+                'destinationId' => $destinationId,
+                'description' => $description,
+                'technology' => $technology,
+            ];
+        } catch (WorkspaceNotFoundException $e) {
+            throw new ToolCallException("Workspace not found: {$workspaceId}");
+        } catch (\Exception $e) {
+            throw new ToolCallException("Failed to add relationship from '{$sourceId}' to '{$destinationId}': " . $e->getMessage());
+        }
     }
 }

@@ -9,6 +9,12 @@ namespace StructurizrMcp\Exception;
  */
 class WorkspaceNotFoundException extends StructurizrException
 {
+    /**
+     * Constructor
+     *
+     * @param string $workspaceId The ID of the workspace that was not found
+     * @param \Throwable|null $previous Previous exception for exception chaining
+     */
     public function __construct(string $workspaceId, ?\Throwable $previous = null)
     {
         parent::__construct(

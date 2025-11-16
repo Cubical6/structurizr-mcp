@@ -562,4 +562,151 @@ class DslBuilderTest extends TestCase
         $this->assertStringContainsString('container ' . $ecommerce, $dsl);
         $this->assertStringContainsString('component ' . $api, $dsl);
     }
+
+    /**
+     * Test container with tags but no technology (GitHub Issue #5, #9)
+     * Verifies that tags are correctly positioned in DSL when technology is empty
+     */
+    public function testContainerWithTagsButNoTechnology(): void
+    {
+        $this->builder->workspace('Test');
+        $systemId = $this->builder->addSoftwareSystem('System');
+        $containerId = $this->builder->addContainer($systemId, 'Cache', 'Redis cache', '', ['Critical', 'Infrastructure']);
+
+        $container = $this->builder->getElement($containerId);
+        $this->assertEquals('', $container['technology']);
+        $this->assertEquals(['Critical', 'Infrastructure'], $container['tags']);
+
+        // Verify DSL includes empty technology string to preserve tag position
+        $dsl = $this->builder->toDsl();
+        $this->assertStringContainsString('container "Cache" "Redis cache" "" "Critical,Infrastructure"', $dsl);
+    }
+
+    /**
+     * Test component with tags but no technology (GitHub Issue #5, #9)
+     * Verifies that tags are correctly positioned in DSL when technology is empty
+     */
+    public function testComponentWithTagsButNoTechnology(): void
+    {
+        $this->builder->workspace('Test');
+        $systemId = $this->builder->addSoftwareSystem('System');
+        $containerId = $this->builder->addContainer($systemId, 'API');
+        $componentId = $this->builder->addComponent($containerId, 'Logger', 'Logging component', '', ['Utility', 'Shared']);
+
+        $component = $this->builder->getElement($componentId);
+        $this->assertEquals('', $component['technology']);
+        $this->assertEquals(['Utility', 'Shared'], $component['tags']);
+
+        // Verify DSL includes empty technology string to preserve tag position
+        $dsl = $this->builder->toDsl();
+        $this->assertStringContainsString('component "Logger" "Logging component" "" "Utility,Shared"', $dsl);
+    }
+
+    /**
+     * Test relationship with tags but no technology (GitHub Issue #5, #9)
+     * Verifies that tags are correctly positioned in DSL when technology is empty
+     */
+    public function testRelationshipWithTagsButNoTechnology(): void
+    {
+        $this->builder->workspace('Test');
+        $person = $this->builder->addPerson('User');
+        $system = $this->builder->addSoftwareSystem('System');
+        $relId = $this->builder->addRelationship($person, $system, 'Interacts with', '', ['Async', 'Important']);
+
+        $array = $this->builder->toArray();
+        $relationship = $array['relationships'][$relId];
+        $this->assertEquals('', $relationship['technology']);
+        $this->assertEquals(['Async', 'Important'], $relationship['tags']);
+
+        // Verify DSL includes empty technology string to preserve tag position
+        $dsl = $this->builder->toDsl();
+        $this->assertStringContainsString('-> ' . $system . ' "Interacts with" "" "Async,Important"', $dsl);
+    }
+
+    /**
+     * Test round-trip DSL parsing with tags but no technology (GitHub Issue #5, #9)
+     * This is the critical test: generate DSL → parse → verify correct interpretation
+     */
+    public function testRoundTripParsingWithTagsButNoTechnology(): void
+    {
+        // Build a model with tags but no technology
+        $this->builder->workspace('Test Workspace', 'Test');
+        $systemId = $this->builder->addSoftwareSystem('System', 'Main system');
+        $containerId = $this->builder->addContainer($systemId, 'Cache', 'Redis cache', '', ['Critical', 'Infrastructure']);
+        $componentId = $this->builder->addComponent($containerId, 'Logger', 'Logging', '', ['Utility']);
+
+        // Generate DSL
+        $dsl = $this->builder->toDsl();
+
+        // Parse DSL back
+        $parsedBuilder = DslBuilder::fromDsl($dsl);
+
+        // Verify workspace
+        $parsedArray = $parsedBuilder->toArray();
+        $this->assertEquals('Test Workspace', $parsedArray['name']);
+        $this->assertEquals('Test', $parsedArray['description']);
+
+        // Verify container was parsed correctly (tags should not be interpreted as technology)
+        $parsedContainer = $parsedBuilder->findElement('Cache', 'container');
+        $this->assertNotNull($parsedContainer);
+        $this->assertEquals('Redis cache', $parsedContainer['description']);
+        $this->assertEquals('', $parsedContainer['technology']); // Technology should be empty
+        $this->assertEquals(['Critical', 'Infrastructure'], $parsedContainer['tags']); // Tags should be preserved
+
+        // Verify component was parsed correctly
+        $parsedComponent = $parsedBuilder->findElement('Logger', 'component');
+        $this->assertNotNull($parsedComponent);
+        $this->assertEquals('Logging', $parsedComponent['description']);
+        $this->assertEquals('', $parsedComponent['technology']); // Technology should be empty
+        $this->assertEquals(['Utility'], $parsedComponent['tags']); // Tags should be preserved
+
+        // Verify DSL round-trip produces identical output
+        $dsl2 = $parsedBuilder->toDsl();
+        $this->assertEquals($dsl, $dsl2);
+    }
+
+    /**
+     * Test all four combinations of technology and tags for containers
+     */
+    public function testContainerTechnologyAndTagsCombinations(): void
+    {
+        $this->builder->workspace('Test');
+        $systemId = $this->builder->addSoftwareSystem('System');
+
+        // 1. Neither technology nor tags
+        $c1 = $this->builder->addContainer($systemId, 'C1', 'Description');
+        // 2. Technology but no tags
+        $c2 = $this->builder->addContainer($systemId, 'C2', 'Description', 'React');
+        // 3. Tags but no technology
+        $c3 = $this->builder->addContainer($systemId, 'C3', 'Description', '', ['Tag1', 'Tag2']);
+        // 4. Both technology and tags
+        $c4 = $this->builder->addContainer($systemId, 'C4', 'Description', 'React', ['Tag1', 'Tag2']);
+
+        $dsl = $this->builder->toDsl();
+
+        // Verify DSL format for each combination
+        $this->assertStringContainsString('container "C1" "Description"' . "\n", $dsl); // Neither
+        $this->assertStringContainsString('container "C2" "Description" "React"' . "\n", $dsl); // Tech only
+        $this->assertStringContainsString('container "C3" "Description" "" "Tag1,Tag2"', $dsl); // Tags only - empty tech
+        $this->assertStringContainsString('container "C4" "Description" "React" "Tag1,Tag2"', $dsl); // Both
+
+        // Verify round-trip parsing
+        $parsedBuilder = DslBuilder::fromDsl($dsl);
+        $e1 = $parsedBuilder->findElement('C1', 'container');
+        $e2 = $parsedBuilder->findElement('C2', 'container');
+        $e3 = $parsedBuilder->findElement('C3', 'container');
+        $e4 = $parsedBuilder->findElement('C4', 'container');
+
+        $this->assertEquals('', $e1['technology']);
+        $this->assertEquals([], $e1['tags']);
+
+        $this->assertEquals('React', $e2['technology']);
+        $this->assertEquals([], $e2['tags']);
+
+        $this->assertEquals('', $e3['technology']); // Should be empty, NOT 'Tag1,Tag2'
+        $this->assertEquals(['Tag1', 'Tag2'], $e3['tags']);
+
+        $this->assertEquals('React', $e4['technology']);
+        $this->assertEquals(['Tag1', 'Tag2'], $e4['tags']);
+    }
 }

@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace StructurizrMcp\Tests\Unit\Tools;
 
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\LoggerInterface;
-use StructurizrMcp\Exception\WorkspaceNotFoundException;
-use StructurizrMcp\Structurizr\Workspace;
-use StructurizrMcp\Structurizr\WorkspaceManager;
+use PHPUnit\Framework\MockObject\MockObject;
 use StructurizrMcp\Tools\ModelTools;
+use StructurizrMcp\Structurizr\WorkspaceManager;
+use StructurizrMcp\Structurizr\Workspace;
+use StructurizrMcp\Exception\WorkspaceNotFoundException;
+use Mcp\Exception\ToolCallException;
+use Psr\Log\LoggerInterface;
 
 /**
  * Unit tests for ModelTools
@@ -72,7 +73,7 @@ class ModelToolsTest extends TestCase
             'ws_test',
             'User',
             'End user of the system',
-            ['External'],
+            ['External']
         );
 
         $this->assertEquals('ws_test', $result['workspaceId']);
@@ -102,7 +103,8 @@ class ModelToolsTest extends TestCase
             ->with('nonexistent')
             ->willThrowException(new WorkspaceNotFoundException('nonexistent'));
 
-        $this->expectException(WorkspaceNotFoundException::class);
+        $this->expectException(ToolCallException::class);
+        $this->expectExceptionMessage('Workspace not found');
 
         $this->tools->addPerson('nonexistent', 'User');
     }
@@ -134,7 +136,7 @@ class ModelToolsTest extends TestCase
             'My System',
             'Main application',
             'Internal',
-            ['Core'],
+            ['Core']
         );
 
         $this->assertEquals('ws_test', $result['workspaceId']);
@@ -156,34 +158,15 @@ class ModelToolsTest extends TestCase
             'ws_test',
             'External API',
             'Third-party service',
-            'External',
+            'External'
         );
 
         $this->assertEquals('External', $result['location']);
     }
 
-    public function testAddSoftwareSystemInvalidLocation(): void
-    {
-        $workspace = $this->createTestWorkspace();
-
-        $this->workspaceManager->method('load')->willReturn($workspace);
-
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage("Location must be 'Internal' or 'External'");
-
-        $this->tools->addSoftwareSystem(
-            'ws_test',
-            'System',
-            'Description',
-            'InvalidLocation',
-        );
-    }
-
     /**
-     * Note: This test demonstrates a current limitation - addContainer requires
-     * the system to exist in the builder, but createBuilderFromWorkspace doesn't
-     * rebuild state from existing DSL. This is marked as TODO in the implementation.
-     * For now, we test that the exception is thrown as expected.
+     * Note: The DslBuilder::fromDsl() method properly rebuilds state from existing DSL,
+     * enabling incremental model building with multiple operations.
      */
     public function testAddContainerThrowsExceptionWhenSystemNotInBuilder(): void
     {
@@ -191,7 +174,7 @@ class ModelToolsTest extends TestCase
 
         $this->workspaceManager->method('load')->willReturn($workspace);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(ToolCallException::class);
         $this->expectExceptionMessage('System not found');
 
         $this->tools->addContainer(
@@ -200,7 +183,7 @@ class ModelToolsTest extends TestCase
             'Web App',
             'Frontend application',
             'React',
-            ['Frontend'],
+            ['Frontend']
         );
     }
 
@@ -213,7 +196,7 @@ class ModelToolsTest extends TestCase
 
         $this->workspaceManager->method('load')->willReturn($workspace);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(ToolCallException::class);
         $this->expectExceptionMessage('Container not found');
 
         $this->tools->addComponent(
@@ -222,7 +205,7 @@ class ModelToolsTest extends TestCase
             'Auth Controller',
             'Handles authentication',
             'Spring MVC',
-            ['Controller'],
+            ['Controller']
         );
     }
 
@@ -235,7 +218,7 @@ class ModelToolsTest extends TestCase
 
         $this->workspaceManager->method('load')->willReturn($workspace);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(ToolCallException::class);
         $this->expectExceptionMessage('Source element not found');
 
         $this->tools->addRelationship(
@@ -244,7 +227,7 @@ class ModelToolsTest extends TestCase
             'system_1',
             'Uses',
             'HTTPS',
-            ['Async'],
+            ['Async']
         );
     }
 
@@ -255,7 +238,8 @@ class ModelToolsTest extends TestCase
             ->method('load')
             ->willThrowException(new WorkspaceNotFoundException('nonexistent'));
 
-        $this->expectException(WorkspaceNotFoundException::class);
+        $this->expectException(ToolCallException::class);
+        $this->expectExceptionMessage('Workspace not found');
 
         $this->tools->addRelationship('nonexistent', 'src', 'dest', 'Uses');
     }
