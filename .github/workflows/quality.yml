@@ -52,7 +52,6 @@ jobs:
         with:
           sarif_file: phpstan-report.sarif
           category: phpstan
-          wait-for-processing: true
 
       - name: Run composer audit
         continue-on-error: true

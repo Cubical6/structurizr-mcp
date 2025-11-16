@@ -41,7 +41,7 @@ $logger->debug('Configuration loaded', [
 // Ensure cache directory exists
 $cacheDir = __DIR__ . '/cache';
 if (!is_dir($cacheDir)) {
-    mkdir($cacheDir, 0755, true);
+    mkdir($cacheDir, 0o755, true);
 }
 
 try {
