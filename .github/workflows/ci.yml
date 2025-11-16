@@ -52,6 +52,7 @@ jobs:
         with:
           sarif_file: phpstan-report.sarif
           category: phpstan
+          wait-for-processing: true
 
       - name: Run Composer audit
         continue-on-error: true
@@ -62,9 +63,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: quality
     strategy:
+      fail-fast: false
       matrix:
         php-version: ['8.1', '8.2', '8.3']
-      fail-fast: false
 
     steps:
       - name: Checkout code
@@ -94,9 +95,8 @@ jobs:
       - name: Run PHPUnit with coverage
         run: ./vendor/bin/phpunit --coverage-text --coverage-clover coverage.xml
 
-      - name: Upload coverage artifacts
-        uses: codecov/codecov-action@v3
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
         with:
-          files: ./coverage.xml
-          flags: unittests
-          name: codecov-php-${{ matrix.php-version }}
+          name: coverage-php${{ matrix.php-version }}
+          path: coverage.xml
