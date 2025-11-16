@@ -8,6 +8,7 @@ use Mcp\Capability\Attribute\McpTool;
 use Mcp\Capability\Attribute\Schema;
 use StructurizrMcp\Structurizr\WorkspaceManager;
 use StructurizrMcp\Structurizr\DslBuilder;
+use StructurizrMcp\Structurizr\Workspace;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -315,7 +316,7 @@ class ModelTools
     /**
      * Create DSL builder from existing workspace
      */
-    private function createBuilderFromWorkspace($workspace): DslBuilder
+    private function createBuilderFromWorkspace(Workspace $workspace): DslBuilder
     {
         $builder = new DslBuilder();
 

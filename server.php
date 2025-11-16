@@ -13,6 +13,7 @@ use StructurizrMcp\Configuration;
 use StructurizrMcp\Structurizr\WorkspaceManager;
 use StructurizrMcp\Tools\WorkspaceTools;
 use StructurizrMcp\Tools\ModelTools;
+use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Psr16Cache;
 
