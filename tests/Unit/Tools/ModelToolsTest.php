@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace StructurizrMcp\Tests\Unit\Tools;
 
-use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
-use StructurizrMcp\Tools\ModelTools;
-use StructurizrMcp\Structurizr\WorkspaceManager;
-use StructurizrMcp\Structurizr\Workspace;
-use StructurizrMcp\Exception\WorkspaceNotFoundException;
+use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use StructurizrMcp\Exception\WorkspaceNotFoundException;
+use StructurizrMcp\Structurizr\Workspace;
+use StructurizrMcp\Structurizr\WorkspaceManager;
+use StructurizrMcp\Tools\ModelTools;
 
 /**
  * Unit tests for ModelTools
@@ -72,7 +72,7 @@ class ModelToolsTest extends TestCase
             'ws_test',
             'User',
             'End user of the system',
-            ['External']
+            ['External'],
         );
 
         $this->assertEquals('ws_test', $result['workspaceId']);
@@ -134,7 +134,7 @@ class ModelToolsTest extends TestCase
             'My System',
             'Main application',
             'Internal',
-            ['Core']
+            ['Core'],
         );
 
         $this->assertEquals('ws_test', $result['workspaceId']);
@@ -156,7 +156,7 @@ class ModelToolsTest extends TestCase
             'ws_test',
             'External API',
             'Third-party service',
-            'External'
+            'External',
         );
 
         $this->assertEquals('External', $result['location']);
@@ -175,7 +175,7 @@ class ModelToolsTest extends TestCase
             'ws_test',
             'System',
             'Description',
-            'InvalidLocation'
+            'InvalidLocation',
         );
     }
 
@@ -200,7 +200,7 @@ class ModelToolsTest extends TestCase
             'Web App',
             'Frontend application',
             'React',
-            ['Frontend']
+            ['Frontend'],
         );
     }
 
@@ -222,7 +222,7 @@ class ModelToolsTest extends TestCase
             'Auth Controller',
             'Handles authentication',
             'Spring MVC',
-            ['Controller']
+            ['Controller'],
         );
     }
 
@@ -244,7 +244,7 @@ class ModelToolsTest extends TestCase
             'system_1',
             'Uses',
             'HTTPS',
-            ['Async']
+            ['Async'],
         );
     }
 

@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace StructurizrMcp\Tests\Unit\Structurizr;
 
 use PHPUnit\Framework\TestCase;
-use StructurizrMcp\Structurizr\WorkspaceManager;
-use StructurizrMcp\Structurizr\Workspace;
-use StructurizrMcp\Exception\WorkspaceNotFoundException;
 use Psr\Log\NullLogger;
+use StructurizrMcp\Exception\WorkspaceNotFoundException;
+use StructurizrMcp\Structurizr\Workspace;
+use StructurizrMcp\Structurizr\WorkspaceManager;
 
 /**
  * Unit tests for WorkspaceManager
@@ -26,7 +26,7 @@ class WorkspaceManagerTest extends TestCase
         $this->tempStoragePath = sys_get_temp_dir() . '/structurizr-test-' . uniqid();
         $this->manager = new WorkspaceManager(
             $this->tempStoragePath,
-            new NullLogger()
+            new NullLogger(),
         );
     }
 
@@ -316,7 +316,7 @@ class WorkspaceManagerTest extends TestCase
         // Create a new manager with the same path (simulating restart)
         $newManager = new WorkspaceManager(
             $this->tempStoragePath,
-            new NullLogger()
+            new NullLogger(),
         );
 
         $list = $newManager->list();
@@ -328,11 +328,11 @@ class WorkspaceManagerTest extends TestCase
     {
         $model = [
             'people' => [
-                ['id' => 'user1', 'name' => 'User']
-            ]
+                ['id' => 'user1', 'name' => 'User'],
+            ],
         ];
         $views = [
-            ['type' => 'systemContext', 'key' => 'context']
+            ['type' => 'systemContext', 'key' => 'context'],
         ];
 
         $workspace = new Workspace(

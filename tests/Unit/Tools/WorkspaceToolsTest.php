@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace StructurizrMcp\Tests\Unit\Tools;
 
-use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
-use StructurizrMcp\Tools\WorkspaceTools;
-use StructurizrMcp\Structurizr\WorkspaceManager;
-use StructurizrMcp\Structurizr\Workspace;
-use StructurizrMcp\Exception\WorkspaceNotFoundException;
+use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use StructurizrMcp\Exception\WorkspaceNotFoundException;
+use StructurizrMcp\Structurizr\Workspace;
+use StructurizrMcp\Structurizr\WorkspaceManager;
+use StructurizrMcp\Tools\WorkspaceTools;
 
 /**
  * Unit tests for WorkspaceTools
