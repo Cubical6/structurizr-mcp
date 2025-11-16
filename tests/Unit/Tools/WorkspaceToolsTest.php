@@ -10,6 +10,7 @@ use StructurizrMcp\Tools\WorkspaceTools;
 use StructurizrMcp\Structurizr\WorkspaceManager;
 use StructurizrMcp\Structurizr\Workspace;
 use StructurizrMcp\Exception\WorkspaceNotFoundException;
+use Mcp\Exception\ToolCallException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -86,7 +87,7 @@ class WorkspaceToolsTest extends TestCase
 
     public function testCreateWorkspaceThrowsExceptionForEmptyName(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(ToolCallException::class);
         $this->expectExceptionMessage('Workspace name cannot be empty');
 
         $this->tools->createWorkspace('');
@@ -94,7 +95,7 @@ class WorkspaceToolsTest extends TestCase
 
     public function testCreateWorkspaceThrowsExceptionForWhitespaceName(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(ToolCallException::class);
         $this->expectExceptionMessage('Workspace name cannot be empty');
 
         $this->tools->createWorkspace('   ');
@@ -102,7 +103,7 @@ class WorkspaceToolsTest extends TestCase
 
     public function testCreateWorkspaceThrowsExceptionForTooLongName(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(ToolCallException::class);
         $this->expectExceptionMessage('Workspace name must be 100 characters or less');
 
         $longName = str_repeat('a', 101);
@@ -193,7 +194,7 @@ class WorkspaceToolsTest extends TestCase
 
     public function testGetWorkspaceThrowsExceptionForInvalidFormat(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(ToolCallException::class);
         $this->expectExceptionMessage("Invalid format: xml. Must be 'json' or 'dsl'");
 
         $this->tools->getWorkspace('ws_123', 'xml');
@@ -207,7 +208,8 @@ class WorkspaceToolsTest extends TestCase
             ->with('nonexistent')
             ->willThrowException(new WorkspaceNotFoundException('nonexistent'));
 
-        $this->expectException(WorkspaceNotFoundException::class);
+        $this->expectException(ToolCallException::class);
+        $this->expectExceptionMessage('Workspace not found');
 
         $this->tools->getWorkspace('nonexistent');
     }
@@ -318,7 +320,7 @@ class WorkspaceToolsTest extends TestCase
      */
     public function testCreateWorkspaceValidatesName(string $invalidName): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(ToolCallException::class);
 
         $this->tools->createWorkspace($invalidName);
     }

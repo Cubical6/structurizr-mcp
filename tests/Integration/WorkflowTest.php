@@ -13,6 +13,7 @@ use StructurizrMcp\Tools\ModelTools;
 use StructurizrMcp\Tools\ViewTools;
 use StructurizrMcp\Tools\ExportTools;
 use StructurizrMcp\Exception\WorkspaceNotFoundException;
+use Mcp\Exception\ToolCallException;
 use Psr\Log\NullLogger;
 
 /**
@@ -259,7 +260,7 @@ class WorkflowTest extends TestCase
         $this->assertEquals('tb', $layoutResult['autoLayout']);
 
         // Step 9: Export to DSL
-        $exportResult = $this->workspaceTools->exportToDsl($workspaceId);
+        $exportResult = $this->exportTools->exportToDsl($workspaceId);
 
         $this->assertNotEmpty($exportResult['dsl']);
         $dsl = $exportResult['dsl'];
@@ -317,8 +318,8 @@ class WorkflowTest extends TestCase
         // Try to get non-existent workspace
         try {
             $this->workspaceTools->getWorkspace('nonexistent');
-            $this->fail('Expected WorkspaceNotFoundException');
-        } catch (WorkspaceNotFoundException $e) {
+            $this->fail('Expected ToolCallException');
+        } catch (ToolCallException $e) {
             $this->assertStringContainsString('Workspace not found', $e->getMessage());
         }
 
@@ -329,8 +330,8 @@ class WorkflowTest extends TestCase
         // Try to access deleted workspace
         try {
             $this->workspaceTools->getWorkspace($workspaceId);
-            $this->fail('Expected WorkspaceNotFoundException');
-        } catch (WorkspaceNotFoundException $e) {
+            $this->fail('Expected ToolCallException');
+        } catch (ToolCallException $e) {
             $this->assertStringContainsString('Workspace not found', $e->getMessage());
         }
     }
@@ -395,7 +396,7 @@ class WorkflowTest extends TestCase
         $this->viewTools->createContainerView($workspaceId, $system['elementId'], 'Containers');
 
         // Export DSL
-        $export = $this->workspaceTools->exportToDsl($workspaceId);
+        $export = $this->exportTools->exportToDsl($workspaceId);
         $dsl = $export['dsl'];
 
         // Verify DSL structure
@@ -507,7 +508,7 @@ class WorkflowTest extends TestCase
         $this->viewTools->createComponentView($workspaceId, $api['elementId'], 'APIComponents');
 
         // Export and verify
-        $export = $this->workspaceTools->exportToDsl($workspaceId);
+        $export = $this->exportTools->exportToDsl($workspaceId);
         $dsl = $export['dsl'];
 
         $this->assertStringContainsString('container "Web"', $dsl);

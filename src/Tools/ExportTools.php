@@ -6,9 +6,11 @@ namespace StructurizrMcp\Tools;
 
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Capability\Attribute\Schema;
+use Mcp\Exception\ToolCallException;
 use StructurizrMcp\Structurizr\WorkspaceManager;
 use StructurizrMcp\Structurizr\CliWrapper;
 use StructurizrMcp\Exception\InvalidDslException;
+use StructurizrMcp\Exception\WorkspaceNotFoundException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -16,6 +18,19 @@ use Psr\Log\LoggerInterface;
  */
 class ExportTools
 {
+    /** Prefix for temporary export files */
+    private const TEMP_FILE_PREFIX = 'ws_export_';
+
+    /** Default workspace name for imported workspaces */
+    private const DEFAULT_WORKSPACE_NAME = 'Imported Workspace';
+
+    /**
+     * Constructor
+     *
+     * @param WorkspaceManager $workspaceManager Manager for workspace operations
+     * @param CliWrapper $cliWrapper Wrapper for Structurizr CLI commands
+     * @param LoggerInterface $logger Logger for debugging and info messages
+     */
     public function __construct(
         private readonly WorkspaceManager $workspaceManager,
         private readonly CliWrapper $cliWrapper,
@@ -39,13 +54,19 @@ class ExportTools
     {
         $this->logger->debug("Exporting workspace to DSL: {$workspaceId}");
 
-        $workspace = $this->workspaceManager->load($workspaceId);
+        try {
+            $workspace = $this->workspaceManager->load($workspaceId);
 
-        return [
-            'workspaceId' => $workspace->id,
-            'name' => $workspace->name,
-            'dsl' => $workspace->dsl,
-        ];
+            return [
+                'workspaceId' => $workspace->id,
+                'name' => $workspace->name,
+                'dsl' => $workspace->dsl,
+            ];
+        } catch (WorkspaceNotFoundException $e) {
+            throw new ToolCallException("Workspace not found: {$workspaceId}");
+        } catch (\Exception $e) {
+            throw new ToolCallException("Failed to export workspace to DSL: " . $e->getMessage());
+        }
     }
 
     /**
@@ -70,16 +91,9 @@ class ExportTools
             'viewKey' => $viewKey,
         ]);
 
-        $workspace = $this->workspaceManager->load($workspaceId);
-
-        // Create temp DSL file
-        $tempPath = sys_get_temp_dir() . '/' . uniqid('ws_export_', true) . '.dsl';
-
         try {
-            file_put_contents($tempPath, $workspace->dsl);
-
-            // Export using CLI
-            $plantUml = $this->cliWrapper->export($tempPath, 'plantuml');
+            $workspace = $this->workspaceManager->load($workspaceId);
+            $plantUml = $this->exportWithTempFile($workspace->dsl, 'plantuml');
 
             return [
                 'workspaceId' => $workspace->id,
@@ -88,11 +102,10 @@ class ExportTools
                 'format' => 'plantuml',
                 'content' => $plantUml,
             ];
-        } finally {
-            // Clean up temp file
-            if (file_exists($tempPath)) {
-                unlink($tempPath);
-            }
+        } catch (WorkspaceNotFoundException $e) {
+            throw new ToolCallException("Workspace not found: {$workspaceId}");
+        } catch (\Exception $e) {
+            throw new ToolCallException("Failed to export workspace to PlantUML: " . $e->getMessage());
         }
     }
 
@@ -118,16 +131,9 @@ class ExportTools
             'viewKey' => $viewKey,
         ]);
 
-        $workspace = $this->workspaceManager->load($workspaceId);
-
-        // Create temp DSL file
-        $tempPath = sys_get_temp_dir() . '/' . uniqid('ws_export_', true) . '.dsl';
-
         try {
-            file_put_contents($tempPath, $workspace->dsl);
-
-            // Export using CLI
-            $mermaid = $this->cliWrapper->export($tempPath, 'mermaid');
+            $workspace = $this->workspaceManager->load($workspaceId);
+            $mermaid = $this->exportWithTempFile($workspace->dsl, 'mermaid');
 
             return [
                 'workspaceId' => $workspace->id,
@@ -136,11 +142,10 @@ class ExportTools
                 'format' => 'mermaid',
                 'content' => $mermaid,
             ];
-        } finally {
-            // Clean up temp file
-            if (file_exists($tempPath)) {
-                unlink($tempPath);
-            }
+        } catch (WorkspaceNotFoundException $e) {
+            throw new ToolCallException("Workspace not found: {$workspaceId}");
+        } catch (\Exception $e) {
+            throw new ToolCallException("Failed to export workspace to Mermaid: " . $e->getMessage());
         }
     }
 
@@ -165,27 +170,58 @@ class ExportTools
             throw new InvalidDslException('DSL content cannot be empty');
         }
 
-        // Extract name and description from DSL
-        $name = $this->extractWorkspaceName($dsl);
-        $description = $this->extractWorkspaceDescription($dsl);
+        try {
+            // Extract name and description from DSL
+            $name = $this->extractWorkspaceName($dsl);
+            $description = $this->extractWorkspaceDescription($dsl);
 
-        $this->logger->debug('Extracted workspace metadata from DSL', [
-            'name' => $name,
-            'description' => $description,
-        ]);
+            $this->logger->debug('Extracted workspace metadata from DSL', [
+                'name' => $name,
+                'description' => $description,
+            ]);
 
-        // Create workspace
-        $workspace = $this->workspaceManager->create($name, $description);
+            // Create workspace
+            $workspace = $this->workspaceManager->create($name, $description);
 
-        // Update with DSL content
-        $workspace = $this->workspaceManager->updateDsl($workspace->id, $dsl);
+            // Update with DSL content
+            $workspace = $this->workspaceManager->updateDsl($workspace->id, $dsl);
 
-        return [
-            'workspaceId' => $workspace->id,
-            'name' => $workspace->name,
-            'description' => $workspace->description,
-            'dsl' => $workspace->dsl,
-        ];
+            return [
+                'workspaceId' => $workspace->id,
+                'name' => $workspace->name,
+                'description' => $workspace->description,
+                'dsl' => $workspace->dsl,
+            ];
+        } catch (InvalidDslException $e) {
+            // Re-throw InvalidDslException as-is
+            throw $e;
+        } catch (\Exception $e) {
+            throw new ToolCallException("Failed to import workspace from DSL: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Export workspace using a temporary file
+     *
+     * Creates a temporary DSL file, exports it using the CLI wrapper,
+     * and cleans up the temporary file afterwards.
+     *
+     * @param string $dsl Workspace DSL content
+     * @param string $format Export format (e.g., 'plantuml', 'mermaid')
+     * @return string Exported content
+     */
+    private function exportWithTempFile(string $dsl, string $format): string
+    {
+        $tempPath = sys_get_temp_dir() . '/' . uniqid(self::TEMP_FILE_PREFIX, true) . '.dsl';
+
+        try {
+            file_put_contents($tempPath, $dsl);
+            return $this->cliWrapper->export($tempPath, $format);
+        } finally {
+            if (file_exists($tempPath)) {
+                unlink($tempPath);
+            }
+        }
     }
 
     /**
@@ -205,7 +241,7 @@ class ExportTools
         }
 
         // Default name if not found
-        return 'Imported Workspace';
+        return self::DEFAULT_WORKSPACE_NAME;
     }
 
     /**

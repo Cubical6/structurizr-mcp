@@ -10,11 +10,13 @@ use StructurizrMcp\Structurizr\WorkspaceManager;
 use StructurizrMcp\Structurizr\DslBuilder;
 use StructurizrMcp\Structurizr\Workspace;
 use Psr\Log\LoggerInterface;
+use Mcp\Exception\ToolCallException;
+use StructurizrMcp\Exception\WorkspaceNotFoundException;
 
 /**
  * MCP Tools for C4 view operations (creating and configuring diagrams)
  */
-class ViewTools
+class ViewTools extends AbstractWorkspaceTool
 {
     public function __construct(
         private readonly WorkspaceManager $workspaceManager,
@@ -48,14 +50,16 @@ class ViewTools
     ): array {
         $this->logger->info("Creating system context view '{$key}' for system '{$systemId}' in workspace: {$workspaceId}");
 
-        $workspace = $this->workspaceManager->load($workspaceId);
+        try {
+            $workspace = $this->workspaceManager->load($workspaceId);
 
-        $builder = $this->createBuilderFromWorkspace($workspace);
-        $viewKey = $builder->addSystemContextView($systemId, $key, $description);
-        $dsl = $builder->toDsl();
+            $builder = $this->createBuilderFromWorkspace($workspace);
+            $viewKey = $builder->addSystemContextView($systemId, $key, $description);
+            $dsl = $builder->toDsl();
 
-        $updated = $workspace->withDsl($dsl);
-        $this->workspaceManager->save($updated);
+            $updated = $workspace->withDsl($dsl);
+            $this->workspaceManager->save($updated);
+
 
         return [
             'workspaceId' => $workspaceId,
@@ -64,6 +68,11 @@ class ViewTools
             'type' => 'systemContext',
             'description' => $description,
         ];
+        } catch (WorkspaceNotFoundException $e) {
+            throw new ToolCallException("Workspace not found: {$workspaceId}");
+        } catch (\Exception $e) {
+            throw new ToolCallException("Failed to create system context view '{$key}': " . $e->getMessage());
+        }
     }
 
     /**
@@ -92,14 +101,16 @@ class ViewTools
     ): array {
         $this->logger->info("Creating container view '{$key}' for system '{$systemId}' in workspace: {$workspaceId}");
 
-        $workspace = $this->workspaceManager->load($workspaceId);
+        try {
+            $workspace = $this->workspaceManager->load($workspaceId);
 
-        $builder = $this->createBuilderFromWorkspace($workspace);
-        $viewKey = $builder->addContainerView($systemId, $key, $description);
-        $dsl = $builder->toDsl();
+            $builder = $this->createBuilderFromWorkspace($workspace);
+            $viewKey = $builder->addContainerView($systemId, $key, $description);
+            $dsl = $builder->toDsl();
 
-        $updated = $workspace->withDsl($dsl);
-        $this->workspaceManager->save($updated);
+            $updated = $workspace->withDsl($dsl);
+            $this->workspaceManager->save($updated);
+
 
         return [
             'workspaceId' => $workspaceId,
@@ -108,6 +119,11 @@ class ViewTools
             'type' => 'container',
             'description' => $description,
         ];
+        } catch (WorkspaceNotFoundException $e) {
+            throw new ToolCallException("Workspace not found: {$workspaceId}");
+        } catch (\Exception $e) {
+            throw new ToolCallException("Failed to create container view '{$key}': " . $e->getMessage());
+        }
     }
 
     /**
@@ -136,14 +152,16 @@ class ViewTools
     ): array {
         $this->logger->info("Creating component view '{$key}' for container '{$containerId}' in workspace: {$workspaceId}");
 
-        $workspace = $this->workspaceManager->load($workspaceId);
+        try {
+            $workspace = $this->workspaceManager->load($workspaceId);
 
-        $builder = $this->createBuilderFromWorkspace($workspace);
-        $viewKey = $builder->addComponentView($containerId, $key, $description);
-        $dsl = $builder->toDsl();
+            $builder = $this->createBuilderFromWorkspace($workspace);
+            $viewKey = $builder->addComponentView($containerId, $key, $description);
+            $dsl = $builder->toDsl();
 
-        $updated = $workspace->withDsl($dsl);
-        $this->workspaceManager->save($updated);
+            $updated = $workspace->withDsl($dsl);
+            $this->workspaceManager->save($updated);
+
 
         return [
             'workspaceId' => $workspaceId,
@@ -152,6 +170,11 @@ class ViewTools
             'type' => 'component',
             'description' => $description,
         ];
+        } catch (WorkspaceNotFoundException $e) {
+            throw new ToolCallException("Workspace not found: {$workspaceId}");
+        } catch (\Exception $e) {
+            throw new ToolCallException("Failed to create component view '{$key}': " . $e->getMessage());
+        }
     }
 
     /**
@@ -176,18 +199,20 @@ class ViewTools
     ): array {
         $this->logger->info("Applying auto-layout '{$direction}' to view '{$viewKey}' in workspace: {$workspaceId}");
 
-        if (!in_array($direction, ['tb', 'bt', 'lr', 'rl'], true)) {
-            throw new \InvalidArgumentException("Direction must be one of: tb, bt, lr, rl");
-        }
+        try {
+            if (!in_array($direction, ['tb', 'bt', 'lr', 'rl'], true)) {
+                throw new \InvalidArgumentException("Direction must be one of: tb, bt, lr, rl");
+            }
 
-        $workspace = $this->workspaceManager->load($workspaceId);
+            $workspace = $this->workspaceManager->load($workspaceId);
 
-        $builder = $this->createBuilderFromWorkspace($workspace);
-        $builder->setViewAutoLayout($viewKey, $direction);
-        $dsl = $builder->toDsl();
+            $builder = $this->createBuilderFromWorkspace($workspace);
+            $builder->setViewAutoLayout($viewKey, $direction);
+            $dsl = $builder->toDsl();
 
-        $updated = $workspace->withDsl($dsl);
-        $this->workspaceManager->save($updated);
+            $updated = $workspace->withDsl($dsl);
+            $this->workspaceManager->save($updated);
+
 
         return [
             'workspaceId' => $workspaceId,
@@ -195,22 +220,10 @@ class ViewTools
             'autoLayout' => $direction,
             'message' => "Auto-layout '{$direction}' applied to view '{$viewKey}'",
         ];
-    }
-
-    /**
-     * Create DSL builder from existing workspace
-     */
-    private function createBuilderFromWorkspace(Workspace $workspace): DslBuilder
-    {
-        $builder = new DslBuilder();
-
-        // If workspace already has a model, we need to reconstruct the builder
-        // For now, start fresh with workspace name and description
-        $builder->workspace($workspace->name, $workspace->description);
-
-        // TODO: If we need to support editing existing workspaces,
-        // we would parse the existing DSL here to rebuild the builder state
-
-        return $builder;
+        } catch (WorkspaceNotFoundException $e) {
+            throw new ToolCallException("Workspace not found: {$workspaceId}");
+        } catch (\Exception $e) {
+            throw new ToolCallException("Failed to apply auto-layout to view '{$viewKey}': " . $e->getMessage());
+        }
     }
 }

@@ -9,11 +9,64 @@ namespace StructurizrMcp\Structurizr;
  */
 class DslBuilder
 {
+    /** Background color for Software System elements */
+    private const COLOR_SOFTWARE_SYSTEM_BG = '#1168bd';
+
+    /** Foreground color for Software System elements */
+    private const COLOR_SOFTWARE_SYSTEM_FG = '#ffffff';
+
+    /** Background color for Person elements */
+    private const COLOR_PERSON_BG = '#08427b';
+
+    /** Foreground color for Person elements */
+    private const COLOR_PERSON_FG = '#ffffff';
+
+    /** Element type name for Software System */
+    private const ELEMENT_TYPE_SOFTWARE_SYSTEM = 'Software System';
+
+    /** Element type name for Person */
+    private const ELEMENT_TYPE_PERSON = 'Person';
+
+    /**
+     * Name of the workspace
+     *
+     * @var string
+     */
     private string $workspaceName = '';
+
+    /**
+     * Description of the workspace
+     *
+     * @var string
+     */
     private string $workspaceDescription = '';
+
+    /**
+     * Collection of elements (people, systems, containers, components)
+     *
+     * @var array<string, array<string, mixed>>
+     */
     private array $elements = [];
+
+    /**
+     * Collection of relationships between elements
+     *
+     * @var array<string, array<string, mixed>>
+     */
     private array $relationships = [];
+
+    /**
+     * Collection of views (system context, container, component)
+     *
+     * @var array<int, array<string, mixed>>
+     */
     private array $views = [];
+
+    /**
+     * Counter for generating unique element IDs
+     *
+     * @var int
+     */
     private int $elementCounter = 0;
 
     public function workspace(string $name, string $description = ''): self
@@ -195,13 +248,13 @@ class DslBuilder
                 $dsl .= $this->generateViewDsl($view);
             }
             $dsl .= "\n        styles {\n";
-            $dsl .= "            element \"Software System\" {\n";
-            $dsl .= "                background #1168bd\n";
-            $dsl .= "                color #ffffff\n";
+            $dsl .= "            element \"" . self::ELEMENT_TYPE_SOFTWARE_SYSTEM . "\" {\n";
+            $dsl .= "                background " . self::COLOR_SOFTWARE_SYSTEM_BG . "\n";
+            $dsl .= "                color " . self::COLOR_SOFTWARE_SYSTEM_FG . "\n";
             $dsl .= "            }\n";
-            $dsl .= "            element \"Person\" {\n";
-            $dsl .= "                background #08427b\n";
-            $dsl .= "                color #ffffff\n";
+            $dsl .= "            element \"" . self::ELEMENT_TYPE_PERSON . "\" {\n";
+            $dsl .= "                background " . self::COLOR_PERSON_BG . "\n";
+            $dsl .= "                color " . self::COLOR_PERSON_FG . "\n";
             $dsl .= "                shape person\n";
             $dsl .= "            }\n";
             $dsl .= "        }\n";
@@ -215,13 +268,13 @@ class DslBuilder
 
     private function generatePersonDsl(array $element): string
     {
-        $tags = !empty($element['tags']) ? ' "' . implode(',', $element['tags']) . '"' : '';
+        $tags = $this->formatTags($element['tags']);
         return "        {$element['id']} = person \"{$element['name']}\" \"{$element['description']}\"{$tags}\n";
     }
 
     private function generateSystemDsl(array $element): string
     {
-        $tags = !empty($element['tags']) ? ' "' . implode(',', $element['tags']) . '"' : '';
+        $tags = $this->formatTags($element['tags']);
         $dsl = "        {$element['id']} = softwareSystem \"{$element['name']}\" \"{$element['description']}\"{$tags}";
 
         if (!empty($element['containers'])) {
@@ -241,8 +294,8 @@ class DslBuilder
 
     private function generateContainerDsl(array $element): string
     {
-        $tags = !empty($element['tags']) ? ' "' . implode(',', $element['tags']) . '"' : '';
-        $tech = $element['technology'] ? " \"{$element['technology']}\"" : '';
+        $tags = $this->formatTags($element['tags']);
+        $tech = $this->formatTechnology($element['technology']);
         $dsl = "            {$element['id']} = container \"{$element['name']}\" \"{$element['description']}\"{$tech}{$tags}";
 
         if (!empty($element['components'])) {
@@ -262,15 +315,15 @@ class DslBuilder
 
     private function generateComponentDsl(array $element): string
     {
-        $tags = !empty($element['tags']) ? ' "' . implode(',', $element['tags']) . '"' : '';
-        $tech = $element['technology'] ? " \"{$element['technology']}\"" : '';
+        $tags = $this->formatTags($element['tags']);
+        $tech = $this->formatTechnology($element['technology']);
         return "                {$element['id']} = component \"{$element['name']}\" \"{$element['description']}\"{$tech}{$tags}\n";
     }
 
     private function generateRelationshipDsl(array $rel): string
     {
-        $tech = $rel['technology'] ? " \"{$rel['technology']}\"" : '';
-        $tags = !empty($rel['tags']) ? ' "' . implode(',', $rel['tags']) . '"' : '';
+        $tech = $this->formatTechnology($rel['technology']);
+        $tags = $this->formatTags($rel['tags']);
         return "        {$rel['sourceId']} -> {$rel['destinationId']} \"{$rel['description']}\"{$tech}{$tags}\n";
     }
 
@@ -318,6 +371,34 @@ class DslBuilder
         return $prefix . '_' . ++$this->elementCounter;
     }
 
+    /**
+     * Format tags for DSL output
+     *
+     * Converts a tags array into the DSL tag format: ' "tag1,tag2,tag3"'
+     * Returns empty string if no tags provided.
+     *
+     * @param array<int, string> $tags Array of tag strings
+     * @return string Formatted tags string or empty string
+     */
+    private function formatTags(array $tags): string
+    {
+        return !empty($tags) ? ' "' . implode(',', $tags) . '"' : '';
+    }
+
+    /**
+     * Format technology for DSL output
+     *
+     * Converts a technology string into the DSL technology format: ' "Technology"'
+     * Returns empty string if technology is null or empty.
+     *
+     * @param string|null $technology Technology string
+     * @return string Formatted technology string or empty string
+     */
+    private function formatTechnology(?string $technology): string
+    {
+        return ($technology !== null && $technology !== '') ? " \"{$technology}\"" : '';
+    }
+
     public function getElement(string $id): ?array
     {
         return $this->elements[$id] ?? null;
@@ -333,5 +414,246 @@ class DslBuilder
             }
         }
         return null;
+    }
+
+    /**
+     * Create a DslBuilder from existing DSL string
+     *
+     * Parses the DSL string to rebuild the builder's internal state,
+     * preserving all existing elements, relationships, and views.
+     *
+     * @param string $dsl The DSL string to parse
+     * @return self A new DslBuilder instance with the parsed state
+     */
+    public static function fromDsl(string $dsl): self
+    {
+        $builder = new self();
+
+        if (empty(trim($dsl))) {
+            return $builder;
+        }
+
+        // Parse workspace name and description
+        if (preg_match('/workspace\s+"([^"]*)"\s+"([^"]*)"/', $dsl, $matches)) {
+            $builder->workspaceName = $matches[1];
+            $builder->workspaceDescription = $matches[2];
+        }
+
+        // Parse model section
+        if (preg_match('/model\s*\{(.*?)\n\s*\}/s', $dsl, $modelMatch)) {
+            $modelContent = $modelMatch[1];
+            $builder->parseModelSection($modelContent);
+        }
+
+        // Parse views section
+        if (preg_match('/views\s*\{(.*?)\n\s*\}/s', $dsl, $viewsMatch)) {
+            $viewsContent = $viewsMatch[1];
+            $builder->parseViewsSection($viewsContent);
+        }
+
+        return $builder;
+    }
+
+    /**
+     * Parse the model section of DSL
+     *
+     * @param string $content The model section content
+     * @return void
+     */
+    private function parseModelSection(string $content): void
+    {
+        $lines = explode("\n", $content);
+        $currentSystem = null;
+        $currentContainer = null;
+        $systemStack = [];
+        $containerStack = [];
+
+        foreach ($lines as $line) {
+            $trimmed = trim($line);
+            if (empty($trimmed)) {
+                continue;
+            }
+
+            // Parse person: person_1 = person "Name" "Description" "tags"
+            if (preg_match('/^(\w+)\s*=\s*person\s+"([^"]*)"\s+"([^"]*)"(?:\s+"([^"]*)")?/', $trimmed, $matches)) {
+                $id = $matches[1];
+                $name = $matches[2];
+                $description = $matches[3];
+                $tags = isset($matches[4]) ? explode(',', $matches[4]) : [];
+
+                $this->elements[$id] = [
+                    'type' => 'person',
+                    'id' => $id,
+                    'name' => $name,
+                    'description' => $description,
+                    'tags' => $tags,
+                ];
+                $this->updateElementCounter($id);
+            }
+            // Parse software system: system_1 = softwareSystem "Name" "Description" "tags" {
+            elseif (preg_match('/^(\w+)\s*=\s*softwareSystem\s+"([^"]*)"\s+"([^"]*)"(?:\s+"([^"]*)")?\s*\{?/', $trimmed, $matches)) {
+                $id = $matches[1];
+                $name = $matches[2];
+                $description = $matches[3];
+                $tags = isset($matches[4]) ? explode(',', $matches[4]) : [];
+
+                $this->elements[$id] = [
+                    'type' => 'softwareSystem',
+                    'id' => $id,
+                    'name' => $name,
+                    'description' => $description,
+                    'location' => 'Internal',
+                    'tags' => $tags,
+                    'containers' => [],
+                ];
+                $this->updateElementCounter($id);
+                $currentSystem = $id;
+                $systemStack[] = $id;
+            }
+            // Parse container: container_1 = container "Name" "Description" "Technology" "tags" {
+            elseif (preg_match('/^(\w+)\s*=\s*container\s+"([^"]*)"\s+"([^"]*)"(?:\s+"([^"]*)")?(?:\s+"([^"]*)")?\s*\{?/', $trimmed, $matches)) {
+                $id = $matches[1];
+                $name = $matches[2];
+                $description = $matches[3];
+                $technology = $matches[4] ?? '';
+                $tags = isset($matches[5]) ? explode(',', $matches[5]) : [];
+
+                if ($currentSystem === null) {
+                    continue; // Skip containers without a parent system
+                }
+
+                $this->elements[$id] = [
+                    'type' => 'container',
+                    'id' => $id,
+                    'name' => $name,
+                    'description' => $description,
+                    'technology' => $technology,
+                    'tags' => $tags,
+                    'systemId' => $currentSystem,
+                    'components' => [],
+                ];
+                $this->elements[$currentSystem]['containers'][] = $id;
+                $this->updateElementCounter($id);
+                $currentContainer = $id;
+                $containerStack[] = $id;
+            }
+            // Parse component: component_1 = component "Name" "Description" "Technology" "tags"
+            elseif (preg_match('/^(\w+)\s*=\s*component\s+"([^"]*)"\s+"([^"]*)"(?:\s+"([^"]*)")?(?:\s+"([^"]*)")?/', $trimmed, $matches)) {
+                $id = $matches[1];
+                $name = $matches[2];
+                $description = $matches[3];
+                $technology = $matches[4] ?? '';
+                $tags = isset($matches[5]) ? explode(',', $matches[5]) : [];
+
+                if ($currentContainer === null) {
+                    continue; // Skip components without a parent container
+                }
+
+                $this->elements[$id] = [
+                    'type' => 'component',
+                    'id' => $id,
+                    'name' => $name,
+                    'description' => $description,
+                    'technology' => $technology,
+                    'tags' => $tags,
+                    'containerId' => $currentContainer,
+                ];
+                $this->elements[$currentContainer]['components'][] = $id;
+                $this->updateElementCounter($id);
+            }
+            // Parse relationship: source -> destination "Description" "Technology" "tags"
+            elseif (preg_match('/^(\w+)\s*->\s*(\w+)\s+"([^"]*)"(?:\s+"([^"]*)")?(?:\s+"([^"]*)")?/', $trimmed, $matches)) {
+                $sourceId = $matches[1];
+                $destinationId = $matches[2];
+                $description = $matches[3];
+                $technology = $matches[4] ?? '';
+                $tags = isset($matches[5]) ? explode(',', $matches[5]) : [];
+
+                $id = $this->generateId('relationship');
+                $this->relationships[$id] = [
+                    'id' => $id,
+                    'sourceId' => $sourceId,
+                    'destinationId' => $destinationId,
+                    'description' => $description,
+                    'technology' => $technology,
+                    'tags' => $tags,
+                ];
+            }
+            // Track closing braces
+            elseif ($trimmed === '}') {
+                if (!empty($containerStack) && $currentContainer !== null) {
+                    array_pop($containerStack);
+                    $currentContainer = end($containerStack) ?: null;
+                } elseif (!empty($systemStack) && $currentSystem !== null) {
+                    array_pop($systemStack);
+                    $currentSystem = end($systemStack) ?: null;
+                }
+            }
+        }
+    }
+
+    /**
+     * Parse the views section of DSL
+     *
+     * @param string $content The views section content
+     * @return void
+     */
+    private function parseViewsSection(string $content): void
+    {
+        // Parse systemContext views
+        if (preg_match_all('/systemContext\s+(\w+)\s+"([^"]+)"\s*\{[^}]*autoLayout\s+(\w+)/s', $content, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $this->views[] = [
+                    'type' => 'systemContext',
+                    'systemId' => $match[1],
+                    'key' => $match[2],
+                    'description' => '',
+                    'autoLayout' => $match[3],
+                ];
+            }
+        }
+
+        // Parse container views
+        if (preg_match_all('/container\s+(\w+)\s+"([^"]+)"\s*\{[^}]*autoLayout\s+(\w+)/s', $content, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $this->views[] = [
+                    'type' => 'container',
+                    'systemId' => $match[1],
+                    'key' => $match[2],
+                    'description' => '',
+                    'autoLayout' => $match[3],
+                ];
+            }
+        }
+
+        // Parse component views
+        if (preg_match_all('/component\s+(\w+)\s+"([^"]+)"\s*\{[^}]*autoLayout\s+(\w+)/s', $content, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $this->views[] = [
+                    'type' => 'component',
+                    'containerId' => $match[1],
+                    'key' => $match[2],
+                    'description' => '',
+                    'autoLayout' => $match[3],
+                ];
+            }
+        }
+    }
+
+    /**
+     * Update the element counter based on parsed element ID
+     *
+     * @param string $id The element ID to analyze
+     * @return void
+     */
+    private function updateElementCounter(string $id): void
+    {
+        // Extract numeric suffix from IDs like "person_1", "system_2", etc.
+        if (preg_match('/_(\d+)$/', $id, $matches)) {
+            $counter = (int) $matches[1];
+            if ($counter > $this->elementCounter) {
+                $this->elementCounter = $counter;
+            }
+        }
     }
 }

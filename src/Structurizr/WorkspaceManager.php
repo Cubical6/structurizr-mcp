@@ -13,6 +13,23 @@ use Psr\Log\LoggerInterface;
  */
 class WorkspaceManager
 {
+    /** File permissions for created directories */
+    private const DIRECTORY_PERMISSIONS = 0755;
+
+    /** Pattern to sanitize workspace IDs (removes invalid characters) */
+    private const WORKSPACE_ID_PATTERN = '/[^a-zA-Z0-9_-]/';
+
+    /** Prefix for generated workspace IDs */
+    private const WORKSPACE_ID_PREFIX = 'ws_';
+
+    /** Number of random bytes for workspace ID generation */
+    private const WORKSPACE_ID_RANDOM_BYTES = 8;
+
+    /**
+     * Symfony filesystem component for file operations
+     *
+     * @var Filesystem
+     */
     private Filesystem $filesystem;
 
     public function __construct(
@@ -23,7 +40,7 @@ class WorkspaceManager
 
         // Ensure storage directory exists
         if (!is_dir($this->storagePath)) {
-            $this->filesystem->mkdir($this->storagePath, 0755);
+            $this->filesystem->mkdir($this->storagePath, self::DIRECTORY_PERMISSIONS);
             $this->logger->info("Created workspace storage directory: {$this->storagePath}");
         }
     }
@@ -178,7 +195,7 @@ class WorkspaceManager
     private function getWorkspacePath(string $id): string
     {
         // Sanitize workspace ID to prevent directory traversal
-        $sanitizedId = preg_replace('/[^a-zA-Z0-9_-]/', '', $id);
+        $sanitizedId = preg_replace(self::WORKSPACE_ID_PATTERN, '', $id);
         return $this->storagePath . '/' . $sanitizedId . '.json';
     }
 
@@ -188,7 +205,7 @@ class WorkspaceManager
     private function generateWorkspaceId(): string
     {
         do {
-            $id = 'ws_' . bin2hex(random_bytes(8));
+            $id = self::WORKSPACE_ID_PREFIX . bin2hex(random_bytes(self::WORKSPACE_ID_RANDOM_BYTES));
         } while ($this->exists($id));
 
         return $id;
