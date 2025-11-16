@@ -5,3 +5,11 @@ parameters:
     excludePaths:
         - vendor
     checkMissingIterableValueType: false
+
+services:
+    errorFormatter.sarif:
+        class: PHPStanSarifErrorFormatter\SarifErrorFormatter
+        arguments:
+            relativePathHelper: @simpleRelativePathHelper
+            currentWorkingDirectory: %currentWorkingDirectory%
+            pretty: true
