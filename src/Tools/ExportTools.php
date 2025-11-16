@@ -44,7 +44,7 @@ class ExportTools
      * Exports the workspace definition to Structurizr DSL format.
      *
      * @param string $workspaceId The ID of the workspace to export
-     * @return array Workspace DSL string
+     * @return array<string, string> Workspace DSL string with workspaceId, name, and dsl keys
      */
     #[McpTool(name: 'export_to_dsl', description: 'Export workspace to Structurizr DSL format')]
     public function exportToDsl(
@@ -76,7 +76,7 @@ class ExportTools
      *
      * @param string $workspaceId The ID of the workspace to export
      * @param string|null $viewKey Optional view key to export specific view
-     * @return array PlantUML diagram content
+     * @return array<string, string|null> PlantUML diagram content with workspaceId, name, viewKey, format, and content keys
      */
     #[McpTool(name: 'export_to_plantuml', description: 'Export workspace to PlantUML format')]
     public function exportToPlantUml(
@@ -115,7 +115,7 @@ class ExportTools
      *
      * @param string $workspaceId The ID of the workspace to export
      * @param string|null $viewKey Optional view key to export specific view
-     * @return array Mermaid diagram content
+     * @return array<string, string|null> Mermaid diagram content with workspaceId, name, viewKey, format, and content keys
      */
     #[McpTool(name: 'export_to_mermaid', description: 'Export workspace to Mermaid format')]
     public function exportToMermaid(
@@ -153,7 +153,7 @@ class ExportTools
      * Automatically extracts workspace name and description from the DSL.
      *
      * @param string $dsl DSL content to import
-     * @return array Created workspace details
+     * @return array<string, string> Created workspace details with workspaceId, name, description, and dsl keys
      */
     #[McpTool(name: 'import_from_dsl', description: 'Import a workspace from Structurizr DSL')]
     public function importFromDsl(

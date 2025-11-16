@@ -9,6 +9,16 @@ namespace StructurizrMcp\Structurizr;
  */
 class Workspace
 {
+    /**
+     * @param string $id Unique workspace identifier
+     * @param string $name Workspace name
+     * @param string $description Workspace description
+     * @param array<string, mixed> $model Workspace model data
+     * @param array<string, mixed> $views Workspace views data
+     * @param string $dsl Workspace DSL content
+     * @param \DateTimeImmutable|null $createdAt Workspace creation timestamp
+     * @param \DateTimeImmutable|null $updatedAt Workspace last update timestamp
+     */
     public function __construct(
         public readonly string $id,
         public readonly string $name,

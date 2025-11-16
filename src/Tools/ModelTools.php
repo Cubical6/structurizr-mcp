@@ -32,8 +32,8 @@ class ModelTools extends AbstractWorkspaceTool
      * @param string $workspaceId The workspace ID
      * @param string $name The name of the person
      * @param string $description Description of the person's role
-     * @param array $tags Optional tags for styling and filtering
-     * @return array Element details including ID and name
+     * @param array<string> $tags Optional tags for styling and filtering
+     * @return array<string, mixed> Element details including ID and name
      */
     #[McpTool(name: 'add_person', description: 'Add a person to the C4 model')]
     public function addPerson(
@@ -85,8 +85,8 @@ class ModelTools extends AbstractWorkspaceTool
      * @param string $name The name of the software system
      * @param string $description Description of what the system does
      * @param string $location 'Internal' or 'External' (default: Internal)
-     * @param array $tags Optional tags for styling
-     * @return array Element details including ID and name
+     * @param array<string> $tags Optional tags for styling
+     * @return array<string, mixed> Element details including ID and name
      */
     #[McpTool(name: 'add_software_system', description: 'Add a software system to the C4 model')]
     public function addSoftwareSystem(
@@ -140,8 +140,8 @@ class ModelTools extends AbstractWorkspaceTool
      * @param string $name The name of the container
      * @param string $description Description of the container's purpose
      * @param string $technology Technology/platform (e.g., "Java Spring Boot", "PostgreSQL")
-     * @param array $tags Optional tags for styling
-     * @return array Container details including ID and name
+     * @param array<string> $tags Optional tags for styling
+     * @return array<string, mixed> Container details including ID and name
      */
     #[McpTool(name: 'add_container', description: 'Add a container to a software system')]
     public function addContainer(
@@ -198,8 +198,8 @@ class ModelTools extends AbstractWorkspaceTool
      * @param string $name The name of the component
      * @param string $description Description of the component's responsibility
      * @param string $technology Technology/framework used
-     * @param array $tags Optional tags for styling
-     * @return array Component details including ID and name
+     * @param array<string> $tags Optional tags for styling
+     * @return array<string, mixed> Component details including ID and name
      */
     #[McpTool(name: 'add_component', description: 'Add a component to a container')]
     public function addComponent(
@@ -256,8 +256,8 @@ class ModelTools extends AbstractWorkspaceTool
      * @param string $destinationId ID of the destination element
      * @param string $description Description of the relationship (e.g., "Sends data to", "Uses")
      * @param string $technology Technology/protocol used (e.g., "HTTPS", "gRPC", "SQL")
-     * @param array $tags Optional tags for styling
-     * @return array Relationship details including ID and description
+     * @param array<string> $tags Optional tags for styling
+     * @return array<string, mixed> Relationship details including ID and description
      */
     #[McpTool(name: 'add_relationship', description: 'Add a relationship between two elements')]
     public function addRelationship(

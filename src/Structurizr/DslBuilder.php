@@ -29,15 +29,11 @@ class DslBuilder
 
     /**
      * Name of the workspace
-     *
-     * @var string
      */
     private string $workspaceName = '';
 
     /**
      * Description of the workspace
-     *
-     * @var string
      */
     private string $workspaceDescription = '';
 
@@ -64,8 +60,6 @@ class DslBuilder
 
     /**
      * Counter for generating unique element IDs
-     *
-     * @var int
      */
     private int $elementCounter = 0;
 
@@ -77,6 +71,14 @@ class DslBuilder
         return $this;
     }
 
+    /**
+     * Add a person element to the workspace
+     *
+     * @param string $name Person name
+     * @param string $description Person description
+     * @param array<string> $tags Array of tag strings
+     * @return string The generated person ID
+     */
     public function addPerson(string $name, string $description = '', array $tags = []): string
     {
         $id = $this->generateId('person');
@@ -91,6 +93,15 @@ class DslBuilder
         return $id;
     }
 
+    /**
+     * Add a software system element to the workspace
+     *
+     * @param string $name System name
+     * @param string $description System description
+     * @param string $location System location (Internal by default)
+     * @param array<string> $tags Array of tag strings
+     * @return string The generated system ID
+     */
     public function addSoftwareSystem(string $name, string $description = '', string $location = 'Internal', array $tags = []): string
     {
         $id = $this->generateId('system');
@@ -107,6 +118,16 @@ class DslBuilder
         return $id;
     }
 
+    /**
+     * Add a container element to a software system
+     *
+     * @param string $systemId Parent system ID
+     * @param string $name Container name
+     * @param string $description Container description
+     * @param string $technology Container technology
+     * @param array<string> $tags Array of tag strings
+     * @return string The generated container ID
+     */
     public function addContainer(string $systemId, string $name, string $description = '', string $technology = '', array $tags = []): string
     {
         if (!isset($this->elements[$systemId]) || $this->elements[$systemId]['type'] !== 'softwareSystem') {
@@ -131,6 +152,16 @@ class DslBuilder
         return $id;
     }
 
+    /**
+     * Add a component element to a container
+     *
+     * @param string $containerId Parent container ID
+     * @param string $name Component name
+     * @param string $description Component description
+     * @param string $technology Component technology
+     * @param array<string> $tags Array of tag strings
+     * @return string The generated component ID
+     */
     public function addComponent(string $containerId, string $name, string $description = '', string $technology = '', array $tags = []): string
     {
         if (!isset($this->elements[$containerId]) || $this->elements[$containerId]['type'] !== 'container') {
@@ -154,6 +185,16 @@ class DslBuilder
         return $id;
     }
 
+    /**
+     * Add a relationship between two elements
+     *
+     * @param string $sourceId Source element ID
+     * @param string $destinationId Destination element ID
+     * @param string $description Relationship description
+     * @param string $technology Relationship technology
+     * @param array<string> $tags Array of tag strings
+     * @return string The generated relationship ID
+     */
     public function addRelationship(string $sourceId, string $destinationId, string $description, string $technology = '', array $tags = []): string
     {
         if (!isset($this->elements[$sourceId])) {
@@ -287,6 +328,12 @@ class DslBuilder
         return $dsl;
     }
 
+    /**
+     * Generate DSL string for a person element
+     *
+     * @param array<string, mixed> $element The person element data
+     * @return string The DSL representation
+     */
     private function generatePersonDsl(array $element): string
     {
         $tags = $this->formatTags($element['tags']);
@@ -294,6 +341,12 @@ class DslBuilder
         return "        {$element['id']} = person \"{$element['name']}\" \"{$element['description']}\"{$tags}\n";
     }
 
+    /**
+     * Generate DSL string for a software system element
+     *
+     * @param array<string, mixed> $element The software system element data
+     * @return string The DSL representation
+     */
     private function generateSystemDsl(array $element): string
     {
         $tags = $this->formatTags($element['tags']);
@@ -314,6 +367,12 @@ class DslBuilder
         return $dsl;
     }
 
+    /**
+     * Generate DSL string for a container element
+     *
+     * @param array<string, mixed> $element The container element data
+     * @return string The DSL representation
+     */
     private function generateContainerDsl(array $element): string
     {
         $techAndTags = $this->formatTechnologyAndTags(
@@ -337,6 +396,12 @@ class DslBuilder
         return $dsl;
     }
 
+    /**
+     * Generate DSL string for a component element
+     *
+     * @param array<string, mixed> $element The component element data
+     * @return string The DSL representation
+     */
     private function generateComponentDsl(array $element): string
     {
         $techAndTags = $this->formatTechnologyAndTags(
@@ -347,6 +412,12 @@ class DslBuilder
         return "                {$element['id']} = component \"{$element['name']}\" \"{$element['description']}\"{$techAndTags}\n";
     }
 
+    /**
+     * Generate DSL string for a relationship
+     *
+     * @param array<string, mixed> $rel The relationship data
+     * @return string The DSL representation
+     */
     private function generateRelationshipDsl(array $rel): string
     {
         $techAndTags = $this->formatTechnologyAndTags(
@@ -357,6 +428,12 @@ class DslBuilder
         return "        {$rel['sourceId']} -> {$rel['destinationId']} \"{$rel['description']}\"{$techAndTags}\n";
     }
 
+    /**
+     * Generate DSL string for a view
+     *
+     * @param array<string, mixed> $view The view data
+     * @return string The DSL representation
+     */
     private function generateViewDsl(array $view): string
     {
         $dsl = '';
@@ -396,6 +473,11 @@ class DslBuilder
         return $dsl;
     }
 
+    /**
+     * Convert the workspace to an array representation
+     *
+     * @return array<string, mixed>
+     */
     public function toArray(): array
     {
         return [
@@ -457,11 +539,24 @@ class DslBuilder
         return !empty($tags) ? ' "' . implode(',', $tags) . '"' : '';
     }
 
+    /**
+     * Get an element by its ID
+     *
+     * @param string $id The element ID
+     * @return array<string, mixed>|null The element data or null if not found
+     */
     public function getElement(string $id): ?array
     {
         return $this->elements[$id] ?? null;
     }
 
+    /**
+     * Find an element by name and optionally by type
+     *
+     * @param string $name The element name to search for
+     * @param string|null $type Optional element type filter
+     * @return array<string, mixed>|null The matching element data or null if not found
+     */
     public function findElement(string $name, ?string $type = null): ?array
     {
         foreach ($this->elements as $element) {

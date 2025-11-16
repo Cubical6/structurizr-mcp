@@ -34,7 +34,7 @@ class ViewTools extends AbstractWorkspaceTool
      * @param string $systemId The software system to focus on
      * @param string $key Unique key for the view (alphanumeric, hyphens, underscores)
      * @param string $description Optional description of the view
-     * @return array View details including key and type
+     * @return array<string, mixed> View details including key and type
      */
     #[McpTool(name: 'create_system_context_view', description: 'Create a system context diagram view')]
     public function createSystemContextView(
@@ -85,7 +85,7 @@ class ViewTools extends AbstractWorkspaceTool
      * @param string $systemId The software system to visualize
      * @param string $key Unique key for the view (alphanumeric, hyphens, underscores)
      * @param string $description Optional description of the view
-     * @return array View details including key and type
+     * @return array<string, mixed> View details including key and type
      */
     #[McpTool(name: 'create_container_view', description: 'Create a container diagram view')]
     public function createContainerView(
@@ -136,7 +136,7 @@ class ViewTools extends AbstractWorkspaceTool
      * @param string $containerId The container to visualize
      * @param string $key Unique key for the view (alphanumeric, hyphens, underscores)
      * @param string $description Optional description of the view
-     * @return array View details including key and type
+     * @return array<string, mixed> View details including key and type
      */
     #[McpTool(name: 'create_component_view', description: 'Create a component diagram view')]
     public function createComponentView(
@@ -187,7 +187,7 @@ class ViewTools extends AbstractWorkspaceTool
      * @param string $elementId The scope element ID (system or container)
      * @param string $key Unique key for the view (alphanumeric, hyphens, underscores)
      * @param string $description Optional description of the view
-     * @return array View details including key and type
+     * @return array<string, mixed> View details including key and type
      */
     #[McpTool(
         name: 'create_dynamic_view',
@@ -239,7 +239,7 @@ class ViewTools extends AbstractWorkspaceTool
      * @param string $workspaceId The workspace ID
      * @param string $viewKey The unique key of the view to modify
      * @param string $direction Layout direction: 'tb' (top-to-bottom), 'bt' (bottom-to-top), 'lr' (left-to-right), 'rl' (right-to-left)
-     * @return array Updated view details
+     * @return array<string, mixed> Updated view details
      */
     #[McpTool(name: 'apply_auto_layout', description: 'Apply auto-layout configuration to a view')]
     public function applyAutoLayout(

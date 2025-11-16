@@ -43,7 +43,7 @@ class AnalysisTools
      *
      * @param string $workspaceId The ID of the workspace to analyze
      * @param string|null $elementId Optional specific element ID to analyze
-     * @return array Dependency analysis including inbound/outbound relationships
+     * @return array<string, mixed> Dependency analysis including inbound/outbound relationships
      */
     #[McpTool(
         name: 'analyze_dependencies',
@@ -140,7 +140,7 @@ class AnalysisTools
      *
      * @param string $workspaceId The ID of the workspace to search
      * @param string $name Element name to search for
-     * @return array Array of matching elements with their details
+     * @return array<string, mixed> Array of matching elements with their details
      */
     #[McpTool(
         name: 'find_element',
@@ -200,7 +200,7 @@ class AnalysisTools
      * Returns validation results including any errors and warnings.
      *
      * @param string $workspaceId The ID of the workspace to validate
-     * @return array Validation results with isValid, errors, and warnings
+     * @return array<string, mixed> Validation results with isValid, errors, and warnings
      */
     #[McpTool(
         name: 'validate_workspace',
@@ -268,7 +268,7 @@ class AnalysisTools
      * from the workspace DSL.
      *
      * @param string $dsl The DSL content to parse
-     * @return array<string, array> Associative array of elements indexed by ID
+     * @return array<string, array<string, mixed>> Associative array of elements indexed by ID
      */
     private function parseElements(string $dsl): array
     {
@@ -331,7 +331,7 @@ class AnalysisTools
      * Extracts all relationships (source -> destination) from the workspace DSL.
      *
      * @param string $dsl The DSL content to parse
-     * @return array<array> Array of relationships with source, destination, and description
+     * @return array<int, array<string, mixed>> Array of relationships with source, destination, and description
      */
     private function parseRelationships(string $dsl): array
     {

@@ -36,7 +36,7 @@ class WorkspaceTools
      *
      * @param string $name The name of the workspace (1-100 characters)
      * @param string $description Optional description of the workspace purpose
-     * @return array Workspace details including ID, name, and DSL
+     * @return array<string, mixed> Workspace details including ID, name, and DSL
      */
     #[McpTool(name: 'create_workspace', description: 'Create a new Structurizr workspace')]
     public function createWorkspace(
@@ -69,7 +69,7 @@ class WorkspaceTools
      *
      * @param string $workspaceId The ID of the workspace to retrieve
      * @param string $format Output format: 'json' or 'dsl' (default: 'json')
-     * @return array Workspace data in the requested format
+     * @return array<string, mixed> Workspace data in the requested format
      */
     #[McpTool(name: 'get_workspace', description: 'Get workspace details by ID')]
     public function getWorkspace(
@@ -104,7 +104,7 @@ class WorkspaceTools
      *
      * Returns a list of all available workspaces with their metadata.
      *
-     * @return array List of workspaces with ID, name, description, and timestamps
+     * @return array<string, mixed> List of workspaces with ID, name, description, and timestamps
      */
     #[McpTool(name: 'list_workspaces', description: 'List all available workspaces')]
     public function listWorkspaces(): array
@@ -129,7 +129,7 @@ class WorkspaceTools
      * Permanently deletes a workspace and all its data.
      *
      * @param string $workspaceId The ID of the workspace to delete
-     * @return array Deletion confirmation with success status and message
+     * @return array<string, mixed> Deletion confirmation with success status and message
      */
     #[McpTool(name: 'delete_workspace', description: 'Delete a workspace by ID')]
     public function deleteWorkspace(

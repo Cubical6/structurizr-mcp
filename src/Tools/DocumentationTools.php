@@ -42,7 +42,7 @@ class DocumentationTools extends AbstractWorkspaceTool
      * @param string $workspaceId The ID of the workspace to add documentation to
      * @param string $title The title of the documentation section
      * @param string $content The content of the documentation section (Markdown supported)
-     * @return array Confirmation with section details
+     * @return array<string, mixed> Confirmation with section details
      * @throws ToolCallException If workspace not found or operation fails
      */
     #[McpTool(
@@ -124,7 +124,7 @@ class DocumentationTools extends AbstractWorkspaceTool
      * @param string $title The ADR title describing the decision
      * @param string $status The ADR status (Proposed, Accepted, Rejected, Deprecated, Superseded)
      * @param string $content The ADR content including context, decision, and consequences (Markdown supported)
-     * @return array Confirmation with ADR details
+     * @return array<string, mixed> Confirmation with ADR details
      * @throws ToolCallException If workspace not found or operation fails
      */
     #[McpTool(
