@@ -18,12 +18,13 @@
     ],
     "require": {
         "php": "^8.1",
-        "mcp/sdk": "dev-main",
         "guzzlehttp/guzzle": "^7.0",
+        "mcp/sdk": "dev-main",
         "monolog/monolog": "^3.0",
+        "psr/simple-cache": "^3.0",
         "symfony/cache": "^6.0|^7.0",
-        "symfony/process": "^6.0|^7.0",
-        "symfony/filesystem": "^6.0|^7.0"
+        "symfony/filesystem": "^6.0|^7.0",
+        "symfony/process": "^6.0|^7.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.0",
