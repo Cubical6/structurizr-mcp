@@ -40,7 +40,7 @@ jobs:
         run: composer install --prefer-dist --no-progress --no-interaction
 
       - name: Run PHP-CS-Fixer check
-        run: ./vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.php
+        run: ./vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.dist.php
 
       - name: Run PHPStan
         continue-on-error: true
