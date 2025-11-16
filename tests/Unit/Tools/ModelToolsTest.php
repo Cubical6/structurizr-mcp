@@ -182,10 +182,8 @@ class ModelToolsTest extends TestCase
     }
 
     /**
-     * Note: This test demonstrates a current limitation - addContainer requires
-     * the system to exist in the builder, but createBuilderFromWorkspace doesn't
-     * rebuild state from existing DSL. This is marked as TODO in the implementation.
-     * For now, we test that the exception is thrown as expected.
+     * Note: The DslBuilder::fromDsl() method properly rebuilds state from existing DSL,
+     * enabling incremental model building with multiple operations.
      */
     public function testAddContainerThrowsExceptionWhenSystemNotInBuilder(): void
     {

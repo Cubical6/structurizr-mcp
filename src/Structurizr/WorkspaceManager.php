@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace StructurizrMcp\Structurizr;
 
+use Psr\Log\LoggerInterface;
 use StructurizrMcp\Exception\WorkspaceNotFoundException;
 use Symfony\Component\Filesystem\Filesystem;
-use Psr\Log\LoggerInterface;
 
 /**
  * Manages local workspace storage and retrieval

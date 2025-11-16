@@ -440,13 +440,13 @@ class DslBuilder
         }
 
         // Parse model section
-        if (preg_match('/model\s*\{(.*?)\n\s*\}/s', $dsl, $modelMatch)) {
+        if (preg_match('/model\s*\{(.*)\n\s*\}/s', $dsl, $modelMatch)) {
             $modelContent = $modelMatch[1];
             $builder->parseModelSection($modelContent);
         }
 
         // Parse views section
-        if (preg_match('/views\s*\{(.*?)\n\s*\}/s', $dsl, $viewsMatch)) {
+        if (preg_match('/views\s*\{(.*)\n\s*\}/s', $dsl, $viewsMatch)) {
             $viewsContent = $viewsMatch[1];
             $builder->parseViewsSection($viewsContent);
         }

@@ -6,12 +6,11 @@ namespace StructurizrMcp\Tools;
 
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Capability\Attribute\Schema;
-use StructurizrMcp\Structurizr\WorkspaceManager;
-use StructurizrMcp\Structurizr\DslBuilder;
-use StructurizrMcp\Structurizr\Workspace;
-use Psr\Log\LoggerInterface;
 use Mcp\Exception\ToolCallException;
+use Psr\Log\LoggerInterface;
 use StructurizrMcp\Exception\WorkspaceNotFoundException;
+use StructurizrMcp\Structurizr\Workspace;
+use StructurizrMcp\Structurizr\WorkspaceManager;
 
 /**
  * MCP Tools for C4 view operations (creating and configuring diagrams)
@@ -61,13 +60,13 @@ class ViewTools extends AbstractWorkspaceTool
             $this->workspaceManager->save($updated);
 
 
-        return [
-            'workspaceId' => $workspaceId,
-            'viewKey' => $viewKey,
-            'systemId' => $systemId,
-            'type' => 'systemContext',
-            'description' => $description,
-        ];
+            return [
+                'workspaceId' => $workspaceId,
+                'viewKey' => $viewKey,
+                'systemId' => $systemId,
+                'type' => 'systemContext',
+                'description' => $description,
+            ];
         } catch (WorkspaceNotFoundException $e) {
             throw new ToolCallException("Workspace not found: {$workspaceId}");
         } catch (\Exception $e) {
@@ -112,13 +111,13 @@ class ViewTools extends AbstractWorkspaceTool
             $this->workspaceManager->save($updated);
 
 
-        return [
-            'workspaceId' => $workspaceId,
-            'viewKey' => $viewKey,
-            'systemId' => $systemId,
-            'type' => 'container',
-            'description' => $description,
-        ];
+            return [
+                'workspaceId' => $workspaceId,
+                'viewKey' => $viewKey,
+                'systemId' => $systemId,
+                'type' => 'container',
+                'description' => $description,
+            ];
         } catch (WorkspaceNotFoundException $e) {
             throw new ToolCallException("Workspace not found: {$workspaceId}");
         } catch (\Exception $e) {
@@ -163,13 +162,13 @@ class ViewTools extends AbstractWorkspaceTool
             $this->workspaceManager->save($updated);
 
 
-        return [
-            'workspaceId' => $workspaceId,
-            'viewKey' => $viewKey,
-            'containerId' => $containerId,
-            'type' => 'component',
-            'description' => $description,
-        ];
+            return [
+                'workspaceId' => $workspaceId,
+                'viewKey' => $viewKey,
+                'containerId' => $containerId,
+                'type' => 'component',
+                'description' => $description,
+            ];
         } catch (WorkspaceNotFoundException $e) {
             throw new ToolCallException("Workspace not found: {$workspaceId}");
         } catch (\Exception $e) {
@@ -214,12 +213,12 @@ class ViewTools extends AbstractWorkspaceTool
             $this->workspaceManager->save($updated);
 
 
-        return [
-            'workspaceId' => $workspaceId,
-            'viewKey' => $viewKey,
-            'autoLayout' => $direction,
-            'message' => "Auto-layout '{$direction}' applied to view '{$viewKey}'",
-        ];
+            return [
+                'workspaceId' => $workspaceId,
+                'viewKey' => $viewKey,
+                'autoLayout' => $direction,
+                'message' => "Auto-layout '{$direction}' applied to view '{$viewKey}'",
+            ];
         } catch (WorkspaceNotFoundException $e) {
             throw new ToolCallException("Workspace not found: {$workspaceId}");
         } catch (\Exception $e) {

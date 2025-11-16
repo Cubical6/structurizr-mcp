@@ -7,9 +7,9 @@ namespace StructurizrMcp\Tools;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Capability\Attribute\Schema;
 use Mcp\Exception\ToolCallException;
-use StructurizrMcp\Structurizr\WorkspaceManager;
-use StructurizrMcp\Exception\WorkspaceNotFoundException;
 use Psr\Log\LoggerInterface;
+use StructurizrMcp\Exception\WorkspaceNotFoundException;
+use StructurizrMcp\Structurizr\WorkspaceManager;
 
 /**
  * MCP Tools for Structurizr workspace management
@@ -149,8 +149,7 @@ class WorkspaceTools
     public function deleteWorkspace(
         #[Schema(description: 'Workspace ID to delete', minLength: 1)]
         string $workspaceId
-    ): array
-    {
+    ): array {
         $this->logger->info("Deleting workspace: {$workspaceId}");
 
         try {

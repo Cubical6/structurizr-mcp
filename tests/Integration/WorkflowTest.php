@@ -21,13 +21,10 @@ use Psr\Log\NullLogger;
  *
  * Tests complete end-to-end workflows using real components (not mocked).
  *
- * NOTE: Many of these tests currently fail due to an implementation limitation:
- * The createBuilderFromWorkspace() method in ModelTools and ViewTools doesn't
- * rebuild the DslBuilder state from existing DSL (see TODO comment in the code).
- * These tests document the EXPECTED behavior once that limitation is addressed.
+ * The DslBuilder::fromDsl() method properly rebuilds state from existing DSL,
+ * enabling incremental model building with multiple operations.
  *
  * @group integration
- * @group incomplete
  */
 class WorkflowTest extends TestCase
 {
@@ -430,6 +427,9 @@ class WorkflowTest extends TestCase
         // Get workspace
         $ws1 = $this->workspaceTools->getWorkspace($workspaceId, 'json');
         $dsl1 = $ws1['dsl'];
+
+        // Wait to ensure timestamp difference
+        usleep(10000); // 10ms
 
         // Add more elements
         $container = $this->modelTools->addContainer($workspaceId, $system['elementId'], 'API');

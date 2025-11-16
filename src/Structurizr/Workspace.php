@@ -35,8 +35,8 @@ class Workspace
             'model' => $this->model,
             'views' => $this->views,
             'dsl' => $this->dsl,
-            'createdAt' => $this->createdAt?->format('c'),
-            'updatedAt' => $this->updatedAt?->format('c'),
+            'createdAt' => $this->createdAt?->format('Y-m-d\TH:i:s.uP'),
+            'updatedAt' => $this->updatedAt?->format('Y-m-d\TH:i:s.uP'),
         ];
     }
 

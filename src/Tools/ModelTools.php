@@ -6,12 +6,11 @@ namespace StructurizrMcp\Tools;
 
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Capability\Attribute\Schema;
-use StructurizrMcp\Structurizr\WorkspaceManager;
-use StructurizrMcp\Structurizr\DslBuilder;
-use StructurizrMcp\Structurizr\Workspace;
-use Psr\Log\LoggerInterface;
 use Mcp\Exception\ToolCallException;
+use Psr\Log\LoggerInterface;
 use StructurizrMcp\Exception\WorkspaceNotFoundException;
+use StructurizrMcp\Structurizr\Workspace;
+use StructurizrMcp\Structurizr\WorkspaceManager;
 
 /**
  * MCP Tools for C4 model building (adding elements and relationships)
@@ -62,13 +61,13 @@ class ModelTools extends AbstractWorkspaceTool
             $this->workspaceManager->save($updated);
 
 
-        return [
-            'workspaceId' => $workspaceId,
-            'elementId' => $elementId,
-            'name' => $name,
-            'type' => 'person',
-            'description' => $description,
-        ];
+            return [
+                'workspaceId' => $workspaceId,
+                'elementId' => $elementId,
+                'name' => $name,
+                'type' => 'person',
+                'description' => $description,
+            ];
         } catch (WorkspaceNotFoundException $e) {
             throw new ToolCallException("Workspace not found: {$workspaceId}");
         } catch (\Exception $e) {
@@ -119,14 +118,14 @@ class ModelTools extends AbstractWorkspaceTool
             $this->workspaceManager->save($updated);
 
 
-        return [
-            'workspaceId' => $workspaceId,
-            'elementId' => $elementId,
-            'name' => $name,
-            'type' => 'softwareSystem',
-            'location' => $location,
-            'description' => $description,
-        ];
+            return [
+                'workspaceId' => $workspaceId,
+                'elementId' => $elementId,
+                'name' => $name,
+                'type' => 'softwareSystem',
+                'location' => $location,
+                'description' => $description,
+            ];
         } catch (WorkspaceNotFoundException $e) {
             throw new ToolCallException("Workspace not found: {$workspaceId}");
         } catch (\Exception $e) {
@@ -176,15 +175,15 @@ class ModelTools extends AbstractWorkspaceTool
             $this->workspaceManager->save($updated);
 
 
-        return [
-            'workspaceId' => $workspaceId,
-            'elementId' => $elementId,
-            'systemId' => $systemId,
-            'name' => $name,
-            'type' => 'container',
-            'technology' => $technology,
-            'description' => $description,
-        ];
+            return [
+                'workspaceId' => $workspaceId,
+                'elementId' => $elementId,
+                'systemId' => $systemId,
+                'name' => $name,
+                'type' => 'container',
+                'technology' => $technology,
+                'description' => $description,
+            ];
         } catch (WorkspaceNotFoundException $e) {
             throw new ToolCallException("Workspace not found: {$workspaceId}");
         } catch (\Exception $e) {
@@ -234,15 +233,15 @@ class ModelTools extends AbstractWorkspaceTool
             $this->workspaceManager->save($updated);
 
 
-        return [
-            'workspaceId' => $workspaceId,
-            'elementId' => $elementId,
-            'containerId' => $containerId,
-            'name' => $name,
-            'type' => 'component',
-            'technology' => $technology,
-            'description' => $description,
-        ];
+            return [
+                'workspaceId' => $workspaceId,
+                'elementId' => $elementId,
+                'containerId' => $containerId,
+                'name' => $name,
+                'type' => 'component',
+                'technology' => $technology,
+                'description' => $description,
+            ];
         } catch (WorkspaceNotFoundException $e) {
             throw new ToolCallException("Workspace not found: {$workspaceId}");
         } catch (\Exception $e) {
@@ -292,14 +291,14 @@ class ModelTools extends AbstractWorkspaceTool
             $this->workspaceManager->save($updated);
 
 
-        return [
-            'workspaceId' => $workspaceId,
-            'relationshipId' => $relationshipId,
-            'sourceId' => $sourceId,
-            'destinationId' => $destinationId,
-            'description' => $description,
-            'technology' => $technology,
-        ];
+            return [
+                'workspaceId' => $workspaceId,
+                'relationshipId' => $relationshipId,
+                'sourceId' => $sourceId,
+                'destinationId' => $destinationId,
+                'description' => $description,
+                'technology' => $technology,
+            ];
         } catch (WorkspaceNotFoundException $e) {
             throw new ToolCallException("Workspace not found: {$workspaceId}");
         } catch (\Exception $e) {

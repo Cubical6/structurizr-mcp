@@ -7,11 +7,11 @@ namespace StructurizrMcp\Tools;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Capability\Attribute\Schema;
 use Mcp\Exception\ToolCallException;
-use StructurizrMcp\Structurizr\WorkspaceManager;
-use StructurizrMcp\Structurizr\CliWrapper;
+use Psr\Log\LoggerInterface;
 use StructurizrMcp\Exception\InvalidDslException;
 use StructurizrMcp\Exception\WorkspaceNotFoundException;
-use Psr\Log\LoggerInterface;
+use StructurizrMcp\Structurizr\CliWrapper;
+use StructurizrMcp\Structurizr\WorkspaceManager;
 
 /**
  * MCP Tools for exporting Structurizr workspaces to various formats
@@ -50,8 +50,7 @@ class ExportTools
     public function exportToDsl(
         #[Schema(description: 'Workspace ID to export', minLength: 1)]
         string $workspaceId
-    ): array
-    {
+    ): array {
         $this->logger->debug("Exporting workspace to DSL: {$workspaceId}");
 
         try {
@@ -85,8 +84,7 @@ class ExportTools
         string $workspaceId,
         #[Schema(description: 'Optional view key to export specific view', minLength: 1)]
         ?string $viewKey = null
-    ): array
-    {
+    ): array {
         $this->logger->debug("Exporting workspace to PlantUML: {$workspaceId}", [
             'viewKey' => $viewKey,
         ]);
@@ -125,8 +123,7 @@ class ExportTools
         string $workspaceId,
         #[Schema(description: 'Optional view key to export specific view', minLength: 1)]
         ?string $viewKey = null
-    ): array
-    {
+    ): array {
         $this->logger->debug("Exporting workspace to Mermaid: {$workspaceId}", [
             'viewKey' => $viewKey,
         ]);
@@ -162,8 +159,7 @@ class ExportTools
     public function importFromDsl(
         #[Schema(description: 'DSL content to import', minLength: 1)]
         string $dsl
-    ): array
-    {
+    ): array {
         $this->logger->info('Importing workspace from DSL');
 
         if (empty(trim($dsl))) {
