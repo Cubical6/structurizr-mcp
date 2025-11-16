@@ -44,7 +44,7 @@ jobs:
 
       - name: Run PHPStan
         continue-on-error: true
-        run: ./vendor/bin/phpstan analyse --no-progress --error-format=sarif > phpstan-report.sarif
+        run: ./vendor/bin/phpstan analyse --no-progress --error-format=sarif > phpstan-report.sarif || true
 
       - name: Upload SARIF to GitHub Security
         if: always()

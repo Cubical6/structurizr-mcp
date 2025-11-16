@@ -30,7 +30,7 @@ return (new PhpCsFixer\Config())
         'phpdoc_var_without_name' => true,
         'method_argument_space' => [
             'on_multiline' => 'ensure_fully_multiline',
-            'keep_multiple_spaces_after_comma' => true,
+            'keep_multiple_spaces_after_comma' => false,
         ],
         'single_trait_insert_per_statement' => true,
     ])
