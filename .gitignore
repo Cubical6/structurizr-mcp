@@ -33,6 +33,9 @@ Thumbs.db
 .phpunit.result.cache
 /coverage/
 
+# PHP-CS-Fixer
+.php-cs-fixer.cache
+
 # Environment
 .env
 .env.local
