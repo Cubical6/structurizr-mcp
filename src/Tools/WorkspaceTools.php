@@ -47,15 +47,6 @@ class WorkspaceTools
     ): array {
         $this->logger->info("Creating workspace: {$name}");
 
-        // Manual validation (Schema handles this in MCP, but needed for direct calls)
-        $trimmedName = trim($name);
-        if (empty($trimmedName)) {
-            throw new ToolCallException('Workspace name cannot be empty');
-        }
-        if (strlen($name) > 100) {
-            throw new ToolCallException('Workspace name must be 100 characters or less');
-        }
-
         try {
             $workspace = $this->workspaceManager->create($name, $description);
 
@@ -88,11 +79,6 @@ class WorkspaceTools
         string $format = 'json'
     ): array {
         $this->logger->debug("Getting workspace: {$workspaceId} in format: {$format}");
-
-        // Manual validation (Schema handles this in MCP, but needed for direct calls)
-        if (!in_array($format, ['json', 'dsl'], true)) {
-            throw new ToolCallException("Invalid format: {$format}. Must be 'json' or 'dsl'");
-        }
 
         try {
             $workspace = $this->workspaceManager->load($workspaceId);
@@ -160,9 +146,6 @@ class WorkspaceTools
                 'message' => "Workspace {$workspaceId} deleted successfully",
                 'workspaceId' => $workspaceId,
             ];
-        } catch (ToolCallException $e) {
-            // Re-throw ToolCallException as-is
-            throw $e;
         } catch (WorkspaceNotFoundException $e) {
             // Return failure instead of throwing for workspace not found
             return [

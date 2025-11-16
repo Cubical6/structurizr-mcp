@@ -16,14 +16,15 @@ use StructurizrMcp\Structurizr\Workspace;
 abstract class AbstractWorkspaceTool
 {
     /**
-     * Create DSL builder from existing workspace
+     * Create DSL builder from existing workspace, preserving existing DSL content if present
      *
-     * Creates a new DslBuilder instance and initializes it with the workspace
-     * content. Parses the existing workspace DSL to preserve all existing elements,
-     * relationships, and views when adding new content.
+     * Creates a new DslBuilder instance and initializes it with the workspace content.
+     * If the workspace has existing DSL, it is parsed to rebuild the builder state with
+     * all existing elements, relationships, and views. Otherwise, a fresh builder is
+     * created with workspace name and description.
      *
-     * @param Workspace $workspace The workspace to load
-     * @return DslBuilder A builder with the workspace's existing state
+     * @param Workspace $workspace The workspace to create builder from
+     * @return DslBuilder Builder instance with workspace state
      */
     protected function createBuilderFromWorkspace(Workspace $workspace): DslBuilder
     {

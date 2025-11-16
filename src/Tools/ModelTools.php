@@ -104,10 +104,6 @@ class ModelTools extends AbstractWorkspaceTool
         $this->logger->info("Adding software system '{$name}' to workspace: {$workspaceId}");
 
         try {
-            if (!in_array($location, ['Internal', 'External'], true)) {
-                throw new \InvalidArgumentException("Location must be 'Internal' or 'External'");
-            }
-
             $workspace = $this->workspaceManager->load($workspaceId);
 
             $builder = $this->createBuilderFromWorkspace($workspace);

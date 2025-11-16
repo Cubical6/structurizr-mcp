@@ -253,10 +253,6 @@ class ViewTools extends AbstractWorkspaceTool
         $this->logger->info("Applying auto-layout '{$direction}' to view '{$viewKey}' in workspace: {$workspaceId}");
 
         try {
-            if (!in_array($direction, ['tb', 'bt', 'lr', 'rl'], true)) {
-                throw new \InvalidArgumentException("Direction must be one of: tb, bt, lr, rl");
-            }
-
             $workspace = $this->workspaceManager->load($workspaceId);
 
             $builder = $this->createBuilderFromWorkspace($workspace);

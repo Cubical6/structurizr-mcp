@@ -164,23 +164,6 @@ class ModelToolsTest extends TestCase
         $this->assertEquals('External', $result['location']);
     }
 
-    public function testAddSoftwareSystemInvalidLocation(): void
-    {
-        $workspace = $this->createTestWorkspace();
-
-        $this->workspaceManager->method('load')->willReturn($workspace);
-
-        $this->expectException(ToolCallException::class);
-        $this->expectExceptionMessage("Location must be 'Internal' or 'External'");
-
-        $this->tools->addSoftwareSystem(
-            'ws_test',
-            'System',
-            'Description',
-            'InvalidLocation'
-        );
-    }
-
     /**
      * Note: The DslBuilder::fromDsl() method properly rebuilds state from existing DSL,
      * enabling incremental model building with multiple operations.

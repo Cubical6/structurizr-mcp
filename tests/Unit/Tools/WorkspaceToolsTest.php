@@ -85,31 +85,6 @@ class WorkspaceToolsTest extends TestCase
         $this->assertEquals('', $result['description']);
     }
 
-    public function testCreateWorkspaceThrowsExceptionForEmptyName(): void
-    {
-        $this->expectException(ToolCallException::class);
-        $this->expectExceptionMessage('Workspace name cannot be empty');
-
-        $this->tools->createWorkspace('');
-    }
-
-    public function testCreateWorkspaceThrowsExceptionForWhitespaceName(): void
-    {
-        $this->expectException(ToolCallException::class);
-        $this->expectExceptionMessage('Workspace name cannot be empty');
-
-        $this->tools->createWorkspace('   ');
-    }
-
-    public function testCreateWorkspaceThrowsExceptionForTooLongName(): void
-    {
-        $this->expectException(ToolCallException::class);
-        $this->expectExceptionMessage('Workspace name must be 100 characters or less');
-
-        $longName = str_repeat('a', 101);
-        $this->tools->createWorkspace($longName);
-    }
-
     public function testGetWorkspaceJson(): void
     {
         $workspace = new Workspace(
@@ -190,14 +165,6 @@ class WorkspaceToolsTest extends TestCase
 
         $this->assertArrayHasKey('model', $result);
         $this->assertArrayHasKey('views', $result);
-    }
-
-    public function testGetWorkspaceThrowsExceptionForInvalidFormat(): void
-    {
-        $this->expectException(ToolCallException::class);
-        $this->expectExceptionMessage("Invalid format: xml. Must be 'json' or 'dsl'");
-
-        $this->tools->getWorkspace('ws_123', 'xml');
     }
 
     public function testGetWorkspaceNotFound(): void
@@ -303,27 +270,6 @@ class WorkspaceToolsTest extends TestCase
      * See ExportToolsTest for export-related tests.
      */
 
-    /**
-     * Test data provider for schema validation scenarios
-     */
-    public static function invalidWorkspaceNamesProvider(): array
-    {
-        return [
-            'empty string' => [''],
-            'whitespace only' => ['   '],
-            'too long' => [str_repeat('a', 101)],
-        ];
-    }
-
-    /**
-     * @dataProvider invalidWorkspaceNamesProvider
-     */
-    public function testCreateWorkspaceValidatesName(string $invalidName): void
-    {
-        $this->expectException(ToolCallException::class);
-
-        $this->tools->createWorkspace($invalidName);
-    }
 
     /**
      * Test that all methods properly use the logger

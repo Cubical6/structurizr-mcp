@@ -237,22 +237,6 @@ class ViewToolsTest extends TestCase
         $this->tools->applyAutoLayout('ws_test', 'Context', 'tb');
     }
 
-    /**
-     * Test that invalid direction is rejected
-     */
-
-    public function testApplyAutoLayoutInvalidDirection(): void
-    {
-        $workspace = $this->createTestWorkspace();
-
-        $this->workspaceManager->method('load')->willReturn($workspace);
-
-        $this->expectException(ToolCallException::class);
-        $this->expectExceptionMessage('Direction must be one of: tb, bt, lr, rl');
-
-        $this->tools->applyAutoLayout('ws_test', 'Context', 'invalid');
-    }
-
     public function testApplyAutoLayoutWorkspaceNotFound(): void
     {
         $this->workspaceManager

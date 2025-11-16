@@ -306,9 +306,11 @@ class DslBuilder
 
     private function generateContainerDsl(array $element): string
     {
-        $tags = $this->formatTags($element['tags']);
-        $tech = $this->formatTechnology($element['technology']);
-        $dsl = "            {$element['id']} = container \"{$element['name']}\" \"{$element['description']}\"{$tech}{$tags}";
+        $techAndTags = $this->formatTechnologyAndTags(
+            $element['technology'] ?? '',
+            $element['tags']
+        );
+        $dsl = "            {$element['id']} = container \"{$element['name']}\" \"{$element['description']}\"{$techAndTags}";
 
         if (!empty($element['components'])) {
             $dsl .= " {\n";
@@ -327,16 +329,20 @@ class DslBuilder
 
     private function generateComponentDsl(array $element): string
     {
-        $tags = $this->formatTags($element['tags']);
-        $tech = $this->formatTechnology($element['technology']);
-        return "                {$element['id']} = component \"{$element['name']}\" \"{$element['description']}\"{$tech}{$tags}\n";
+        $techAndTags = $this->formatTechnologyAndTags(
+            $element['technology'] ?? '',
+            $element['tags']
+        );
+        return "                {$element['id']} = component \"{$element['name']}\" \"{$element['description']}\"{$techAndTags}\n";
     }
 
     private function generateRelationshipDsl(array $rel): string
     {
-        $tech = $this->formatTechnology($rel['technology']);
-        $tags = $this->formatTags($rel['tags']);
-        return "        {$rel['sourceId']} -> {$rel['destinationId']} \"{$rel['description']}\"{$tech}{$tags}\n";
+        $techAndTags = $this->formatTechnologyAndTags(
+            $rel['technology'] ?? '',
+            $rel['tags']
+        );
+        return "        {$rel['sourceId']} -> {$rel['destinationId']} \"{$rel['description']}\"{$techAndTags}\n";
     }
 
     private function generateViewDsl(array $view): string
@@ -390,10 +396,41 @@ class DslBuilder
     }
 
     /**
+     * Format technology and tags for DSL output with correct positional handling
+     *
+     * In DSL, technology and tags are positionally distinguished. When tags are present
+     * but technology is empty, we must output an empty technology string to prevent
+     * the parser from misinterpreting tags as technology.
+     *
+     * This method replaces the previous formatTechnology() and formatTags() helpers
+     * to ensure correct positional formatting.
+     *
+     * @param string $technology Technology string (may be empty)
+     * @param array<int, string> $tags Array of tag strings
+     * @return string Formatted technology and tags string
+     */
+    private function formatTechnologyAndTags(string $technology, array $tags): string
+    {
+        $result = '';
+
+        if (!empty($tags)) {
+            // Tags present: always output technology (even if empty) to preserve position
+            $result .= " \"{$technology}\"";
+            $result .= ' "' . implode(',', $tags) . '"';
+        } elseif ($technology !== '') {
+            // No tags but technology present
+            $result .= " \"{$technology}\"";
+        }
+        // If both empty, return empty string
+
+        return $result;
+    }
+
+    /**
      * Format tags for DSL output
      *
-     * Converts a tags array into the DSL tag format: ' "tag1,tag2,tag3"'
-     * Returns empty string if no tags provided.
+     * Helper method for generating tag strings in Person and SoftwareSystem elements.
+     * For containers, components, and relationships, use formatTechnologyAndTags() instead.
      *
      * @param array<int, string> $tags Array of tag strings
      * @return string Formatted tags string or empty string
@@ -401,20 +438,6 @@ class DslBuilder
     private function formatTags(array $tags): string
     {
         return !empty($tags) ? ' "' . implode(',', $tags) . '"' : '';
-    }
-
-    /**
-     * Format technology for DSL output
-     *
-     * Converts a technology string into the DSL technology format: ' "Technology"'
-     * Returns empty string if technology is null or empty.
-     *
-     * @param string|null $technology Technology string
-     * @return string Formatted technology string or empty string
-     */
-    private function formatTechnology(?string $technology): string
-    {
-        return ($technology !== null && $technology !== '') ? " \"{$technology}\"" : '';
     }
 
     public function getElement(string $id): ?array
@@ -492,113 +515,49 @@ class DslBuilder
                 continue;
             }
 
-            // Parse person: person_1 = person "Name" "Description" "tags"
-            if (preg_match('/^(\w+)\s*=\s*person\s+"([^"]*)"\s+"([^"]*)"(?:\s+"([^"]*)")?/', $trimmed, $matches)) {
-                $id = $matches[1];
-                $name = $matches[2];
-                $description = $matches[3];
-                $tags = isset($matches[4]) ? explode(',', $matches[4]) : [];
-
-                $this->elements[$id] = [
-                    'type' => 'person',
-                    'id' => $id,
-                    'name' => $name,
-                    'description' => $description,
-                    'tags' => $tags,
-                ];
-                $this->updateElementCounter($id);
+            // Try each parser in sequence
+            if ($element = $this->parsePerson($trimmed)) {
+                $this->elements[$element['id']] = $element;
+                $this->updateElementCounter($element['id']);
+                continue;
             }
-            // Parse software system: system_1 = softwareSystem "Name" "Description" "tags" {
-            elseif (preg_match('/^(\w+)\s*=\s*softwareSystem\s+"([^"]*)"\s+"([^"]*)"(?:\s+"([^"]*)")?\s*\{?/', $trimmed, $matches)) {
-                $id = $matches[1];
-                $name = $matches[2];
-                $description = $matches[3];
-                $tags = isset($matches[4]) ? explode(',', $matches[4]) : [];
 
-                $this->elements[$id] = [
-                    'type' => 'softwareSystem',
-                    'id' => $id,
-                    'name' => $name,
-                    'description' => $description,
-                    'location' => 'Internal',
-                    'tags' => $tags,
-                    'containers' => [],
-                ];
-                $this->updateElementCounter($id);
-                $currentSystem = $id;
-                $systemStack[] = $id;
+            if ($element = $this->parseSystem($trimmed)) {
+                $this->elements[$element['id']] = $element;
+                $this->updateElementCounter($element['id']);
+                $currentSystem = $element['id'];
+                $systemStack[] = $element['id'];
+                continue;
             }
-            // Parse container: container_1 = container "Name" "Description" "Technology" "tags" {
-            elseif (preg_match('/^(\w+)\s*=\s*container\s+"([^"]*)"\s+"([^"]*)"(?:\s+"([^"]*)")?(?:\s+"([^"]*)")?\s*\{?/', $trimmed, $matches)) {
-                $id = $matches[1];
-                $name = $matches[2];
-                $description = $matches[3];
-                $technology = $matches[4] ?? '';
-                $tags = isset($matches[5]) ? explode(',', $matches[5]) : [];
 
-                if ($currentSystem === null) {
-                    continue; // Skip containers without a parent system
+            if ($element = $this->parseContainer($trimmed, $currentSystem)) {
+                if ($element !== null) {
+                    $this->elements[$element['id']] = $element;
+                    $this->elements[$currentSystem]['containers'][] = $element['id'];
+                    $this->updateElementCounter($element['id']);
+                    $currentContainer = $element['id'];
+                    $containerStack[] = $element['id'];
                 }
-
-                $this->elements[$id] = [
-                    'type' => 'container',
-                    'id' => $id,
-                    'name' => $name,
-                    'description' => $description,
-                    'technology' => $technology,
-                    'tags' => $tags,
-                    'systemId' => $currentSystem,
-                    'components' => [],
-                ];
-                $this->elements[$currentSystem]['containers'][] = $id;
-                $this->updateElementCounter($id);
-                $currentContainer = $id;
-                $containerStack[] = $id;
+                continue;
             }
-            // Parse component: component_1 = component "Name" "Description" "Technology" "tags"
-            elseif (preg_match('/^(\w+)\s*=\s*component\s+"([^"]*)"\s+"([^"]*)"(?:\s+"([^"]*)")?(?:\s+"([^"]*)")?/', $trimmed, $matches)) {
-                $id = $matches[1];
-                $name = $matches[2];
-                $description = $matches[3];
-                $technology = $matches[4] ?? '';
-                $tags = isset($matches[5]) ? explode(',', $matches[5]) : [];
 
-                if ($currentContainer === null) {
-                    continue; // Skip components without a parent container
+            if ($element = $this->parseComponent($trimmed, $currentContainer)) {
+                if ($element !== null) {
+                    $this->elements[$element['id']] = $element;
+                    $this->elements[$currentContainer]['components'][] = $element['id'];
+                    $this->updateElementCounter($element['id']);
                 }
-
-                $this->elements[$id] = [
-                    'type' => 'component',
-                    'id' => $id,
-                    'name' => $name,
-                    'description' => $description,
-                    'technology' => $technology,
-                    'tags' => $tags,
-                    'containerId' => $currentContainer,
-                ];
-                $this->elements[$currentContainer]['components'][] = $id;
-                $this->updateElementCounter($id);
+                continue;
             }
-            // Parse relationship: source -> destination "Description" "Technology" "tags"
-            elseif (preg_match('/^(\w+)\s*->\s*(\w+)\s+"([^"]*)"(?:\s+"([^"]*)")?(?:\s+"([^"]*)")?/', $trimmed, $matches)) {
-                $sourceId = $matches[1];
-                $destinationId = $matches[2];
-                $description = $matches[3];
-                $technology = $matches[4] ?? '';
-                $tags = isset($matches[5]) ? explode(',', $matches[5]) : [];
 
+            if ($relationship = $this->parseRelationship($trimmed)) {
                 $id = $this->generateId('relationship');
-                $this->relationships[$id] = [
-                    'id' => $id,
-                    'sourceId' => $sourceId,
-                    'destinationId' => $destinationId,
-                    'description' => $description,
-                    'technology' => $technology,
-                    'tags' => $tags,
-                ];
+                $this->relationships[$id] = array_merge(['id' => $id], $relationship);
+                continue;
             }
+
             // Track closing braces
-            elseif ($trimmed === '}') {
+            if ($trimmed === '}') {
                 if (!empty($containerStack) && $currentContainer !== null) {
                     array_pop($containerStack);
                     $currentContainer = end($containerStack) ?: null;
@@ -608,6 +567,138 @@ class DslBuilder
                 }
             }
         }
+    }
+
+    /**
+     * Parse a person element from a DSL line
+     *
+     * Pattern: person_1 = person "Name" "Description" "tags"
+     *
+     * @param string $line The trimmed DSL line to parse
+     * @return array<string, mixed>|null Parsed element data or null if not a person
+     */
+    private function parsePerson(string $line): ?array
+    {
+        if (!preg_match('/^(\w+)\s*=\s*person\s+"([^"]*)"\s+"([^"]*)"(?:\s+"([^"]*)")?/', $line, $matches)) {
+            return null;
+        }
+
+        return [
+            'type' => 'person',
+            'id' => $matches[1],
+            'name' => $matches[2],
+            'description' => $matches[3],
+            'tags' => isset($matches[4]) ? explode(',', $matches[4]) : [],
+        ];
+    }
+
+    /**
+     * Parse a software system element from a DSL line
+     *
+     * Pattern: system_1 = softwareSystem "Name" "Description" "tags" {
+     *
+     * @param string $line The trimmed DSL line to parse
+     * @return array<string, mixed>|null Parsed element data or null if not a system
+     */
+    private function parseSystem(string $line): ?array
+    {
+        if (!preg_match('/^(\w+)\s*=\s*softwareSystem\s+"([^"]*)"\s+"([^"]*)"(?:\s+"([^"]*)")?\s*\{?/', $line, $matches)) {
+            return null;
+        }
+
+        return [
+            'type' => 'softwareSystem',
+            'id' => $matches[1],
+            'name' => $matches[2],
+            'description' => $matches[3],
+            'location' => 'Internal',
+            'tags' => isset($matches[4]) ? explode(',', $matches[4]) : [],
+            'containers' => [],
+        ];
+    }
+
+    /**
+     * Parse a container element from a DSL line
+     *
+     * Pattern: container_1 = container "Name" "Description" "Technology" "tags" {
+     *
+     * @param string $line The trimmed DSL line to parse
+     * @param string|null $currentSystem The current parent system ID
+     * @return array<string, mixed>|null Parsed element data or null if not a container or no parent
+     */
+    private function parseContainer(string $line, ?string $currentSystem): ?array
+    {
+        if (!preg_match('/^(\w+)\s*=\s*container\s+"([^"]*)"\s+"([^"]*)"(?:\s+"([^"]*)")?(?:\s+"([^"]*)")?\s*\{?/', $line, $matches)) {
+            return null;
+        }
+
+        if ($currentSystem === null) {
+            return null; // Skip containers without a parent system
+        }
+
+        return [
+            'type' => 'container',
+            'id' => $matches[1],
+            'name' => $matches[2],
+            'description' => $matches[3],
+            'technology' => $matches[4] ?? '',
+            'tags' => isset($matches[5]) ? explode(',', $matches[5]) : [],
+            'systemId' => $currentSystem,
+            'components' => [],
+        ];
+    }
+
+    /**
+     * Parse a component element from a DSL line
+     *
+     * Pattern: component_1 = component "Name" "Description" "Technology" "tags"
+     *
+     * @param string $line The trimmed DSL line to parse
+     * @param string|null $currentContainer The current parent container ID
+     * @return array<string, mixed>|null Parsed element data or null if not a component or no parent
+     */
+    private function parseComponent(string $line, ?string $currentContainer): ?array
+    {
+        if (!preg_match('/^(\w+)\s*=\s*component\s+"([^"]*)"\s+"([^"]*)"(?:\s+"([^"]*)")?(?:\s+"([^"]*)")?/', $line, $matches)) {
+            return null;
+        }
+
+        if ($currentContainer === null) {
+            return null; // Skip components without a parent container
+        }
+
+        return [
+            'type' => 'component',
+            'id' => $matches[1],
+            'name' => $matches[2],
+            'description' => $matches[3],
+            'technology' => $matches[4] ?? '',
+            'tags' => isset($matches[5]) ? explode(',', $matches[5]) : [],
+            'containerId' => $currentContainer,
+        ];
+    }
+
+    /**
+     * Parse a relationship from a DSL line
+     *
+     * Pattern: source -> destination "Description" "Technology" "tags"
+     *
+     * @param string $line The trimmed DSL line to parse
+     * @return array<string, mixed>|null Parsed relationship data or null if not a relationship
+     */
+    private function parseRelationship(string $line): ?array
+    {
+        if (!preg_match('/^(\w+)\s*->\s*(\w+)\s+"([^"]*)"(?:\s+"([^"]*)")?(?:\s+"([^"]*)")?/', $line, $matches)) {
+            return null;
+        }
+
+        return [
+            'sourceId' => $matches[1],
+            'destinationId' => $matches[2],
+            'description' => $matches[3],
+            'technology' => $matches[4] ?? '',
+            'tags' => isset($matches[5]) ? explode(',', $matches[5]) : [],
+        ];
     }
 
     /**

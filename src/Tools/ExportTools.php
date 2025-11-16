@@ -163,7 +163,7 @@ class ExportTools
         $this->logger->info('Importing workspace from DSL');
 
         if (empty(trim($dsl))) {
-            throw new InvalidDslException('DSL content cannot be empty');
+            throw new ToolCallException('DSL content cannot be empty');
         }
 
         try {
@@ -189,8 +189,7 @@ class ExportTools
                 'dsl' => $workspace->dsl,
             ];
         } catch (InvalidDslException $e) {
-            // Re-throw InvalidDslException as-is
-            throw $e;
+            throw new ToolCallException("Invalid DSL: " . $e->getMessage());
         } catch (\Exception $e) {
             throw new ToolCallException("Failed to import workspace from DSL: " . $e->getMessage());
         }

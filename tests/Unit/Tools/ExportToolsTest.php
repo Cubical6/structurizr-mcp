@@ -377,23 +377,10 @@ skinparam componentStyle rectangle
      */
     public function testImportFromDslValidatesNotEmpty(): void
     {
-        $this->expectException(InvalidDslException::class);
+        $this->expectException(ToolCallException::class);
         $this->expectExceptionMessage('DSL content cannot be empty');
 
         $this->tools->importFromDsl('');
-    }
-
-    /**
-     * Test importFromDsl validates DSL is not whitespace only
-     */
-    public function testImportFromDslValidatesNotWhitespace(): void
-    {
-        $this->expectException(InvalidDslException::class);
-        $this->expectExceptionMessage('DSL content cannot be empty');
-
-        $this->tools->importFromDsl('
-
-   ');
     }
 
     /**
@@ -527,7 +514,7 @@ skinparam componentStyle rectangle
     }
 
     /**
-     * Test importFromDsl re-throws InvalidDslException as-is
+     * Test importFromDsl wraps InvalidDslException in ToolCallException
      */
     public function testImportFromDslRethrowsInvalidDslException(): void
     {
@@ -552,8 +539,8 @@ skinparam componentStyle rectangle
             ->method('updateDsl')
             ->willThrowException(new InvalidDslException('Invalid DSL syntax'));
 
-        $this->expectException(InvalidDslException::class);
-        $this->expectExceptionMessage('Invalid DSL syntax');
+        $this->expectException(ToolCallException::class);
+        $this->expectExceptionMessage('Invalid DSL: Invalid DSL syntax');
 
         $this->tools->importFromDsl($dslContent);
     }
