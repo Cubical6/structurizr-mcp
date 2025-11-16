@@ -9,6 +9,26 @@ namespace StructurizrMcp;
  */
 class Configuration
 {
+    /** Default Structurizr API URL */
+    private const DEFAULT_API_URL = 'https://api.structurizr.com';
+
+    /** Default CLI executable path */
+    private const DEFAULT_CLI_PATH = './bin/structurizr-cli.sh';
+
+    /** Default MCP server name */
+    private const DEFAULT_SERVER_NAME = 'structurizr-mcp-server';
+
+    /** Default MCP server version */
+    private const DEFAULT_SERVER_VERSION = '1.0.0';
+
+    /** Default log level */
+    private const DEFAULT_LOG_LEVEL = 'DEBUG';
+
+    /**
+     * Configuration array loaded from environment variables and .env file
+     *
+     * @var array<string, mixed>
+     */
     private array $config;
 
     public function __construct()
@@ -27,8 +47,11 @@ class Configuration
                     if (str_starts_with(trim($line), '#')) {
                         continue;
                     }
-                    [$key, $value] = explode('=', $line, 2);
-                    $_ENV[trim($key)] = trim($value);
+                    $parts = explode('=', $line, 2);
+                    if (count($parts) === 2) {
+                        [$key, $value] = $parts;
+                        $_ENV[trim($key)] = trim($value);
+                    }
                 }
             }
         }
@@ -37,20 +60,20 @@ class Configuration
             'structurizr' => [
                 'api_key' => $this->getEnv('STRUCTURIZR_API_KEY', ''),
                 'api_secret' => $this->getEnv('STRUCTURIZR_API_SECRET', ''),
-                'api_url' => $this->getEnv('STRUCTURIZR_API_URL', 'https://api.structurizr.com'),
+                'api_url' => $this->getEnv('STRUCTURIZR_API_URL', self::DEFAULT_API_URL),
                 'workspace_id' => $this->getEnv('STRUCTURIZR_WORKSPACE_ID', ''),
-                'cli_path' => $this->getEnv('STRUCTURIZR_CLI_PATH', './bin/structurizr-cli.sh'),
+                'cli_path' => $this->getEnv('STRUCTURIZR_CLI_PATH', self::DEFAULT_CLI_PATH),
             ],
             'storage' => [
                 'workspace_path' => $this->getEnv('WORKSPACE_STORAGE_PATH', __DIR__ . '/../workspaces'),
             ],
             'logging' => [
-                'level' => $this->getEnv('LOG_LEVEL', 'DEBUG'),
+                'level' => $this->getEnv('LOG_LEVEL', self::DEFAULT_LOG_LEVEL),
                 'path' => $this->getEnv('LOG_PATH', 'php://stderr'),
             ],
             'server' => [
-                'name' => $this->getEnv('SERVER_NAME', 'structurizr-mcp-server'),
-                'version' => $this->getEnv('SERVER_VERSION', '1.0.0'),
+                'name' => $this->getEnv('SERVER_NAME', self::DEFAULT_SERVER_NAME),
+                'version' => $this->getEnv('SERVER_VERSION', self::DEFAULT_SERVER_VERSION),
             ],
         ];
     }
@@ -87,12 +110,12 @@ class Configuration
 
     public function getStructurizrApiUrl(): string
     {
-        return $this->get('structurizr.api_url', 'https://api.structurizr.com');
+        return $this->get('structurizr.api_url', self::DEFAULT_API_URL);
     }
 
     public function getStructurizrCliPath(): string
     {
-        return $this->get('structurizr.cli_path', './bin/structurizr-cli.sh');
+        return $this->get('structurizr.cli_path', self::DEFAULT_CLI_PATH);
     }
 
     public function getWorkspacePath(): string
@@ -102,7 +125,7 @@ class Configuration
 
     public function getLogLevel(): string
     {
-        return $this->get('logging.level', 'DEBUG');
+        return $this->get('logging.level', self::DEFAULT_LOG_LEVEL);
     }
 
     public function getLogPath(): string
@@ -112,11 +135,11 @@ class Configuration
 
     public function getServerName(): string
     {
-        return $this->get('server.name', 'structurizr-mcp-server');
+        return $this->get('server.name', self::DEFAULT_SERVER_NAME);
     }
 
     public function getServerVersion(): string
     {
-        return $this->get('server.version', '1.0.0');
+        return $this->get('server.version', self::DEFAULT_SERVER_VERSION);
     }
 }

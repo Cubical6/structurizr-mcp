@@ -111,8 +111,8 @@ class ValidationResult
     public function getAllMessages(): array
     {
         return array_merge(
-            array_map(fn($error) => 'ERROR: ' . $error, $this->errors),
-            array_map(fn($warning) => 'WARNING: ' . $warning, $this->warnings)
+            array_map(fn ($error) => 'ERROR: ' . $error, $this->errors),
+            array_map(fn ($warning) => 'WARNING: ' . $warning, $this->warnings)
         );
     }
 }

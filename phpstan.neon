@@ -4,4 +4,7 @@ parameters:
         - src
     excludePaths:
         - vendor
-    checkMissingIterableValueType: false
+    treatPhpDocTypesAsCertain: false
+    ignoreErrors:
+        -
+            identifier: missingType.iterableValue

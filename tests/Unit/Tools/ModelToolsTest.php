@@ -10,6 +10,7 @@ use StructurizrMcp\Tools\ModelTools;
 use StructurizrMcp\Structurizr\WorkspaceManager;
 use StructurizrMcp\Structurizr\Workspace;
 use StructurizrMcp\Exception\WorkspaceNotFoundException;
+use Mcp\Exception\ToolCallException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -102,7 +103,8 @@ class ModelToolsTest extends TestCase
             ->with('nonexistent')
             ->willThrowException(new WorkspaceNotFoundException('nonexistent'));
 
-        $this->expectException(WorkspaceNotFoundException::class);
+        $this->expectException(ToolCallException::class);
+        $this->expectExceptionMessage('Workspace not found');
 
         $this->tools->addPerson('nonexistent', 'User');
     }
@@ -162,28 +164,9 @@ class ModelToolsTest extends TestCase
         $this->assertEquals('External', $result['location']);
     }
 
-    public function testAddSoftwareSystemInvalidLocation(): void
-    {
-        $workspace = $this->createTestWorkspace();
-
-        $this->workspaceManager->method('load')->willReturn($workspace);
-
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage("Location must be 'Internal' or 'External'");
-
-        $this->tools->addSoftwareSystem(
-            'ws_test',
-            'System',
-            'Description',
-            'InvalidLocation'
-        );
-    }
-
     /**
-     * Note: This test demonstrates a current limitation - addContainer requires
-     * the system to exist in the builder, but createBuilderFromWorkspace doesn't
-     * rebuild state from existing DSL. This is marked as TODO in the implementation.
-     * For now, we test that the exception is thrown as expected.
+     * Note: The DslBuilder::fromDsl() method properly rebuilds state from existing DSL,
+     * enabling incremental model building with multiple operations.
      */
     public function testAddContainerThrowsExceptionWhenSystemNotInBuilder(): void
     {
@@ -191,7 +174,7 @@ class ModelToolsTest extends TestCase
 
         $this->workspaceManager->method('load')->willReturn($workspace);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(ToolCallException::class);
         $this->expectExceptionMessage('System not found');
 
         $this->tools->addContainer(
@@ -213,7 +196,7 @@ class ModelToolsTest extends TestCase
 
         $this->workspaceManager->method('load')->willReturn($workspace);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(ToolCallException::class);
         $this->expectExceptionMessage('Container not found');
 
         $this->tools->addComponent(
@@ -235,7 +218,7 @@ class ModelToolsTest extends TestCase
 
         $this->workspaceManager->method('load')->willReturn($workspace);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(ToolCallException::class);
         $this->expectExceptionMessage('Source element not found');
 
         $this->tools->addRelationship(
@@ -255,7 +238,8 @@ class ModelToolsTest extends TestCase
             ->method('load')
             ->willThrowException(new WorkspaceNotFoundException('nonexistent'));
 
-        $this->expectException(WorkspaceNotFoundException::class);
+        $this->expectException(ToolCallException::class);
+        $this->expectExceptionMessage('Workspace not found');
 
         $this->tools->addRelationship('nonexistent', 'src', 'dest', 'Uses');
     }

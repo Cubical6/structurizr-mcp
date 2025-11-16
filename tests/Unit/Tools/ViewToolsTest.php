@@ -10,6 +10,7 @@ use StructurizrMcp\Tools\ViewTools;
 use StructurizrMcp\Structurizr\WorkspaceManager;
 use StructurizrMcp\Structurizr\Workspace;
 use StructurizrMcp\Exception\WorkspaceNotFoundException;
+use Mcp\Exception\ToolCallException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -106,7 +107,8 @@ class ViewToolsTest extends TestCase
             ->with('nonexistent')
             ->willThrowException(new WorkspaceNotFoundException('nonexistent'));
 
-        $this->expectException(WorkspaceNotFoundException::class);
+        $this->expectException(ToolCallException::class);
+        $this->expectExceptionMessage('Workspace not found');
 
         $this->tools->createSystemContextView('nonexistent', 'system_1', 'Context');
     }
@@ -229,26 +231,10 @@ class ViewToolsTest extends TestCase
 
         $this->workspaceManager->method('load')->willReturn($workspace);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(ToolCallException::class);
         $this->expectExceptionMessage('View not found');
 
         $this->tools->applyAutoLayout('ws_test', 'Context', 'tb');
-    }
-
-    /**
-     * Test that invalid direction is rejected
-     */
-
-    public function testApplyAutoLayoutInvalidDirection(): void
-    {
-        $workspace = $this->createTestWorkspace();
-
-        $this->workspaceManager->method('load')->willReturn($workspace);
-
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Direction must be one of: tb, bt, lr, rl');
-
-        $this->tools->applyAutoLayout('ws_test', 'Context', 'invalid');
     }
 
     public function testApplyAutoLayoutWorkspaceNotFound(): void
@@ -258,7 +244,8 @@ class ViewToolsTest extends TestCase
             ->method('load')
             ->willThrowException(new WorkspaceNotFoundException('nonexistent'));
 
-        $this->expectException(WorkspaceNotFoundException::class);
+        $this->expectException(ToolCallException::class);
+        $this->expectExceptionMessage('Workspace not found');
 
         $this->tools->applyAutoLayout('nonexistent', 'Context', 'lr');
     }

@@ -21,6 +21,11 @@ class Workspace
     ) {
     }
 
+    /**
+     * Convert workspace to array representation
+     *
+     * @return array<string, mixed> Workspace data as associative array
+     */
     public function toArray(): array
     {
         return [
@@ -30,11 +35,17 @@ class Workspace
             'model' => $this->model,
             'views' => $this->views,
             'dsl' => $this->dsl,
-            'createdAt' => $this->createdAt?->format('c'),
-            'updatedAt' => $this->updatedAt?->format('c'),
+            'createdAt' => $this->createdAt?->format('Y-m-d\TH:i:s.uP'),
+            'updatedAt' => $this->updatedAt?->format('Y-m-d\TH:i:s.uP'),
         ];
     }
 
+    /**
+     * Create workspace from array representation
+     *
+     * @param array<string, mixed> $data Workspace data as associative array
+     * @return self New workspace instance
+     */
     public static function fromArray(array $data): self
     {
         return new self(
@@ -49,6 +60,15 @@ class Workspace
         );
     }
 
+    /**
+     * Create a new workspace instance with updated DSL
+     *
+     * Returns a new workspace instance with the DSL updated and the updatedAt timestamp refreshed.
+     * This maintains immutability of the workspace object.
+     *
+     * @param string $dsl The new DSL content
+     * @return self New workspace instance with updated DSL
+     */
     public function withDsl(string $dsl): self
     {
         return new self(
@@ -63,6 +83,15 @@ class Workspace
         );
     }
 
+    /**
+     * Create a new workspace instance with updated model
+     *
+     * Returns a new workspace instance with the model updated and the updatedAt timestamp refreshed.
+     * This maintains immutability of the workspace object.
+     *
+     * @param array<string, mixed> $model The new model data
+     * @return self New workspace instance with updated model
+     */
     public function withModel(array $model): self
     {
         return new self(
@@ -77,6 +106,15 @@ class Workspace
         );
     }
 
+    /**
+     * Create a new workspace instance with updated views
+     *
+     * Returns a new workspace instance with the views updated and the updatedAt timestamp refreshed.
+     * This maintains immutability of the workspace object.
+     *
+     * @param array<string, mixed> $views The new views data
+     * @return self New workspace instance with updated views
+     */
     public function withViews(array $views): self
     {
         return new self(

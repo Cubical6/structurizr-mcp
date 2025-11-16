@@ -9,6 +9,13 @@ namespace StructurizrMcp\Exception;
  */
 class CliExecutionException extends StructurizrException
 {
+    /**
+     * Constructor
+     *
+     * @param string $command The CLI command that failed
+     * @param string $error The error message from the command
+     * @param \Throwable|null $previous Previous exception for exception chaining
+     */
     public function __construct(string $command, string $error, ?\Throwable $previous = null)
     {
         parent::__construct(
