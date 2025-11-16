@@ -31,6 +31,7 @@ Thumbs.db
 
 # PHPUnit
 .phpunit.result.cache
+.phpunit.cache/
 /coverage/
 
 # PHP-CS-Fixer
