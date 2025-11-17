@@ -53,7 +53,7 @@ C:\Users\YourUsername\AppData\Roaming\Claude\claude_desktop_config.json
 
 Open the configuration file in your preferred text editor and add the Structurizr server configuration:
 
-### Basic Configuration
+### Basic Configuration (macOS/Linux)
 
 ```json
 {
@@ -67,6 +67,48 @@ Open the configuration file in your preferred text editor and add the Structuriz
 ```
 
 > **Important:** Replace `/absolute/path/to/structurizr-mcp` with the actual absolute path to where you cloned the repository.
+
+### Windows Configuration
+
+> ⚠️ **CRITICAL for Windows users**: JSON requires backslashes to be escaped. You have two options:
+
+**Option 1: Use forward slashes (recommended, cleaner syntax)**
+```json
+{
+  "mcpServers": {
+    "structurizr": {
+      "command": "php",
+      "args": ["C:/Users/YourName/Projects/structurizr-mcp/server.php"]
+    }
+  }
+}
+```
+
+**Option 2: Use escaped backslashes (double backslashes)**
+```json
+{
+  "mcpServers": {
+    "structurizr": {
+      "command": "php",
+      "args": ["C:\\Users\\YourName\\Projects\\structurizr-mcp\\server.php"]
+    }
+  }
+}
+```
+
+**❌ This WILL FAIL with "Cannot read properties of undefined (reading 'cmd')" error:**
+```json
+{
+  "mcpServers": {
+    "structurizr": {
+      "command": "php",
+      "args": ["C:\Users\YourName\Projects\structurizr-mcp\server.php"]
+    }
+  }
+}
+```
+
+> **Why?** Single backslashes in JSON are escape characters (like `\n` for newline). The sequences `\U`, `\P`, etc. are invalid, causing JSON parsing to fail silently and Claude Desktop cannot read the configuration.
 
 ### Finding the Absolute Path
 
@@ -198,11 +240,41 @@ If Claude successfully creates a workspace and returns a workspace ID, your setu
 
 ## Troubleshooting
 
+### Error: "Cannot read properties of undefined (reading 'cmd')"
+
+**This is the most common Windows configuration error.**
+
+**Cause:** Single backslashes in JSON path (e.g., `C:\Users\...`)
+
+**Solution:** Use one of these options:
+
+```json
+// ✅ Option 1: Forward slashes (recommended)
+"args": ["C:/Users/YourName/Projects/structurizr-mcp/server.php"]
+
+// ✅ Option 2: Escaped backslashes
+"args": ["C:\\Users\\YourName\\Projects\\structurizr-mcp\\server.php"]
+
+// ❌ WRONG - this causes the error
+"args": ["C:\Users\YourName\Projects\structurizr-mcp\server.php"]
+```
+
+**Steps to fix:**
+
+1. Open `%APPDATA%\Claude\claude_desktop_config.json`
+2. Find your path in the `args` field
+3. Either:
+   - Replace all `\` with `/`, OR
+   - Replace all `\` with `\\`
+4. Validate your JSON at [jsonlint.com](https://jsonlint.com)
+5. Save and restart Claude Desktop (fully quit, not just close)
+
 ### Claude Desktop Doesn't Show Structurizr Tools
 
 **Possible causes:**
 
-1. **Configuration file syntax error**
+1. **Configuration file syntax error (especially Windows paths)**
+   - **Windows users:** Check backslash escaping (see above)
    - Verify JSON is valid using [jsonlint.com](https://jsonlint.com)
    - Ensure all quotes are double quotes (`"`)
    - Check for missing commas between entries
@@ -211,12 +283,16 @@ If Claude successfully creates a workspace and returns a workspace ID, your setu
    - Verify PHP is in your PATH: `which php` (macOS/Linux) or `where php` (Windows)
    - Try using absolute PHP path:
      ```json
+     // macOS/Linux
      "command": "/usr/bin/php"
+
+     // Windows (with escaped backslashes or forward slashes)
+     "command": "C:/PHP/php.exe"
      ```
 
 3. **Incorrect server.php path**
    - Ensure you're using an absolute path, not relative
-   - Verify the file exists: `ls /path/to/server.php`
+   - Verify the file exists: `ls /path/to/server.php` (macOS/Linux) or `dir C:\path\to\server.php` (Windows)
 
 4. **PHP version too old**
    - Check: `php -v`

@@ -201,7 +201,103 @@ Valid log paths:
 
 ## Claude Desktop Connection
 
-### Issue 7: Tools not appearing in Claude Desktop
+### Issue 7: "Cannot read properties of undefined (reading 'cmd')" (Windows)
+
+**Problem:** Most common Windows configuration error. Claude Desktop fails to parse configuration file.
+
+**Symptoms:**
+- Error in logs: `Cannot read properties of undefined (reading 'cmd')`
+- Error in logs: `TypeError: Cannot read properties of undefined`
+- MCP server doesn't appear in Claude Desktop
+- Server shows as disconnected immediately
+
+**Root Cause:** Single backslashes in Windows file paths are invalid in JSON. Backslashes are escape characters in JSON (like `\n` for newline), so `C:\Users\...` creates invalid escape sequences like `\U`, `\P`, etc.
+
+**Solution:**
+
+**Option 1: Use forward slashes (RECOMMENDED)**
+```json
+{
+  "mcpServers": {
+    "structurizr": {
+      "command": "php",
+      "args": ["C:/Users/YourName/Projects/structurizr-mcp/server.php"],
+      "env": {
+        "WORKSPACE_STORAGE_PATH": "C:/Users/YourName/Projects/structurizr-mcp/workspaces",
+        "STRUCTURIZR_CLI_PATH": "C:/Users/YourName/Projects/structurizr-mcp/bin/structurizr.bat"
+      }
+    }
+  }
+}
+```
+
+**Option 2: Use escaped backslashes (double backslashes)**
+```json
+{
+  "mcpServers": {
+    "structurizr": {
+      "command": "php",
+      "args": ["C:\\Users\\YourName\\Projects\\structurizr-mcp\\server.php"],
+      "env": {
+        "WORKSPACE_STORAGE_PATH": "C:\\Users\\YourName\\Projects\\structurizr-mcp\\workspaces",
+        "STRUCTURIZR_CLI_PATH": "C:\\Users\\YourName\\Projects\\structurizr-mcp\\bin\\structurizr.bat"
+      }
+    }
+  }
+}
+```
+
+**Step-by-step fix:**
+
+1. **Locate your configuration file:**
+   ```powershell
+   notepad %APPDATA%\Claude\claude_desktop_config.json
+   ```
+
+2. **Find all Windows paths** (look for `C:\`, `D:\`, etc.)
+
+3. **Replace backslashes** using one of these methods:
+   - **Method A:** Replace all `\` with `/` (easier, cleaner)
+   - **Method B:** Replace all `\` with `\\` (traditional JSON escaping)
+
+4. **Validate your JSON:**
+   - Copy the entire file content
+   - Paste it into [jsonlint.com](https://jsonlint.com)
+   - Fix any errors shown
+   - Copy the validated JSON back
+
+5. **Save the file** and **fully quit Claude Desktop:**
+   - Right-click Claude icon in taskbar
+   - Click "Exit" (don't just close the window)
+   - Wait 3-5 seconds
+   - Restart Claude Desktop
+
+6. **Verify it works:**
+   - Open Claude Desktop
+   - Start a new conversation
+   - Ask: "What MCP servers are connected?"
+   - You should see "structurizr" in the response
+
+**Before (WRONG - causes error):**
+```json
+"args": ["C:\Users\Bob\Projects\structurizr-mcp\server.php"]
+```
+
+**After (CORRECT):**
+```json
+"args": ["C:/Users/Bob/Projects/structurizr-mcp/server.php"]
+```
+
+**Common Windows path mistakes:**
+- ❌ `C:\Users\...` - Invalid JSON
+- ❌ `C:\Program Files\...` - Invalid JSON (also has spaces)
+- ✅ `C:/Users/...` - Valid
+- ✅ `C:\\Users\\...` - Valid
+- ✅ `C:/Program Files/...` - Valid (spaces are OK in JSON strings)
+
+---
+
+### Issue 8: Tools not appearing in Claude Desktop
 
 **Problem:** MCP server is running but tools don't show up in Claude.
 
