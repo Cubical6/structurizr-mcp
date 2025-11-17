@@ -90,6 +90,7 @@ This MCP server allows Large Language Models to:
    **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
    **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
+   **macOS/Linux configuration:**
    ```json
    {
      "mcpServers": {
@@ -100,6 +101,47 @@ This MCP server allows Large Language Models to:
      }
    }
    ```
+
+   **Windows configuration:**
+
+   > ⚠️ **IMPORTANT for Windows users**: You MUST escape backslashes in JSON paths by doubling them (`\\`) or use forward slashes (`/`).
+
+   **Option 1: Using forward slashes (recommended)**
+   ```json
+   {
+     "mcpServers": {
+       "structurizr": {
+         "command": "php",
+         "args": ["C:/Users/YourName/Projects/structurizr-mcp/server.php"]
+       }
+     }
+   }
+   ```
+
+   **Option 2: Using escaped backslashes**
+   ```json
+   {
+     "mcpServers": {
+       "structurizr": {
+         "command": "php",
+         "args": ["C:\\Users\\YourName\\Projects\\structurizr-mcp\\server.php"]
+       }
+     }
+   }
+   ```
+
+   **❌ This will NOT work on Windows:**
+   ```json
+   {
+     "mcpServers": {
+       "structurizr": {
+         "command": "php",
+         "args": ["C:\Users\YourName\Projects\structurizr-mcp\server.php"]
+       }
+     }
+   }
+   ```
+   *Single backslashes are invalid in JSON and will cause "Cannot read properties of undefined (reading 'cmd')" errors.*
 
 5. **Restart Claude Desktop**
 
