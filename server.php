@@ -7,14 +7,15 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use Mcp\Server;
 use Mcp\Server\Transport\StdioTransport;
-use Mcp\Server\Container\Container;
-use Mcp\Server\Container\ContainerInterface;
+use Mcp\Capability\Registry\Container;
+use Psr\Container\ContainerInterface;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Psr\Log\LoggerInterface;
 use StructurizrMcp\Configuration;
 use StructurizrMcp\Structurizr\WorkspaceManager;
 use StructurizrMcp\Structurizr\CliWrapper;
+use StructurizrMcp\Structurizr\NullCliWrapper;
 use StructurizrMcp\Exception\CliExecutionException;
 use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
@@ -64,7 +65,7 @@ try {
 
     $logger->debug('Cache initialized', ['cacheDir' => __DIR__ . '/cache']);
 
-    // Initialize CliWrapper with error handling
+    // Initialize CliWrapper with graceful degradation to NullCliWrapper
     $cliWrapper = null;
     $cliPath = $config->getStructurizrCliPath();
     if (!empty($cliPath)) {
@@ -72,13 +73,15 @@ try {
             $cliWrapper = new CliWrapper($cliPath, $logger);
             $logger->info('CliWrapper initialized successfully', ['cliPath' => $cliPath]);
         } catch (CliExecutionException $e) {
-            $logger->warning('CliWrapper initialization failed - export/validation features will be unavailable', [
+            $logger->warning('CliWrapper initialization failed - using NullCliWrapper fallback', [
                 'cliPath' => $cliPath,
                 'error' => $e->getMessage(),
             ]);
+            $cliWrapper = new NullCliWrapper($logger);
         }
     } else {
-        $logger->warning('CLI path not configured - export/validation features will be unavailable');
+        $logger->warning('CLI path not configured - using NullCliWrapper fallback');
+        $cliWrapper = new NullCliWrapper($logger);
     }
 
     // Create PSR-11 container for dependency injection
@@ -89,11 +92,11 @@ try {
     $container->set(WorkspaceManager::class, $workspaceManager);
     $container->set(Configuration::class, $config);
 
-    // Register CliWrapper only if initialized successfully
-    if ($cliWrapper !== null) {
-        $container->set(CliWrapper::class, $cliWrapper);
-        $logger->debug('CliWrapper registered in container');
-    }
+    // Register CliWrapper (or NullCliWrapper) - always an object, never null
+    $container->set(CliWrapper::class, $cliWrapper);
+    $logger->debug('CliWrapper registered in container', [
+        'type' => $cliWrapper instanceof CliWrapper ? 'CliWrapper' : 'NullCliWrapper'
+    ]);
 
     $logger->debug('Dependency injection container configured');
 

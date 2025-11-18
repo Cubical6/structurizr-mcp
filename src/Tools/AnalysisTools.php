@@ -10,6 +10,7 @@ use Mcp\Exception\ToolCallException;
 use Psr\Log\LoggerInterface;
 use StructurizrMcp\Exception\WorkspaceNotFoundException;
 use StructurizrMcp\Structurizr\CliWrapper;
+use StructurizrMcp\Structurizr\NullCliWrapper;
 use StructurizrMcp\Structurizr\WorkspaceManager;
 
 /**
@@ -24,12 +25,12 @@ class AnalysisTools
      * Constructor
      *
      * @param WorkspaceManager $workspaceManager Manager for workspace operations
-     * @param CliWrapper $cliWrapper Wrapper for Structurizr CLI operations
+     * @param CliWrapper|NullCliWrapper $cliWrapper Wrapper for Structurizr CLI operations (NullCliWrapper when CLI unavailable)
      * @param LoggerInterface $logger Logger for debugging and info messages
      */
     public function __construct(
         private readonly WorkspaceManager $workspaceManager,
-        private readonly CliWrapper $cliWrapper,
+        private readonly CliWrapper|NullCliWrapper $cliWrapper,
         private readonly LoggerInterface $logger,
     ) {
     }

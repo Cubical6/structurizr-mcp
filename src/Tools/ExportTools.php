@@ -11,6 +11,7 @@ use Psr\Log\LoggerInterface;
 use StructurizrMcp\Exception\InvalidDslException;
 use StructurizrMcp\Exception\WorkspaceNotFoundException;
 use StructurizrMcp\Structurizr\CliWrapper;
+use StructurizrMcp\Structurizr\NullCliWrapper;
 use StructurizrMcp\Structurizr\WorkspaceManager;
 
 /**
@@ -28,12 +29,12 @@ class ExportTools
      * Constructor
      *
      * @param WorkspaceManager $workspaceManager Manager for workspace operations
-     * @param CliWrapper $cliWrapper Wrapper for Structurizr CLI commands
+     * @param CliWrapper|NullCliWrapper $cliWrapper Wrapper for Structurizr CLI commands (NullCliWrapper when CLI unavailable)
      * @param LoggerInterface $logger Logger for debugging and info messages
      */
     public function __construct(
         private readonly WorkspaceManager $workspaceManager,
-        private readonly CliWrapper $cliWrapper,
+        private readonly CliWrapper|NullCliWrapper $cliWrapper,
         private readonly LoggerInterface $logger,
     ) {
     }
