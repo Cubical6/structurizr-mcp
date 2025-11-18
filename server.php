@@ -66,7 +66,7 @@ try {
 
     // Initialize CliWrapper with error handling
     $cliWrapper = null;
-    $cliPath = $config->getCliPath();
+    $cliPath = $config->getStructurizrCliPath();
     if (!empty($cliPath)) {
         try {
             $cliWrapper = new CliWrapper($cliPath, $logger);
