@@ -31,7 +31,7 @@ use StructurizrMcp\Tools\WorkspaceTools;
  * Tests container service resolution, dependency injection, singleton behavior,
  * and proper wiring of all tool, resource, and prompt classes.
  *
- * @covers \StructurizrMcp\Container\ServerContainer
+ * @covers \StructurizrMcp\Tests\Unit\Container\ServerContainer
  */
 class ServerContainerTest extends TestCase
 {
@@ -310,7 +310,7 @@ class ServerContainerTest extends TestCase
         $this->assertNotNull($constructor, 'ExportTools must have constructor');
 
         $parameters = $constructor->getParameters();
-        $parameterNames = array_map(fn($p) => $p->getName(), $parameters);
+        $parameterNames = array_map(fn ($p) => $p->getName(), $parameters);
 
         $this->assertContains(
             'workspaceManager',
@@ -349,7 +349,7 @@ class ServerContainerTest extends TestCase
         $this->assertNotNull($constructor, 'ConfigResource must have constructor');
 
         $parameters = $constructor->getParameters();
-        $parameterNames = array_map(fn($p) => $p->getName(), $parameters);
+        $parameterNames = array_map(fn ($p) => $p->getName(), $parameters);
 
         $this->assertContains(
             'config',
@@ -485,14 +485,14 @@ class ServerContainerTest extends TestCase
      */
     private function createTestContainer(): ContainerInterface
     {
-        return new class implements ContainerInterface {
+        return new class () implements ContainerInterface {
             /** @var array<string, object> */
             private array $singletons = [];
 
             public function get(string $id): mixed
             {
                 if (!$this->has($id)) {
-                    throw new class("Service not found: {$id}") extends \Exception implements NotFoundExceptionInterface {};
+                    throw new class ("Service not found: {$id}") extends \Exception implements NotFoundExceptionInterface {};
                 }
 
                 // Return singleton if already instantiated
@@ -617,7 +617,7 @@ class ServerContainerTest extends TestCase
                         logger: $this->get(LoggerInterface::class)
                     ),
 
-                    default => throw new class("Unknown service: {$id}") extends \Exception implements NotFoundExceptionInterface {},
+                    default => throw new class ("Unknown service: {$id}") extends \Exception implements NotFoundExceptionInterface {},
                 };
             }
         };

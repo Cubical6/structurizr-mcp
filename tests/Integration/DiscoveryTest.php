@@ -133,7 +133,7 @@ class DiscoveryTest extends TestCase
             'validate_workspace',
         ];
 
-        $toolNames = array_map(fn($tool) => $tool->name, $tools);
+        $toolNames = array_map(fn ($tool) => $tool->name, $tools);
 
         foreach ($expectedTools as $expectedTool) {
             $this->assertContains(
@@ -164,7 +164,7 @@ class DiscoveryTest extends TestCase
         $this->assertEquals(7, $totalCount, 'Expected to discover exactly 7 MCP resources (1 static + 6 templates)');
 
         // Verify static resource
-        $resourceNames = array_map(fn($resource) => $resource->name, $resources);
+        $resourceNames = array_map(fn ($resource) => $resource->name, $resources);
         $this->assertContains('server_config', $resourceNames, 'Expected static resource "server_config" was not discovered');
 
         // Verify resource template names (dynamic resources)
@@ -177,7 +177,7 @@ class DiscoveryTest extends TestCase
             'workspace_view',
         ];
 
-        $templateNames = array_map(fn($template) => $template->name, $templates);
+        $templateNames = array_map(fn ($template) => $template->name, $templates);
 
         foreach ($expectedTemplates as $expectedTemplate) {
             $this->assertContains(
@@ -215,7 +215,7 @@ class DiscoveryTest extends TestCase
             'create_example_workspace',
         ];
 
-        $promptNames = array_map(fn($prompt) => $prompt->name, $prompts);
+        $promptNames = array_map(fn ($prompt) => $prompt->name, $prompts);
 
         foreach ($expectedPrompts as $expectedPrompt) {
             $this->assertContains(
@@ -244,7 +244,7 @@ class DiscoveryTest extends TestCase
 
         $toolsPage = $registry->getTools();
         $tools = $toolsPage->references;
-        $toolNames = array_map(fn($tool) => $tool->name, $tools);
+        $toolNames = array_map(fn ($tool) => $tool->name, $tools);
 
         // Should find real tools from src
         $this->assertContains('create_workspace', $toolNames, 'Discovery should find tools from src directory');
@@ -269,7 +269,9 @@ class DiscoveryTest extends TestCase
         mkdir($tempDir, 0o755, true);
 
         $toolFile = $tempDir . '/CustomTool.php';
-        file_put_contents($toolFile, <<<'PHP'
+        file_put_contents(
+            $toolFile,
+            <<<'PHP'
 <?php
 namespace CustomTools;
 use Mcp\Capability\Attribute\McpTool;
@@ -288,7 +290,7 @@ PHP
 
         $toolsPage = $registry->getTools();
         $tools = $toolsPage->references;
-        $toolNames = array_map(fn($tool) => $tool->name, $tools);
+        $toolNames = array_map(fn ($tool) => $tool->name, $tools);
 
         $this->assertNotContains('custom_tool', $toolNames, 'Discovery should only scan configured directories');
     }
@@ -418,7 +420,7 @@ PHP
 
         $toolsPage = $registry->getTools();
         $tools = $toolsPage->references;
-        $toolNames = array_map(fn($tool) => $tool->name, $tools);
+        $toolNames = array_map(fn ($tool) => $tool->name, $tools);
 
         // Check for uniqueness
         $uniqueNames = array_unique($toolNames);
@@ -479,7 +481,7 @@ PHP
 
         $promptsPage = $registry->getPrompts();
         $prompts = $promptsPage->references;
-        $promptNames = array_map(fn($prompt) => $prompt->name, $prompts);
+        $promptNames = array_map(fn ($prompt) => $prompt->name, $prompts);
 
         // Check for uniqueness
         $uniqueNames = array_unique($promptNames);
