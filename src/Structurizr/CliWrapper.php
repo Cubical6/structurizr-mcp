@@ -21,7 +21,7 @@ use Symfony\Component\Process\Process;
  * - Sanitizes credentials from logs
  * - Sets appropriate timeouts for different operations
  */
-class CliWrapper
+class CliWrapper implements CliWrapperInterface
 {
     private const TIMEOUT_VALIDATION = 30;
     private const TIMEOUT_EXPORT = 30;

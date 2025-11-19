@@ -43,4 +43,14 @@ class CliWrapperInterfaceTest extends TestCase
         $reflection = new \ReflectionClass(CliWrapperInterface::class);
         $this->assertTrue($reflection->hasMethod('getVersion'));
     }
+
+    public function testCliWrapperImplementsInterface(): void
+    {
+        $this->assertTrue(
+            in_array(
+                CliWrapperInterface::class,
+                class_implements(\StructurizrMcp\Structurizr\CliWrapper::class) ?: []
+            )
+        );
+    }
 }
