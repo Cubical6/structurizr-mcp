@@ -53,4 +53,14 @@ class CliWrapperInterfaceTest extends TestCase
             )
         );
     }
+
+    public function testNullCliWrapperImplementsInterface(): void
+    {
+        $this->assertTrue(
+            in_array(
+                CliWrapperInterface::class,
+                class_implements(\StructurizrMcp\Structurizr\NullCliWrapper::class) ?: []
+            )
+        );
+    }
 }

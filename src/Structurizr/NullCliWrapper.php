@@ -17,7 +17,7 @@ use StructurizrMcp\Exception\CliExecutionException;
  * when the CLI is not available, while still allowing dependency injection
  * to work correctly.
  */
-class NullCliWrapper
+class NullCliWrapper implements CliWrapperInterface
 {
     private const ERROR_MESSAGE = 'Structurizr CLI is not configured. Please set STRUCTURIZR_CLI_PATH environment variable to the path of the Structurizr CLI executable.';
 
