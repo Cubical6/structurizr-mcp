@@ -8,6 +8,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 use Mcp\Server;
 use Mcp\Server\Transport\StdioTransport;
 use Mcp\Capability\Registry\Container;
+use StructurizrMcp\Structurizr\CliWrapperInterface;
 use Psr\Container\ContainerInterface;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
@@ -92,9 +93,9 @@ try {
     $container->set(WorkspaceManager::class, $workspaceManager);
     $container->set(Configuration::class, $config);
 
-    // Register CliWrapper (or NullCliWrapper) - always an object, never null
-    $container->set(CliWrapper::class, $cliWrapper);
-    $logger->debug('CliWrapper registered in container', [
+    // Register CliWrapperInterface (or NullCliWrapper) - always an object, never null
+    $container->set(CliWrapperInterface::class, $cliWrapper);
+    $logger->debug('CliWrapperInterface registered in container', [
         'type' => $cliWrapper instanceof CliWrapper ? 'CliWrapper' : 'NullCliWrapper'
     ]);
 
