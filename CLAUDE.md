@@ -210,8 +210,9 @@ MCP is a universal, vendor-neutral standard for interactions between Large Langu
 - **MCP SDK**: `mcp/sdk` (dev-main branch via Composer)
 - **Transport**: stdio for Claude Desktop
 - **Structurizr CLI** for DSL parsing, validation, and export
-- **PSR standards**: PSR-3 (logging), PSR-16 (simple cache)
+- **PSR standards**: PSR-3 (logging), PSR-11 (container), PSR-16 (simple cache)
 - **Symfony components**: Process, Cache, Filesystem
+- **Dependency Injection**: PSR-11 compliant container with automatic dependency resolution
 
 ### Composer Dependencies
 ```json
@@ -265,7 +266,7 @@ structurizr-mcp/
 │   │   ├── CliExecutionException.php
 │   │   └── StructurizrException.php
 │   └── Configuration.php              # Environment configuration
-├── tests/                             # PHPUnit tests (286 tests, all passing)
+├── tests/                             # PHPUnit tests (414 tests, all passing)
 │   ├── Unit/
 │   │   ├── Tools/
 │   │   │   ├── WorkspaceToolsTest.php
@@ -279,13 +280,21 @@ structurizr-mcp/
 │   │   │   ├── WorkspaceResourceTest.php
 │   │   │   ├── ElementResourceTest.php
 │   │   │   └── ViewResourceTest.php
+│   │   ├── Container/
+│   │   │   └── ServerContainerTest.php
 │   │   ├── Structurizr/
 │   │   │   ├── DslBuilderTest.php
 │   │   │   ├── WorkspaceManagerTest.php
 │   │   │   └── CliWrapperTest.php
 │   │   └── ConfigurationTest.php
-│   └── Integration/
-│       └── WorkflowTest.php
+│   ├── Integration/
+│   │   ├── WorkflowTest.php
+│   │   ├── ServerInitializationTest.php
+│   │   └── DiscoveryTest.php
+│   └── Helpers/
+│       ├── ContainerTestTrait.php
+│       ├── ServerTestTrait.php
+│       └── ExampleTraitUsageTest.php
 ├── examples/                          # Example workspaces
 ├── docs/                              # Documentation
 ├── cache/                             # Discovery cache
@@ -306,55 +315,113 @@ structurizr-mcp/
 ```php
 <?php
 
-require 'vendor/autoload.php';
+declare(strict_types=1);
 
-use StructurizrMcp\Configuration;
+require_once __DIR__ . '/vendor/autoload.php';
+
 use Mcp\Server;
 use Mcp\Server\Transport\StdioTransport;
+use Mcp\Server\Container\Container;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
+use Psr\Log\LoggerInterface;
+use StructurizrMcp\Configuration;
+use StructurizrMcp\Structurizr\WorkspaceManager;
+use StructurizrMcp\Structurizr\CliWrapper;
+use StructurizrMcp\Exception\CliExecutionException;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Psr16Cache;
 
-// Load configuration from environment
-$config = Configuration::loadConfiguration();
+// Load configuration
+$config = new Configuration();
 
-// Setup logging (to STDERR by default)
+// Setup logging (MUST use STDERR for MCP servers)
 $logger = new Logger('structurizr-mcp');
-$logPath = $config->getLogPath();
-$logLevel = $config->getLogLevel();
-$logger->pushHandler(new StreamHandler($logPath, $logLevel));
+$logLevel = match (strtoupper($config->getLogLevel())) {
+    'DEBUG' => Logger::DEBUG,
+    'INFO' => Logger::INFO,
+    'WARNING' => Logger::WARNING,
+    'ERROR' => Logger::ERROR,
+    default => Logger::DEBUG,
+};
+$logger->pushHandler(new StreamHandler('php://stderr', $logLevel));
 
-// Setup cache for discovery
-$cache = new Psr16Cache(
-    new PhpFilesAdapter(directory: __DIR__ . '/cache')
-);
+try {
+    // Initialize workspace manager
+    $workspaceManager = new WorkspaceManager(
+        storagePath: $config->getWorkspacePath(),
+        logger: $logger
+    );
 
-// Build MCP server with auto-discovery
-$server = Server::builder()
-    ->setServerInfo(
-        name: $config->getServerName(),
-        version: $config->getServerVersion(),
-        description: 'MCP server for Structurizr workspace management and C4 model creation'
-    )
-    ->setInstructions(
-        'Use this server to create and manage Structurizr workspaces, ' .
-        'add architectural elements, create views, and generate C4 diagrams. ' .
-        'All 23 tools are available for comprehensive workspace management.'
-    )
-    ->setLogger($logger)
-    ->setDiscovery(
-        basePath: __DIR__,
-        scanDirs: ['src'],
-        excludeDirs: ['vendor', 'tests', 'cache', 'sessions', 'workspaces'],
-        cache: $cache
-    )
-    ->build();
+    // Initialize PSR-16 cache for discovery
+    $cache = new Psr16Cache(
+        new PhpFilesAdapter(
+            directory: __DIR__ . '/cache',
+            namespace: 'structurizr-mcp',
+            defaultLifetime: 3600
+        )
+    );
 
-// Run with STDIO transport
-$transport = new StdioTransport(logger: $logger);
-$exitCode = $server->run($transport);
-exit($exitCode);
+    // Initialize CliWrapper with graceful degradation
+    $cliWrapper = null;
+    $cliPath = $config->getStructurizrCliPath();
+    if (!empty($cliPath)) {
+        try {
+            $cliWrapper = new CliWrapper($cliPath, $logger);
+            $logger->info('CliWrapper initialized successfully');
+        } catch (CliExecutionException $e) {
+            $logger->warning('CliWrapper unavailable - export features disabled');
+        }
+    }
+
+    // Create PSR-11 container for dependency injection
+    $container = new Container();
+
+    // Register core dependencies
+    $container->set(LoggerInterface::class, $logger);
+    $container->set(WorkspaceManager::class, $workspaceManager);
+    $container->set(Configuration::class, $config);
+
+    // Register CliWrapper only if initialized successfully
+    if ($cliWrapper !== null) {
+        $container->set(CliWrapper::class, $cliWrapper);
+    }
+
+    // Build MCP server with auto-discovery and DI container
+    $server = Server::builder()
+        ->setServerInfo(
+            name: $config->getServerName(),
+            version: $config->getServerVersion(),
+            description: 'MCP server for Structurizr - Create and manage C4 architecture diagrams as code'
+        )
+        ->setInstructions(
+            'Use this server to create and manage Structurizr workspaces, ' .
+            'add architectural elements (people, systems, containers, components), ' .
+            'create relationships, and generate C4 diagrams. ' .
+            'Start by creating a workspace, then add elements to build your architecture model.'
+        )
+        ->setLogger($logger)
+        ->setContainer($container)  // Inject PSR-11 container
+        ->setDiscovery(
+            basePath: __DIR__,
+            scanDirs: ['src'],
+            excludeDirs: ['vendor', 'tests', 'cache', 'sessions', 'workspaces', 'docs', 'examples'],
+            cache: $cache
+        )
+        ->build();
+
+    // Run server with STDIO transport
+    $transport = new StdioTransport(logger: $logger);
+    $exitCode = $server->run($transport);
+    exit($exitCode);
+
+} catch (\Throwable $e) {
+    $logger->error('Fatal error starting server', [
+        'error' => $e->getMessage(),
+        'trace' => $e->getTraceAsString(),
+    ]);
+    exit(1);
+}
 ```
 
 ### Tool Definition with Attributes
@@ -478,6 +545,103 @@ abstract class AbstractWorkspaceTool
 }
 ```
 
+### Dependency Injection Architecture
+
+The server uses a PSR-11 compliant dependency injection container for managing service dependencies and enabling automatic dependency resolution during auto-discovery.
+
+#### Container Registration
+
+The PSR-11 container is configured in `server.php` and registers all core dependencies:
+
+```php
+use Mcp\Server\Container\Container;
+use Psr\Log\LoggerInterface;
+
+// Create PSR-11 container
+$container = new Container();
+
+// Register core dependencies
+$container->set(LoggerInterface::class, $logger);
+$container->set(WorkspaceManager::class, $workspaceManager);
+$container->set(Configuration::class, $config);
+
+// Register optional dependencies (graceful degradation)
+if ($cliWrapper !== null) {
+    $container->set(CliWrapper::class, $cliWrapper);
+}
+
+// Pass container to server builder
+$server = Server::builder()
+    ->setContainer($container)
+    ->build();
+```
+
+#### Registered Dependencies
+
+**Core Dependencies (always available):**
+- `Psr\Log\LoggerInterface` - Logger instance for all components
+- `StructurizrMcp\Structurizr\WorkspaceManager` - Workspace management service
+- `StructurizrMcp\Configuration` - Server configuration
+
+**Optional Dependencies (graceful degradation):**
+- `StructurizrMcp\Structurizr\CliWrapper` - Structurizr CLI wrapper for export/validation features
+  - Only registered if CLI path is configured and executable is available
+  - Export tools gracefully degrade if not available
+
+#### Automatic Dependency Resolution
+
+The MCP SDK's auto-discovery system uses the container to automatically resolve constructor dependencies for tools, resources, and prompts:
+
+```php
+// Tools automatically receive dependencies via constructor injection
+class ExportTools
+{
+    public function __construct(
+        WorkspaceManager $workspaceManager,
+        CliWrapper $cliWrapper,           // Injected from container
+        LoggerInterface $logger           // Injected from container
+    ) {
+        // Dependencies automatically resolved
+    }
+}
+```
+
+#### Graceful Degradation
+
+When optional dependencies are unavailable, the system handles it gracefully:
+
+1. **CliWrapper unavailable**: Export tools that require CLI functionality will throw descriptive errors
+2. **Container resolution**: The discovery system skips classes that cannot be instantiated due to missing dependencies
+3. **Logging**: All dependency issues are logged with appropriate severity levels
+
+Example from server initialization:
+
+```php
+$cliWrapper = null;
+if (!empty($cliPath)) {
+    try {
+        $cliWrapper = new CliWrapper($cliPath, $logger);
+        $logger->info('CliWrapper initialized successfully');
+    } catch (CliExecutionException $e) {
+        // Log warning but continue - export features will be unavailable
+        $logger->warning('CliWrapper unavailable - export features disabled');
+    }
+}
+
+// Only register if successfully initialized
+if ($cliWrapper !== null) {
+    $container->set(CliWrapper::class, $cliWrapper);
+}
+```
+
+#### Benefits
+
+- **Clean Architecture**: Dependencies are explicitly declared and automatically resolved
+- **Testability**: Easy to mock dependencies in unit tests using test containers
+- **Flexibility**: Optional features can be enabled/disabled without code changes
+- **Type Safety**: PHP 8.1+ type hints ensure type-safe dependency injection
+- **Maintainability**: Clear dependency graph makes the codebase easier to understand
+
 ### Claude Desktop Configuration
 
 All configuration is handled via environment variables:
@@ -562,8 +726,12 @@ All MCP capabilities fully implemented, tested, and production-ready.
 | Unit Tests (Resources) | 31 tests | >95% coverage |
 | Unit Tests (Prompts) | 39 tests | >95% coverage |
 | Unit Tests (Core) | 25 tests | >95% coverage |
-| Integration Tests | 8 tests | 100% passing |
-| **Total** | **355 tests** | **✅ 100% passing** |
+| Unit Tests (Container) | 13 tests | >95% coverage |
+| Integration Tests (Workflow) | 8 tests | 100% passing |
+| Integration Tests (Server Init) | 18 tests | 100% passing |
+| Integration Tests (Discovery) | 13 tests | 100% passing |
+| Test Helpers (Example Usage) | 15 tests | 100% passing |
+| **Total** | **414 tests** | **✅ 100% passing** |
 
 ### Quality Assurance
 - **PHPStan Level 8**: All code passes strict static analysis (0 errors)
@@ -585,12 +753,27 @@ All MCP capabilities fully implemented, tested, and production-ready.
 7. Export to desired format (DSL, PlantUML, Mermaid)
 
 ### Testing
+
+The project includes comprehensive test coverage across multiple test suites:
+
+**Test Suites:**
+- **Unit Tests (Tools)**: Test all 23 MCP tools (252 tests)
+- **Unit Tests (Resources)**: Test all 7 MCP resources (31 tests)
+- **Unit Tests (Prompts)**: Test all 7 MCP prompts (39 tests)
+- **Unit Tests (Core)**: Test core Structurizr components (25 tests)
+- **Unit Tests (Container)**: Test PSR-11 container implementation (13 tests)
+- **Integration Tests**: Test complete workflows, server initialization, and discovery (39 tests)
+- **Test Helpers**: Reusable test traits and example usage (15 tests)
+
+**Test Commands:**
 ```bash
-# Run all PHPUnit tests
+# Run all PHPUnit tests (414 tests)
 ./vendor/bin/phpunit
 
 # Run specific test suite
 ./vendor/bin/phpunit tests/Unit/Tools/WorkspaceToolsTest.php
+./vendor/bin/phpunit tests/Unit/Container/ServerContainerTest.php
+./vendor/bin/phpunit tests/Integration/ServerInitializationTest.php
 
 # Run with coverage report
 ./vendor/bin/phpunit --coverage-html coverage
@@ -605,6 +788,13 @@ All MCP capabilities fully implemented, tested, and production-ready.
 ./vendor/bin/php-cs-fixer fix
 ```
 
+**Key Test Files:**
+- `tests/Unit/Container/ServerContainerTest.php` - PSR-11 container dependency injection tests
+- `tests/Integration/ServerInitializationTest.php` - Server startup and configuration tests
+- `tests/Integration/DiscoveryTest.php` - Auto-discovery system tests
+- `tests/Helpers/ContainerTestTrait.php` - Reusable test container utilities
+- `tests/Helpers/ServerTestTrait.php` - Reusable server testing utilities
+
 ### Integration with Structurizr Cloud
 **Note**: Cloud integration is planned for future enhancement. Current implementation focuses on local workspace management with CLI-based operations.
 
@@ -616,7 +806,8 @@ The server is fully functional with:
 - All 23 MCP tools implemented
 - All 7 MCP resources implemented
 - All 7 MCP prompts implemented
-- 355 tests passing with >95% coverage
+- 414 tests passing with >95% coverage
+- PSR-11 dependency injection container
 - PHPStan Level 8 compliance (0 errors)
 - PSR-12 code style compliance
 

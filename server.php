@@ -7,12 +7,17 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use Mcp\Server;
 use Mcp\Server\Transport\StdioTransport;
+use Mcp\Capability\Registry\Container;
+use StructurizrMcp\Structurizr\CliWrapperInterface;
+use Psr\Container\ContainerInterface;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
+use Psr\Log\LoggerInterface;
 use StructurizrMcp\Configuration;
 use StructurizrMcp\Structurizr\WorkspaceManager;
-use StructurizrMcp\Tools\WorkspaceTools;
-use StructurizrMcp\Tools\ModelTools;
+use StructurizrMcp\Structurizr\CliWrapper;
+use StructurizrMcp\Structurizr\NullCliWrapper;
+use StructurizrMcp\Exception\CliExecutionException;
 use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Psr16Cache;
@@ -61,9 +66,40 @@ try {
 
     $logger->debug('Cache initialized', ['cacheDir' => __DIR__ . '/cache']);
 
-    // Initialize tool classes
-    $workspaceTools = new WorkspaceTools($workspaceManager, $logger);
-    $modelTools = new ModelTools($workspaceManager, $logger);
+    // Initialize CliWrapper with graceful degradation to NullCliWrapper
+    $cliWrapper = null;
+    $cliPath = $config->getStructurizrCliPath();
+    if (!empty($cliPath)) {
+        try {
+            $cliWrapper = new CliWrapper($cliPath, $logger);
+            $logger->info('CliWrapper initialized successfully', ['cliPath' => $cliPath]);
+        } catch (CliExecutionException $e) {
+            $logger->warning('CliWrapper initialization failed - using NullCliWrapper fallback', [
+                'cliPath' => $cliPath,
+                'error' => $e->getMessage(),
+            ]);
+            $cliWrapper = new NullCliWrapper($logger);
+        }
+    } else {
+        $logger->warning('CLI path not configured - using NullCliWrapper fallback');
+        $cliWrapper = new NullCliWrapper($logger);
+    }
+
+    // Create PSR-11 container for dependency injection
+    $container = new Container();
+
+    // Register core dependencies
+    $container->set(LoggerInterface::class, $logger);
+    $container->set(WorkspaceManager::class, $workspaceManager);
+    $container->set(Configuration::class, $config);
+
+    // Register CliWrapperInterface (or NullCliWrapper) - always an object, never null
+    $container->set(CliWrapperInterface::class, $cliWrapper);
+    $logger->debug('CliWrapperInterface registered in container', [
+        'type' => $cliWrapper instanceof CliWrapper ? 'CliWrapper' : 'NullCliWrapper'
+    ]);
+
+    $logger->debug('Dependency injection container configured');
 
     // Build MCP server with automatic discovery
     $server = Server::builder()
@@ -79,6 +115,7 @@ try {
             'Start by creating a workspace, then add elements to build your architecture model.'
         )
         ->setLogger($logger)
+        ->setContainer($container)
         ->setDiscovery(
             basePath: __DIR__,
             scanDirs: ['src'],
