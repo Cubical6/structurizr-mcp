@@ -254,19 +254,25 @@ structurizr-mcp/
 │   │   └── ViewResource.php           # View retrieval resource
 │   ├── Structurizr/                   # Core Structurizr integration
 │   │   ├── CliWrapper.php             # CLI command execution wrapper
+│   │   ├── CliWrapperInterface.php    # CLI wrapper contract
 │   │   ├── DslBuilder.php             # DSL generation utility
 │   │   ├── Workspace.php              # Workspace data model
 │   │   ├── WorkspaceManager.php       # Workspace state management
 │   │   ├── ProcessResult.php          # CLI process result object
-│   │   └── ValidationResult.php       # Validation result object
+│   │   ├── ValidationResult.php       # Validation result object
+│   │   └── Executor/                  # CLI execution strategies
+│   │       ├── CliExecutorInterface.php   # Executor contract
+│   │       ├── LocalCliExecutor.php       # Local CLI execution
+│   │       └── DockerCliExecutor.php      # Docker-based execution
 │   ├── Exception/                     # Custom exceptions
 │   │   ├── ApiAuthenticationException.php
 │   │   ├── WorkspaceNotFoundException.php
 │   │   ├── InvalidDslException.php
 │   │   ├── CliExecutionException.php
+│   │   ├── CliNotAvailableException.php   # CLI not available error
 │   │   └── StructurizrException.php
 │   └── Configuration.php              # Environment configuration
-├── tests/                             # PHPUnit tests (414 tests, all passing)
+├── tests/                             # PHPUnit tests (411 tests, all passing)
 │   ├── Unit/
 │   │   ├── Tools/
 │   │   │   ├── WorkspaceToolsTest.php
@@ -670,10 +676,11 @@ All configuration is handled via environment variables:
 ```
 
 **Required Environment Variables:**
-- `STRUCTURIZR_CLI_PATH`: Path to Structurizr CLI executable
 - `WORKSPACE_STORAGE_PATH`: Directory for storing workspace files
 
 **Optional Environment Variables:**
+- `STRUCTURIZR_CLI_PATH`: Path to Structurizr CLI executable (auto-detected if not set)
+- `STRUCTURIZR_DOCKER_IMAGE`: Docker image for CLI (default: structurizr/cli:latest)
 - `STRUCTURIZR_API_KEY`: API key for Structurizr Cloud (for future cloud sync)
 - `STRUCTURIZR_API_SECRET`: API secret for Structurizr Cloud
 - `STRUCTURIZR_API_URL`: API URL (default: https://api.structurizr.com)
@@ -682,6 +689,12 @@ All configuration is handled via environment variables:
 - `LOG_PATH`: Log file path (default: php://stderr)
 - `SERVER_NAME`: Server name (default: structurizr-mcp-server)
 - `SERVER_VERSION`: Server version (default: 1.0.0)
+
+**CLI Auto-Detection:**
+The server automatically detects and uses the CLI in this order:
+1. **Local CLI**: If `STRUCTURIZR_CLI_PATH` is set and points to a valid executable
+2. **Docker**: Falls back to Docker (`structurizr/cli:latest`) if Docker is available
+3. **Not Available**: Throws `CliNotAvailableException` with installation instructions
 
 ## Implementation Status
 
@@ -731,7 +744,7 @@ All MCP capabilities fully implemented, tested, and production-ready.
 | Integration Tests (Server Init) | 18 tests | 100% passing |
 | Integration Tests (Discovery) | 13 tests | 100% passing |
 | Test Helpers (Example Usage) | 15 tests | 100% passing |
-| **Total** | **414 tests** | **✅ 100% passing** |
+| **Total** | **411 tests** | **✅ 100% passing** |
 
 ### Quality Assurance
 - **PHPStan Level 8**: All code passes strict static analysis (0 errors)
@@ -806,7 +819,7 @@ The server is fully functional with:
 - All 23 MCP tools implemented
 - All 7 MCP resources implemented
 - All 7 MCP prompts implemented
-- 414 tests passing with >95% coverage
+- 411 tests passing with >95% coverage
 - PSR-11 dependency injection container
 - PHPStan Level 8 compliance (0 errors)
 - PSR-12 code style compliance

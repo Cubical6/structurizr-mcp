@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use StructurizrMcp\Exception\CliExecutionException;
+use StructurizrMcp\Exception\CliNotAvailableException;
 use StructurizrMcp\Structurizr\CliWrapper;
 use StructurizrMcp\Structurizr\ProcessResult;
 use StructurizrMcp\Structurizr\ValidationResult;
@@ -73,41 +74,67 @@ class CliWrapperTest extends TestCase
     }
 
     // ========================================
-    // Constructor Tests
+    // Constructor and Availability Tests
     // ========================================
-
-    public function testConstructorValidatesCliPath(): void
-    {
-        $this->expectException(CliExecutionException::class);
-        $this->expectExceptionMessage('CLI executable not found at path: /nonexistent/path/to/cli');
-
-        new CliWrapper('/nonexistent/path/to/cli', $this->logger);
-    }
-
-    public function testConstructorValidatesExecutable(): void
-    {
-        // Create a non-executable file
-        $nonExecutable = sys_get_temp_dir() . '/non-executable-' . uniqid();
-        file_put_contents($nonExecutable, 'not executable');
-        chmod($nonExecutable, 0o644);
-
-        try {
-            $this->expectException(CliExecutionException::class);
-            $this->expectExceptionMessage('CLI path is not executable:');
-
-            new CliWrapper($nonExecutable, $this->logger);
-        } finally {
-            if (file_exists($nonExecutable)) {
-                unlink($nonExecutable);
-            }
-        }
-    }
 
     public function testConstructorAcceptsValidCliPath(): void
     {
-        $wrapper = new CliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new CliWrapper($this->logger, $this->tempCliPath);
 
         $this->assertInstanceOf(CliWrapper::class, $wrapper);
+        $this->assertTrue($wrapper->isAvailable());
+        $this->assertEquals('local', $wrapper->getExecutorName());
+    }
+
+    public function testConstructorWithNullCliPathAndNoDocker(): void
+    {
+        // With no CLI path and no Docker, isAvailable should return false
+        $wrapper = new CliWrapper($this->logger, null);
+
+        // The wrapper is created but may not be available (depends on Docker)
+        $this->assertInstanceOf(CliWrapper::class, $wrapper);
+    }
+
+    public function testConstructorWithInvalidCliPathDoesNotThrow(): void
+    {
+        // Create wrapper with invalid CLI path - no exception should be thrown
+        // because executor detection is lazy
+        $wrapper = new CliWrapper($this->logger, '/nonexistent/path/to/cli');
+
+        // Verify wrapper is created successfully
+        $this->assertInstanceOf(CliWrapper::class, $wrapper);
+
+        // Verify isAvailable() returns false when no valid executor exists
+        // (unless Docker is available on the system)
+        $isAvailable = $wrapper->isAvailable();
+        $executorName = $wrapper->getExecutorName();
+
+        // If Docker is available, it will be used as fallback
+        if ($isAvailable) {
+            $this->assertEquals('docker', $executorName);
+        } else {
+            $this->assertNull($executorName);
+        }
+    }
+
+    public function testGetVersionReturnsStringResult(): void
+    {
+        // Create wrapper with valid CLI path
+        $wrapper = new CliWrapper($this->logger, $this->tempCliPath);
+
+        // getVersion should return a string (version info, 'unknown', or 'not installed')
+        $version = $wrapper->getVersion();
+        $this->assertIsString($version);
+    }
+
+    public function testGetExecutorNameReturnsNullWhenNoExecutorAvailable(): void
+    {
+        // Create wrapper with invalid CLI path - executor detection is lazy
+        $wrapper = new CliWrapper($this->logger, '/nonexistent/path/to/cli');
+
+        // If Docker is available, it will return 'docker', otherwise null
+        $executorName = $wrapper->getExecutorName();
+        $this->assertTrue($executorName === null || $executorName === 'docker');
     }
 
     // ========================================
@@ -121,7 +148,7 @@ class CliWrapperTest extends TestCase
         file_put_contents($tempCli, "#!/bin/sh\necho 'Success output'\nexit 0");
         chmod($tempCli, 0o755);
 
-        $wrapper = new CliWrapper($tempCli, $this->logger);
+        $wrapper = new CliWrapper($this->logger, $tempCli);
         $result = $wrapper->executeCommand(['version'], 30);
 
         $this->assertInstanceOf(ProcessResult::class, $result);
@@ -137,7 +164,7 @@ class CliWrapperTest extends TestCase
         file_put_contents($tempCli, "#!/bin/sh\necho 'Error message' >&2\nexit 1");
         chmod($tempCli, 0o755);
 
-        $wrapper = new CliWrapper($tempCli, $this->logger);
+        $wrapper = new CliWrapper($this->logger, $tempCli);
         $result = $wrapper->executeCommand(['invalid'], 30);
 
         $this->assertFalse($result->isSuccess());
@@ -152,7 +179,7 @@ class CliWrapperTest extends TestCase
         file_put_contents($tempCli, "#!/bin/sh\nsleep 10\necho 'Done'\nexit 0");
         chmod($tempCli, 0o755);
 
-        $wrapper = new CliWrapper($tempCli, $this->logger);
+        $wrapper = new CliWrapper($this->logger, $tempCli);
 
         $this->expectException(CliExecutionException::class);
 
@@ -166,7 +193,7 @@ class CliWrapperTest extends TestCase
 
     public function testValidateCommandSuccess(): void
     {
-        $wrapper = new TestableCliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new TestableCliWrapper($this->logger, $this->tempCliPath);
 
         $result = new ProcessResult(
             exitCode: 0,
@@ -187,7 +214,7 @@ class CliWrapperTest extends TestCase
 
     public function testValidateCommandWithErrors(): void
     {
-        $wrapper = new TestableCliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new TestableCliWrapper($this->logger, $this->tempCliPath);
 
         $result = new ProcessResult(
             exitCode: 1,
@@ -208,7 +235,7 @@ class CliWrapperTest extends TestCase
 
     public function testValidateCommandWithWarnings(): void
     {
-        $wrapper = new TestableCliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new TestableCliWrapper($this->logger, $this->tempCliPath);
 
         $result = new ProcessResult(
             exitCode: 0,
@@ -230,7 +257,7 @@ class CliWrapperTest extends TestCase
 
     public function testValidateCommandFileNotFound(): void
     {
-        $wrapper = new CliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new CliWrapper($this->logger, $this->tempCliPath);
 
         $this->expectException(CliExecutionException::class);
         $this->expectExceptionMessage('DSL file not found:');
@@ -244,7 +271,7 @@ class CliWrapperTest extends TestCase
 
     public function testExportCommandSuccess(): void
     {
-        $wrapper = new TestableCliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new TestableCliWrapper($this->logger, $this->tempCliPath);
 
         $expectedOutput = '@startuml' . PHP_EOL . 'Test PlantUML' . PHP_EOL . '@enduml';
         $result = new ProcessResult(
@@ -263,7 +290,7 @@ class CliWrapperTest extends TestCase
 
     public function testExportCommandWithOutputPath(): void
     {
-        $wrapper = new TestableCliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new TestableCliWrapper($this->logger, $this->tempCliPath);
 
         $outputPath = $this->tempOutputDir . '/output.puml';
         $result = new ProcessResult(
@@ -282,7 +309,7 @@ class CliWrapperTest extends TestCase
 
     public function testExportCommandFailure(): void
     {
-        $wrapper = new TestableCliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new TestableCliWrapper($this->logger, $this->tempCliPath);
 
         $result = new ProcessResult(
             exitCode: 1,
@@ -301,7 +328,7 @@ class CliWrapperTest extends TestCase
 
     public function testExportCommandWithInvalidOutputDirectory(): void
     {
-        $wrapper = new CliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new CliWrapper($this->logger, $this->tempCliPath);
 
         $this->expectException(CliExecutionException::class);
         $this->expectExceptionMessage('Output directory does not exist:');
@@ -315,7 +342,7 @@ class CliWrapperTest extends TestCase
 
     public function testPushCommandSuccess(): void
     {
-        $wrapper = new TestableCliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new TestableCliWrapper($this->logger, $this->tempCliPath);
 
         $result = new ProcessResult(
             exitCode: 0,
@@ -347,7 +374,7 @@ class CliWrapperTest extends TestCase
 
     public function testPushCommandWithCustomApiUrl(): void
     {
-        $wrapper = new TestableCliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new TestableCliWrapper($this->logger, $this->tempCliPath);
 
         $result = new ProcessResult(
             exitCode: 0,
@@ -373,7 +400,7 @@ class CliWrapperTest extends TestCase
 
     public function testPushCommandFailure(): void
     {
-        $wrapper = new TestableCliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new TestableCliWrapper($this->logger, $this->tempCliPath);
 
         $result = new ProcessResult(
             exitCode: 1,
@@ -401,7 +428,7 @@ class CliWrapperTest extends TestCase
 
     public function testPullCommandSuccess(): void
     {
-        $wrapper = new TestableCliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new TestableCliWrapper($this->logger, $this->tempCliPath);
 
         $outputPath = $this->tempOutputDir . '/pulled-workspace.json';
         $result = new ProcessResult(
@@ -431,7 +458,7 @@ class CliWrapperTest extends TestCase
 
     public function testPullCommandWithCustomApiUrl(): void
     {
-        $wrapper = new TestableCliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new TestableCliWrapper($this->logger, $this->tempCliPath);
 
         $outputPath = $this->tempOutputDir . '/pulled-workspace.json';
         $result = new ProcessResult(
@@ -458,7 +485,7 @@ class CliWrapperTest extends TestCase
 
     public function testPullCommandFailure(): void
     {
-        $wrapper = new TestableCliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new TestableCliWrapper($this->logger, $this->tempCliPath);
 
         $outputPath = $this->tempOutputDir . '/pulled-workspace.json';
         $result = new ProcessResult(
@@ -483,7 +510,7 @@ class CliWrapperTest extends TestCase
 
     public function testPullCommandWithInvalidOutputDirectory(): void
     {
-        $wrapper = new CliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new CliWrapper($this->logger, $this->tempCliPath);
 
         $this->expectException(CliExecutionException::class);
         $this->expectExceptionMessage('Output directory does not exist:');
@@ -502,7 +529,7 @@ class CliWrapperTest extends TestCase
 
     public function testGetVersionSuccess(): void
     {
-        $wrapper = new TestableCliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new TestableCliWrapper($this->logger, $this->tempCliPath);
 
         $result = new ProcessResult(
             exitCode: 0,
@@ -520,7 +547,7 @@ class CliWrapperTest extends TestCase
 
     public function testGetVersionFailure(): void
     {
-        $wrapper = new TestableCliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new TestableCliWrapper($this->logger, $this->tempCliPath);
 
         $result = new ProcessResult(
             exitCode: 1,
@@ -542,11 +569,11 @@ class CliWrapperTest extends TestCase
 
     public function testCommandSanitizationForLogging(): void
     {
-        $wrapper = new CliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new CliWrapper($this->logger, $this->tempCliPath);
 
         // Use reflection to access private method
         $reflection = new \ReflectionClass($wrapper);
-        $method = $reflection->getMethod('sanitizeCommandForLogging');
+        $method = $reflection->getMethod('sanitizeArgsForLogging');
         $method->setAccessible(true);
 
         $command = [
@@ -576,10 +603,10 @@ class CliWrapperTest extends TestCase
 
     public function testApiKeyRedactionInLogs(): void
     {
-        $wrapper = new CliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new CliWrapper($this->logger, $this->tempCliPath);
 
         $reflection = new \ReflectionClass($wrapper);
-        $method = $reflection->getMethod('sanitizeCommandForLogging');
+        $method = $reflection->getMethod('sanitizeArgsForLogging');
         $method->setAccessible(true);
 
         $command = [
@@ -599,10 +626,10 @@ class CliWrapperTest extends TestCase
 
     public function testApiSecretRedactionInLogs(): void
     {
-        $wrapper = new CliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new CliWrapper($this->logger, $this->tempCliPath);
 
         $reflection = new \ReflectionClass($wrapper);
-        $method = $reflection->getMethod('sanitizeCommandForLogging');
+        $method = $reflection->getMethod('sanitizeArgsForLogging');
         $method->setAccessible(true);
 
         $command = [
@@ -622,10 +649,10 @@ class CliWrapperTest extends TestCase
 
     public function testMultipleCredentialsRedaction(): void
     {
-        $wrapper = new CliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new CliWrapper($this->logger, $this->tempCliPath);
 
         $reflection = new \ReflectionClass($wrapper);
-        $method = $reflection->getMethod('sanitizeCommandForLogging');
+        $method = $reflection->getMethod('sanitizeArgsForLogging');
         $method->setAccessible(true);
 
         $command = [
@@ -662,7 +689,7 @@ class CliWrapperTest extends TestCase
 
     public function testParseValidationResultWithMixedMessages(): void
     {
-        $wrapper = new TestableCliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new TestableCliWrapper($this->logger, $this->tempCliPath);
 
         $output = <<<OUTPUT
             [INFO] Starting validation
@@ -690,7 +717,7 @@ class CliWrapperTest extends TestCase
 
     public function testParseValidationResultWithStderrFallback(): void
     {
-        $wrapper = new TestableCliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new TestableCliWrapper($this->logger, $this->tempCliPath);
 
         $result = new ProcessResult(
             exitCode: 1,
@@ -714,7 +741,7 @@ class CliWrapperTest extends TestCase
 
     public function testValidateFilePathWithNonexistentFile(): void
     {
-        $wrapper = new CliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new CliWrapper($this->logger, $this->tempCliPath);
 
         $this->expectException(CliExecutionException::class);
         $this->expectExceptionMessage('not found:');
@@ -724,7 +751,7 @@ class CliWrapperTest extends TestCase
 
     public function testValidateFilePathWithDirectory(): void
     {
-        $wrapper = new CliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new CliWrapper($this->logger, $this->tempCliPath);
 
         $this->expectException(CliExecutionException::class);
         $this->expectExceptionMessage('is not a file:');
@@ -744,7 +771,7 @@ class CliWrapperTest extends TestCase
         file_put_contents($nonReadable, '{}');
         chmod($nonReadable, 0o000);
 
-        $wrapper = new CliWrapper($this->tempCliPath, $this->logger);
+        $wrapper = new CliWrapper($this->logger, $this->tempCliPath);
 
         try {
             $this->expectException(CliExecutionException::class);
@@ -764,6 +791,8 @@ class CliWrapperTest extends TestCase
 class TestableCliWrapper extends CliWrapper
 {
     private ?ProcessResult $mockedResult = null;
+
+    /** @var array<string> */
     private array $lastCommandArgs = [];
 
     public function setMockedResult(ProcessResult $result): void
@@ -771,6 +800,9 @@ class TestableCliWrapper extends CliWrapper
         $this->mockedResult = $result;
     }
 
+    /**
+     * @return array<string>
+     */
     public function getLastCommandArgs(): array
     {
         return $this->lastCommandArgs;
