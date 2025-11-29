@@ -2,7 +2,7 @@
 
 [![Production Ready](https://img.shields.io/badge/status-production%20ready-brightgreen.svg)](https://github.com/Cubical6/structurizr-mcp)
 [![PHP 8.1+](https://img.shields.io/badge/php-8.1%2B-blue.svg)](https://www.php.net/)
-[![Tests](https://img.shields.io/badge/tests-355%20passing-brightgreen.svg)](https://github.com/Cubical6/structurizr-mcp)
+[![Tests](https://img.shields.io/badge/tests-411%20passing-brightgreen.svg)](https://github.com/Cubical6/structurizr-mcp)
 [![Coverage](https://img.shields.io/badge/coverage-%3E95%25-brightgreen.svg)](https://github.com/Cubical6/structurizr-mcp)
 
 A [Model Context Protocol (MCP)](https://modelcontextprotocol.io) server for [Structurizr](https://structurizr.com), enabling AI assistants like Claude to create and manage C4 architecture diagrams as code.
@@ -51,10 +51,15 @@ This MCP server allows Large Language Models to:
 - Workspace validation
 
 🔒 **Production Quality**
-- >95% test coverage (355 tests passing)
+- >95% test coverage (411 tests passing)
 - PHPStan Level 8 compliance (maximum static analysis)
 - PSR-12 code style compliance
 - Comprehensive error handling and security
+
+🐳 **Automatic CLI Detection**
+- Automatically detects local Structurizr CLI installation
+- Falls back to Docker when local CLI is not available
+- Zero configuration needed - just works!
 
 ## Installation
 
@@ -63,6 +68,9 @@ This MCP server allows Large Language Models to:
 - PHP 8.1 or higher
 - Composer
 - Claude Desktop (or another MCP-compatible client)
+- One of the following (for DSL validation/export):
+  - **Docker** (recommended) - Automatically uses `structurizr/cli` image
+  - **Structurizr CLI** - [Download from GitHub](https://github.com/structurizr/cli/releases)
 
 ### Setup
 

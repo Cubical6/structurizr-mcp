@@ -6,8 +6,10 @@ namespace StructurizrMcp\Structurizr;
 
 use Psr\Log\LoggerInterface;
 use StructurizrMcp\Exception\CliExecutionException;
-use Symfony\Component\Process\Exception\ProcessFailedException;
-use Symfony\Component\Process\Process;
+use StructurizrMcp\Exception\CliNotAvailableException;
+use StructurizrMcp\Structurizr\Executor\CliExecutorInterface;
+use StructurizrMcp\Structurizr\Executor\DockerCliExecutor;
+use StructurizrMcp\Structurizr\Executor\LocalCliExecutor;
 
 /**
  * Wrapper for Structurizr CLI operations
@@ -20,6 +22,10 @@ use Symfony\Component\Process\Process;
  * - Validates all file paths with realpath()
  * - Sanitizes credentials from logs
  * - Sets appropriate timeouts for different operations
+ *
+ * Executor detection:
+ * - Automatically detects available CLI executors (local first, then Docker)
+ * - Throws CliNotAvailableException with installation instructions if neither available
  */
 class CliWrapper implements CliWrapperInterface
 {
@@ -33,35 +39,56 @@ class CliWrapper implements CliWrapperInterface
     /** Default Structurizr API URL */
     private const DEFAULT_API_URL = 'https://api.structurizr.com';
 
-    private readonly string $cliPath;
+    private ?CliExecutorInterface $executor = null;
+
+    /** @var array<CliExecutorInterface> */
+    private array $executors;
 
     /**
-     * @param string $cliPath Path to the Structurizr CLI executable
      * @param LoggerInterface $logger Logger instance
-     * @throws CliExecutionException If CLI executable not found or not executable
+     * @param string|null $cliPath Path to the Structurizr CLI executable (optional)
+     * @param string|null $dockerImage Docker image for CLI (optional, default: structurizr/cli:latest)
      */
     public function __construct(
-        string $cliPath,
         private readonly LoggerInterface $logger,
+        ?string $cliPath = null,
+        ?string $dockerImage = null,
     ) {
-        // Validate CLI path exists and is executable
-        $resolvedPath = realpath($cliPath);
-        if ($resolvedPath === false) {
-            throw new CliExecutionException(
-                'structurizr-cli',
-                "CLI executable not found at path: {$cliPath}",
-            );
+        // Initialize executors in priority order
+        $this->executors = [
+            new LocalCliExecutor($cliPath, $logger),
+            new DockerCliExecutor($logger, $dockerImage ?? 'structurizr/cli:latest'),
+        ];
+
+        $this->logger->debug('CliWrapper initialized', [
+            'cliPath' => $cliPath,
+            'dockerImage' => $dockerImage,
+        ]);
+    }
+
+    /**
+     * Get the active executor, detecting automatically if needed
+     *
+     * @throws CliNotAvailableException If no executor is available
+     */
+    private function getExecutor(): CliExecutorInterface
+    {
+        if ($this->executor !== null) {
+            return $this->executor;
         }
 
-        if (!is_executable($resolvedPath)) {
-            throw new CliExecutionException(
-                'structurizr-cli',
-                "CLI path is not executable: {$resolvedPath}",
-            );
+        foreach ($this->executors as $executor) {
+            if ($executor->isAvailable()) {
+                $this->executor = $executor;
+                $this->logger->info('CLI executor detected', [
+                    'executor' => $executor->getName(),
+                ]);
+
+                return $this->executor;
+            }
         }
 
-        $this->cliPath = $resolvedPath;
-        $this->logger->info('CliWrapper initialized', ['cliPath' => $this->cliPath]);
+        throw new CliNotAvailableException();
     }
 
     /**
@@ -71,32 +98,23 @@ class CliWrapper implements CliWrapperInterface
      * @param int $timeout Timeout in seconds
      * @return ProcessResult
      * @throws CliExecutionException If command execution fails
+     * @throws CliNotAvailableException If no executor is available
      */
     public function executeCommand(array $args, int $timeout = self::TIMEOUT_VALIDATION): ProcessResult
     {
-        // Build command array (ARRAY form for security)
-        $command = array_merge([$this->cliPath], $args);
+        $executor = $this->getExecutor();
 
         // Sanitize command for logging (remove potential credentials)
-        $sanitizedCommand = $this->sanitizeCommandForLogging($command);
+        $sanitizedArgs = $this->sanitizeArgsForLogging($args);
 
         $this->logger->debug('Executing CLI command', [
-            'command' => $sanitizedCommand,
+            'executor' => $executor->getName(),
+            'args' => $sanitizedArgs,
             'timeout' => $timeout,
         ]);
 
         try {
-            // Create process with array form (prevents shell injection)
-            $process = new Process($command);
-            $process->setTimeout($timeout);
-            $process->run();
-
-            $result = new ProcessResult(
-                exitCode: $process->getExitCode() ?? 1,
-                stdout: $process->getOutput(),
-                stderr: $process->getErrorOutput(),
-                success: $process->isSuccessful(),
-            );
+            $result = $executor->execute($args, $timeout);
 
             if ($result->isSuccess()) {
                 $this->logger->debug('CLI command successful', [
@@ -110,26 +128,15 @@ class CliWrapper implements CliWrapperInterface
             }
 
             return $result;
-        } catch (ProcessFailedException $e) {
-            $this->logger->error('CLI process failed', [
-                'command' => $sanitizedCommand,
-                'error' => $e->getMessage(),
-            ]);
-
-            throw new CliExecutionException(
-                implode(' ', $sanitizedCommand),
-                $e->getMessage(),
-                $e,
-            );
         } catch (\Throwable $e) {
-            $this->logger->error('Unexpected error during CLI execution', [
-                'command' => $sanitizedCommand,
+            $this->logger->error('CLI execution error', [
+                'args' => $sanitizedArgs,
                 'error' => $e->getMessage(),
             ]);
 
             throw new CliExecutionException(
-                implode(' ', $sanitizedCommand),
-                'Unexpected error: ' . $e->getMessage(),
+                implode(' ', $sanitizedArgs),
+                $e->getMessage(),
                 $e,
             );
         }
@@ -330,13 +337,45 @@ class CliWrapper implements CliWrapperInterface
      */
     public function getVersion(): string
     {
-        $result = $this->executeCommand(['version'], self::CREDENTIAL_CHECK_TIMEOUT_SECONDS);
+        try {
+            $result = $this->executeCommand(['version'], self::CREDENTIAL_CHECK_TIMEOUT_SECONDS);
 
-        if (!$result->isSuccess()) {
-            return 'unknown';
+            if (!$result->isSuccess()) {
+                return 'unknown';
+            }
+
+            return trim($result->getStdout());
+        } catch (CliNotAvailableException) {
+            return 'not installed';
         }
+    }
 
-        return trim($result->getStdout());
+    /**
+     * Check which executor is being used
+     *
+     * @return string|null Executor name or null if none available
+     */
+    public function getExecutorName(): ?string
+    {
+        try {
+            return $this->getExecutor()->getName();
+        } catch (CliNotAvailableException) {
+            return null;
+        }
+    }
+
+    /**
+     * Check if CLI is available (either local or docker)
+     */
+    public function isAvailable(): bool
+    {
+        try {
+            $this->getExecutor();
+
+            return true;
+        } catch (CliNotAvailableException) {
+            return false;
+        }
     }
 
     /**
@@ -449,17 +488,17 @@ class CliWrapper implements CliWrapperInterface
     }
 
     /**
-     * Sanitize command for logging (remove credentials)
+     * Sanitize arguments for logging (remove credentials)
      *
-     * @param array<string> $command Command arguments
-     * @return array<string> Sanitized command
+     * @param array<string> $args Command arguments
+     * @return array<string> Sanitized arguments
      */
-    private function sanitizeCommandForLogging(array $command): array
+    private function sanitizeArgsForLogging(array $args): array
     {
         $sanitized = [];
         $redactNext = false;
 
-        foreach ($command as $arg) {
+        foreach ($args as $arg) {
             // If previous argument was a credential flag, redact this value
             if ($redactNext) {
                 $sanitized[] = '[REDACTED]';

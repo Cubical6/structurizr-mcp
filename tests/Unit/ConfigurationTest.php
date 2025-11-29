@@ -24,6 +24,8 @@ class ConfigurationTest extends TestCase
             'STRUCTURIZR_API_URL' => getenv('STRUCTURIZR_API_URL'),
             'STRUCTURIZR_API_KEY' => getenv('STRUCTURIZR_API_KEY'),
             'STRUCTURIZR_API_SECRET' => getenv('STRUCTURIZR_API_SECRET'),
+            'STRUCTURIZR_CLI_PATH' => getenv('STRUCTURIZR_CLI_PATH'),
+            'STRUCTURIZR_DOCKER_IMAGE' => getenv('STRUCTURIZR_DOCKER_IMAGE'),
             'WORKSPACE_STORAGE_PATH' => getenv('WORKSPACE_STORAGE_PATH'),
             'LOG_LEVEL' => getenv('LOG_LEVEL'),
             'SERVER_NAME' => getenv('SERVER_NAME'),
@@ -34,6 +36,8 @@ class ConfigurationTest extends TestCase
         putenv('STRUCTURIZR_API_URL');
         putenv('STRUCTURIZR_API_KEY');
         putenv('STRUCTURIZR_API_SECRET');
+        putenv('STRUCTURIZR_CLI_PATH');
+        putenv('STRUCTURIZR_DOCKER_IMAGE');
         putenv('WORKSPACE_STORAGE_PATH');
         putenv('LOG_LEVEL');
         putenv('SERVER_NAME');
@@ -42,6 +46,8 @@ class ConfigurationTest extends TestCase
         unset($_ENV['STRUCTURIZR_API_URL']);
         unset($_ENV['STRUCTURIZR_API_KEY']);
         unset($_ENV['STRUCTURIZR_API_SECRET']);
+        unset($_ENV['STRUCTURIZR_CLI_PATH']);
+        unset($_ENV['STRUCTURIZR_DOCKER_IMAGE']);
         unset($_ENV['WORKSPACE_STORAGE_PATH']);
         unset($_ENV['LOG_LEVEL']);
         unset($_ENV['SERVER_NAME']);
@@ -350,8 +356,24 @@ class ConfigurationTest extends TestCase
     {
         $config = new Configuration();
 
+        // Default value is null (auto-detection)
+        $this->assertNull($config->getStructurizrCliPath());
+    }
+
+    public function testGetDockerImage(): void
+    {
+        $config = new Configuration();
+
         // Default value
-        $this->assertEquals('./bin/structurizr-cli.sh', $config->getStructurizrCliPath());
+        $this->assertEquals('structurizr/cli:latest', $config->getDockerImage());
+    }
+
+    public function testGetDockerImageWithCustomValue(): void
+    {
+        putenv('STRUCTURIZR_DOCKER_IMAGE=structurizr/cli:2.0.0');
+        $config = new Configuration();
+
+        $this->assertEquals('structurizr/cli:2.0.0', $config->getDockerImage());
     }
 
     public function testGetStructurizrCliPathWithCustomValue(): void

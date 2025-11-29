@@ -12,8 +12,8 @@ class Configuration
     /** Default Structurizr API URL */
     private const DEFAULT_API_URL = 'https://api.structurizr.com';
 
-    /** Default CLI executable path */
-    private const DEFAULT_CLI_PATH = './bin/structurizr-cli.sh';
+    /** Default Docker image for CLI */
+    private const DEFAULT_DOCKER_IMAGE = 'structurizr/cli:latest';
 
     /** Default MCP server name */
     private const DEFAULT_SERVER_NAME = 'structurizr-mcp-server';
@@ -39,7 +39,7 @@ class Configuration
     /**
      * Load configuration from environment variables and .env file
      *
-     * @return array<string, array<string, string>>
+     * @return array<string, array<string, string|null>>
      */
     private function loadConfiguration(): array
     {
@@ -67,7 +67,8 @@ class Configuration
                 'api_secret' => $this->getEnv('STRUCTURIZR_API_SECRET', ''),
                 'api_url' => $this->getEnv('STRUCTURIZR_API_URL', self::DEFAULT_API_URL),
                 'workspace_id' => $this->getEnv('STRUCTURIZR_WORKSPACE_ID', ''),
-                'cli_path' => $this->getEnv('STRUCTURIZR_CLI_PATH', self::DEFAULT_CLI_PATH),
+                'cli_path' => $this->getEnvOrNull('STRUCTURIZR_CLI_PATH'),
+                'docker_image' => $this->getEnv('STRUCTURIZR_DOCKER_IMAGE', self::DEFAULT_DOCKER_IMAGE),
             ],
             'storage' => [
                 'workspace_path' => $this->getEnv('WORKSPACE_STORAGE_PATH', __DIR__ . '/../workspaces'),
@@ -86,6 +87,16 @@ class Configuration
     private function getEnv(string $key, string $default = ''): string
     {
         return $_ENV[$key] ?? getenv($key) ?: $default;
+    }
+
+    /**
+     * Get environment variable or null if not set
+     */
+    private function getEnvOrNull(string $key): ?string
+    {
+        $value = $_ENV[$key] ?? getenv($key) ?: null;
+
+        return $value !== null && $value !== '' ? $value : null;
     }
 
     public function get(string $key, mixed $default = null): mixed
@@ -118,9 +129,20 @@ class Configuration
         return $this->get('structurizr.api_url', self::DEFAULT_API_URL);
     }
 
-    public function getStructurizrCliPath(): string
+    /**
+     * Get CLI path or null for auto-detection
+     */
+    public function getStructurizrCliPath(): ?string
     {
-        return $this->get('structurizr.cli_path', self::DEFAULT_CLI_PATH);
+        return $this->get('structurizr.cli_path');
+    }
+
+    /**
+     * Get Docker image for CLI
+     */
+    public function getDockerImage(): string
+    {
+        return $this->get('structurizr.docker_image', self::DEFAULT_DOCKER_IMAGE);
     }
 
     public function getWorkspacePath(): string

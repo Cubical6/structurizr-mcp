@@ -16,8 +16,6 @@ use Psr\Log\LoggerInterface;
 use StructurizrMcp\Configuration;
 use StructurizrMcp\Structurizr\WorkspaceManager;
 use StructurizrMcp\Structurizr\CliWrapper;
-use StructurizrMcp\Structurizr\NullCliWrapper;
-use StructurizrMcp\Exception\CliExecutionException;
 use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
 use Symfony\Component\Cache\Psr16Cache;
@@ -66,24 +64,17 @@ try {
 
     $logger->debug('Cache initialized', ['cacheDir' => __DIR__ . '/cache']);
 
-    // Initialize CliWrapper with graceful degradation to NullCliWrapper
-    $cliWrapper = null;
-    $cliPath = $config->getStructurizrCliPath();
-    if (!empty($cliPath)) {
-        try {
-            $cliWrapper = new CliWrapper($cliPath, $logger);
-            $logger->info('CliWrapper initialized successfully', ['cliPath' => $cliPath]);
-        } catch (CliExecutionException $e) {
-            $logger->warning('CliWrapper initialization failed - using NullCliWrapper fallback', [
-                'cliPath' => $cliPath,
-                'error' => $e->getMessage(),
-            ]);
-            $cliWrapper = new NullCliWrapper($logger);
-        }
-    } else {
-        $logger->warning('CLI path not configured - using NullCliWrapper fallback');
-        $cliWrapper = new NullCliWrapper($logger);
-    }
+    // Initialize CliWrapper with automatic executor detection (local CLI or Docker)
+    // Detection is lazy - happens on first use, not during initialization
+    $cliWrapper = new CliWrapper(
+        logger: $logger,
+        cliPath: $config->getStructurizrCliPath(),
+        dockerImage: $config->getDockerImage(),
+    );
+    $logger->info('CliWrapper initialized with auto-detection', [
+        'cliPath' => $config->getStructurizrCliPath(),
+        'dockerImage' => $config->getDockerImage(),
+    ]);
 
     // Create PSR-11 container for dependency injection
     $container = new Container();
@@ -93,11 +84,9 @@ try {
     $container->set(WorkspaceManager::class, $workspaceManager);
     $container->set(Configuration::class, $config);
 
-    // Register CliWrapperInterface (or NullCliWrapper) - always an object, never null
+    // Register CliWrapperInterface with auto-detection support
     $container->set(CliWrapperInterface::class, $cliWrapper);
-    $logger->debug('CliWrapperInterface registered in container', [
-        'type' => $cliWrapper instanceof CliWrapper ? 'CliWrapper' : 'NullCliWrapper'
-    ]);
+    $logger->debug('CliWrapperInterface registered in container');
 
     $logger->debug('Dependency injection container configured');
 
