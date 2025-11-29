@@ -95,14 +95,26 @@ class CliWrapperTest extends TestCase
         $this->assertInstanceOf(CliWrapper::class, $wrapper);
     }
 
-    public function testIsAvailableReturnsFalseWhenNoExecutorAvailable(): void
+    public function testConstructorWithInvalidCliPathDoesNotThrow(): void
     {
-        // Create wrapper with invalid CLI path and assume Docker is not available
+        // Create wrapper with invalid CLI path - no exception should be thrown
+        // because executor detection is lazy
         $wrapper = new CliWrapper($this->logger, '/nonexistent/path/to/cli');
 
-        // This test may pass or fail depending on Docker availability
-        // We're testing that no exception is thrown during construction
+        // Verify wrapper is created successfully
         $this->assertInstanceOf(CliWrapper::class, $wrapper);
+
+        // Verify isAvailable() returns false when no valid executor exists
+        // (unless Docker is available on the system)
+        $isAvailable = $wrapper->isAvailable();
+        $executorName = $wrapper->getExecutorName();
+
+        // If Docker is available, it will be used as fallback
+        if ($isAvailable) {
+            $this->assertEquals('docker', $executorName);
+        } else {
+            $this->assertNull($executorName);
+        }
     }
 
     public function testGetVersionReturnsStringResult(): void

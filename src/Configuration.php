@@ -91,6 +91,9 @@ class Configuration
 
     /**
      * Get environment variable or null if not set
+     *
+     * @param string $key Environment variable name
+     * @return string|null Value of the environment variable, or null if not set
      */
     private function getEnvOrNull(string $key): ?string
     {
